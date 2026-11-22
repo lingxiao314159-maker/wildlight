@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-NI5D+I2wOGtFEFY7Rzbq4xr178H47O6Mn4VVx8hZAFg='; style-src 'unsafe-inline'; img-src data: blob:; base-uri 'none'; object-src 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-BsCT4f8tEb/oMOG3OJW0I5EF4eXmYRQUNRJgq4jorPI='; style-src 'unsafe-inline'; img-src data: blob:; base-uri 'none'; object-src 'none'; form-action 'none'">
 <meta name="theme-color" content="#0d2224">
 <title>荒野微光 V1.90 · 丰收与家业</title>
 <meta name="description" content="《荒野微光》V1.90《丰收与家业》。贸易、置业、委托施工，在灯塔湾给家园起个名字。">
@@ -502,6 +502,7 @@ buildKinds.push('barrel','smoker','rootPlot','compost','trough');
 buildKinds.push('fridge','floor','stoneWall','rainRoof','shade','bridge','raisedDock','cargoChest','outpost','cistern','fruitSapling','dryPlot');
 buildKinds.push('strawMat','forge','bedLamp','brazier','sign','harborLight','doubleTrap','collector','beehive','oysterBasket','silverSapling');
 const CHEST_SLOTS = 10;
+const PACK_CAPACITIES = [16,22,28];
 const recipes = [
   ['axe','tools',{wood:2,stone:2},'砍树两下。徒手也能采集。'],
   ['pick','tools',{wood:2,stone:3},'加快采石，可从灰烬岛矿脉取得铁矿。'],
@@ -521,8 +522,8 @@ const recipes = [
 ];
 recipes.push(
   ['rope','tools',{fiber:3},'陷阱、轻型装备与背包的材料。'],
-  ['wovenBag','tools',{fiber:5,rope:1},'随身容量升到 18 格，完成后自动换上。'],
-  ['hideBag','tools',{hide:3,rope:2},'容量升到 24 格，需要先有编织背包。','bench'],
+  ['wovenBag','tools',{fiber:5,rope:1},`随身容量升到 ${PACK_CAPACITIES[1]} 格，完成后自动换上。`],
+  ['hideBag','tools',{hide:3,rope:2},`容量升到 ${PACK_CAPACITIES[2]} 格，需要先有编织背包。`,'bench'],
   ['copper','food',{copperOre:2,wood:1},'熔炼铜矿，得到精细工具材料。','furnace'],
   ['iron','food',{scrap:2,wood:1},'把沉船废铁熔成铁锭。','furnace'],
   ['pry','tools',{copper:2,wood:1},'开启沉船锁箱，也可从废墟撬回材料。','bench'],
@@ -1135,7 +1136,7 @@ function installGameState(next,showWelcome,loadAudio=false){
   closePanel();renderHotbar();updateHud();
   if(showWelcome)toast('靠近树木采木。营地北侧旧坑道与海岸沉船可深入探索！',5);
 }
-const packSize=()=>[12,18,24][state.packTier];
+const packSize=()=>PACK_CAPACITIES[state.packTier];
 const bulkBuilds=new Set([...planted,'wall','gate','floor','stoneWall','bridge']);
 const stackSize=k=>shelfLife[k]?8:bulkBuilds.has(k)?10:garmentSlot[k]||items[k][4]||buildKinds.includes(k)||['coat','pot',...upgrades].includes(k)?1:30;
 function usedSlots(bag){return Object.entries(bag).reduce((slots,[k,n])=>slots+Math.ceil(n/stackSize(k)),0);}
