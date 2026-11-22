@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-dVsImFHC9Hpw5XwYT/DdGoVZlVJiWii+yEH4XsFcomE='; style-src 'unsafe-inline'; img-src data: blob:; base-uri 'none'; object-src 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-XKDgo/Y8N5LvjOPfnh303vkF/D6MH4E4g33QeOKHsLs='; style-src 'unsafe-inline'; img-src data: blob:; base-uri 'none'; object-src 'none'; form-action 'none'">
 <meta name="theme-color" content="#0d2224">
-<title>荒野微光 V1.91c · 移动端适配与角色优化</title>
-<meta name="description" content="《荒野微光》V1.91c《移动端适配与角色优化》。按真实视口探索群岛，自选像素角色外观，随时制作所需装备。">
-<meta property="og:title" content="荒野微光 V1.91c · 移动端适配与角色优化">
-<meta property="og:description" content="《荒野微光》V1.91c《移动端适配与角色优化》。按真实视口探索群岛，自选像素角色外观，随时制作所需装备。">
+<title>荒野微光 V1.91d · 客船、物品名称与性别外观</title>
+<meta name="description" content="《荒野微光》V1.91d《客船、物品名称与性别外观》。按真实视口探索群岛，自选男女像素角色外观，随时制作所需装备。">
+<meta property="og:title" content="荒野微光 V1.91d · 客船、物品名称与性别外观">
+<meta property="og:description" content="《荒野微光》V1.91d《客船、物品名称与性别外观》。按真实视口探索群岛，自选男女像素角色外观，随时制作所需装备。">
 <style>
-#placementStatus{align-self:center;padding:2px 6px;color:#dfedcf;font-size:11px}.route-tabs{position:sticky;top:0;z-index:1;padding:4px 0;background:#112629}.route-voyage{text-align:center}.route-voyage span{display:inline-block;font-size:44px;animation:routeSwell .8s ease-in-out infinite alternate}.estate-panel progress{width:100%;accent-color:#b6e5ad}@keyframes routeSwell{from{transform:translate(-5px,1px) rotate(-5deg)}to{transform:translate(5px,-2px) rotate(5deg)}}@media(prefers-reduced-motion:reduce){.route-voyage span{animation:none}}
+#placementStatus{align-self:center;padding:2px 6px;color:#dfedcf;font-size:11px}.route-tabs{position:sticky;top:0;z-index:1;padding:4px 0;background:#112629}.route-voyage{text-align:center}.ferry-art{display:block;width:min(100%,360px);margin:0 auto 8px;border-radius:8px;border:1px solid #496661;overflow:hidden}.ferry-boat{animation:ferryBob 1.1s ease-in-out infinite alternate;transform-origin:160px 100px}.ferry-wave.a{animation:ferryDrift 2.4s linear infinite}.ferry-wave.b{animation:ferryDrift 1.6s linear infinite reverse}.ferry-progress{width:min(100%,360px);height:6px;margin:8px auto 0;border-radius:3px;background:#102426;overflow:hidden}.ferry-progress i{display:block;height:100%;width:0;background:#b6e5ad;animation:ferryFill var(--dur,3.6s) linear forwards}@keyframes ferryBob{from{transform:translateY(-2px) rotate(-1.2deg)}to{transform:translateY(3px) rotate(1.2deg)}}@keyframes ferryDrift{from{transform:translateX(0)}to{transform:translateX(-40px)}}@keyframes ferryFill{to{width:100%}}@media(prefers-reduced-motion:reduce){.ferry-boat,.ferry-wave{animation:none}}.route-voyage span{display:inline-block;font-size:44px;animation:routeSwell .8s ease-in-out infinite alternate}.estate-panel progress{width:100%;accent-color:#b6e5ad}@keyframes routeSwell{from{transform:translate(-5px,1px) rotate(-5deg)}to{transform:translate(5px,-2px) rotate(5deg)}}@media(prefers-reduced-motion:reduce){.route-voyage span{animation:none}}
 :root{color-scheme:dark;--ink:#eff3e9;--dim:#a5b9ad;--edge:#486762;--panel:#102326;--mint:#b6e5ad;--gold:#f4c47b;--pad:clamp(9px,2vw,22px);font-family:system-ui,'Microsoft YaHei',sans-serif}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;overflow:hidden;background:#0d2224;color:var(--ink)}button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}button:disabled{opacity:.45;cursor:default}[hidden]{display:none!important}
 #world{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}#hud{position:absolute;inset:0;pointer-events:none;padding:max(var(--pad),env(safe-area-inset-top)) max(var(--pad),env(safe-area-inset-right)) max(var(--pad),env(safe-area-inset-bottom)) max(var(--pad),env(safe-area-inset-left));display:flex;flex-direction:column;justify-content:space-between;gap:8px}
@@ -371,17 +371,17 @@ body{position:fixed;inset:auto;left:var(--game-view-x,0px);top:var(--game-view-y
 .inv-groups,.inv-details{min-width:0;max-height:max(108px,calc(var(--game-view-h,100dvh) - 165px));overscroll-behavior:contain;overflow:auto;touch-action:pan-y}
 .inv-group+ .inv-group{margin-top:10px}
 .inv-group h3{margin:0 0 6px;color:#d6ddbb;font-size:12px;letter-spacing:.045em}
-.inv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(48px,1fr));gap:5px;padding:2px}
-.inv-cell{position:relative;display:grid;place-items:center;min-height:49px;min-width:0;padding:4px 2px 7px;border:1px solid #58736b;border-radius:5px;background:#1d3938;color:#efedcc;touch-action:pan-y;-webkit-touch-callout:none;user-select:none}
+.inv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(54px,1fr));gap:5px;padding:2px}
+.inv-cell{position:relative;display:grid;place-items:center;min-height:62px;min-width:0;padding:4px 2px 15px;border:1px solid #58736b;border-radius:5px;background:#1d3938;color:#efedcc;touch-action:pan-y;-webkit-touch-callout:none;user-select:none}
 .inv-cell .item-icon{width:27px;height:27px;image-rendering:pixelated}
 .inv-cell[aria-pressed=true]{border-color:#f0cd85;box-shadow:inset 0 0 0 2px #baa269;background:#345146}
 .inv-cell.inv-muted{background:#172e31}
 .inv-cell.inv-muted .item-icon{opacity:.65}
 .inv-empty{background:#102426;border-color:#33534f;cursor:default}
 .inv-gear-empty{color:#9ab4a9;font-size:9px}
-.inv-count{position:absolute;right:3px;bottom:2px;font-size:10px;color:#f6e6ae;text-shadow:1px 1px #142424}
+.inv-name{position:absolute;left:1px;right:1px;bottom:2px;font-style:normal;font-size:9px;line-height:1.1;text-align:center;color:#cfd9bd;white-space:nowrap;overflow:hidden;text-overflow:clip;pointer-events:none}.inv-count{position:absolute;right:3px;bottom:13px;font-size:10px;color:#f6e6ae;text-shadow:1px 1px #142424}
 .inv-badge{position:absolute;left:2px;top:2px;max-width:95%;text-align:left;color:#f0c990;background:#172a28d8;border-radius:2px;font-size:8px;line-height:1.15;padding:1px 2px;white-space:nowrap}
-.inv-dur{position:absolute;left:7%;bottom:3px;height:2px;background:#b5db8d;border-radius:1px}
+.inv-dur{position:absolute;left:7%;bottom:12px;height:2px;background:#b5db8d;border-radius:1px}
 .inv-details{border:1px solid #56736b;background:#192f31;border-radius:8px;padding:9px;display:grid;gap:7px;align-content:start;overflow-wrap:anywhere}
 .inv-detail-head,.inv-title{display:flex;gap:7px;align-items:center}
 .inv-detail-head{justify-content:space-between;color:#b8c5a9;font-size:11px}
@@ -528,7 +528,7 @@ body{position:fixed;inset:auto;left:var(--game-view-x,0px);top:var(--game-view-y
 <div id="editLayoutBar" hidden><span>拖动右侧按钮。摇杆在操作布局设置中调整。</span><button class="press primary" id="doneEditLayout">保存布局</button><button class="press" id="backEditLayout">返回游戏</button><button class="press" id="resetEditLayout">重置</button></div>
 <div id="worldCatchup" class="world-catchup" role="status" hidden></div><div class="veil" id="veil"><section class="window title-window" id="window" role="dialog" aria-modal="true">
       <div class="inside">
-        <div class="eyebrow">1.91c · 移动端适配与角色优化</div>
+        <div class="eyebrow">1.91d · 客船、物品名称与性别外观</div>
         <h1>荒野微光</h1>
         <p role="status">正在启动游戏…</p>
         <p class="controls">如果一直停在这里，请下载 HTML 文件并用系统浏览器打开。</p>
@@ -544,7 +544,7 @@ const canvas = $('world'), ctx = canvas.getContext('2d');
 const W = 446, H = 292, T = 32, REACH = 60, DAY = 240;
 const SURFACE_W_182=416,SURFACE_H_182=272;
 const OLD_W=120,OLD_H=100,CHUNK=16;
-const SAVE = 'wildcraft.archipelago.v191c';
+const SAVE = 'wildcraft.archipelago.v191d';
 const TAILOR_ID='prosper:tailor';
 const TWO_PI = Math.PI * 2;
 const clamp = (n, low, high) => Math.max(low, Math.min(high, n));
@@ -1200,7 +1200,7 @@ function newState(){
     relics:[],builds:[],depleted:{},mounted:null,dock:{...HOME},camp:{...HOME},won:false,downs:0,nextId:1};
 }
 function loadGame(){
-  const keys=[SAVE,'wildcraft.archipelago.v191b','wildcraft.archipelago.v191a','wildcraft.archipelago.v190','wildcraft.archipelago.v189','wildcraft.archipelago.v188c','wildcraft.archipelago.v188b','wildcraft.archipelago.v188a','wildcraft.archipelago.v188','wildcraft.archipelago.v187b','wildcraft.archipelago.v187a','wildcraft.archipelago.v186','wildcraft.archipelago.v185','wildcraft.archipelago.v184','wildcraft.archipelago.v183','wildcraft.archipelago.v182','wildcraft.archipelago.v181','wildcraft.archipelago.v181b','wildcraft.archipelago.v181a','wildcraft.archipelago.v18','wildcraft.archipelago.v18c','wildcraft.archipelago.v18b','wildcraft.archipelago.v18a','wildcraft.archipelago.v173'];
+  const keys=[SAVE,'wildcraft.archipelago.v191c','wildcraft.archipelago.v191b','wildcraft.archipelago.v191a','wildcraft.archipelago.v190','wildcraft.archipelago.v189','wildcraft.archipelago.v188c','wildcraft.archipelago.v188b','wildcraft.archipelago.v188a','wildcraft.archipelago.v188','wildcraft.archipelago.v187b','wildcraft.archipelago.v187a','wildcraft.archipelago.v186','wildcraft.archipelago.v185','wildcraft.archipelago.v184','wildcraft.archipelago.v183','wildcraft.archipelago.v182','wildcraft.archipelago.v181','wildcraft.archipelago.v181b','wildcraft.archipelago.v181a','wildcraft.archipelago.v18','wildcraft.archipelago.v18c','wildcraft.archipelago.v18b','wildcraft.archipelago.v18a','wildcraft.archipelago.v173'];
   for(const key of keys){
     try{
       const raw=localStorage.getItem(key);
@@ -1306,7 +1306,7 @@ function installGameState(next,showWelcome,loadAudio=false){
   initSchools();particles=[];trails=[];lookoutUntil=0;cooldown=0;swing=0;ouch=0;dashUntil=0;dashReady=0;guardUntil=0;nextWisp=state.elapsed+12;nextFish=0;hungerNotice=false;
   cancelPlacement();toastUntil=0;notices.length=0;noticeCurrent=null;$('toast').textContent='';$('hud').hidden=false;
   closePanel();renderHotbar();updateHud();
-  if(state.routes.passenger){openPanel('passengerVoyage');passengerUntil=nowClock+.65;}
+  if(state.routes.passenger){passengerUntil=nowClock+2;openPanel('passengerVoyage');}
   if(showWelcome)toast('靠近树木采木。营地北侧旧坑道与海岸沉船可深入探索！',5);
 }
 const packSize=()=>PACK_CAPACITIES[state.packTier];
@@ -2894,7 +2894,7 @@ function openPanel(kind,reason=''){
   $('veil').hidden=false;
   if(kind==='title'){
     const exists=!!loadGame();
-    w.innerHTML=`<div class="inside"><div class="eyebrow">1.91c · 移动端适配与角色优化</div><h1>荒野微光</h1><p>选择你的角色外观，踏上群岛旅程。</p><div class="row">${exists?'<button class="press primary" data-act="continue" data-start="true">继续航行</button><button class="press" data-act="restart">新游戏</button>':'<button class="press primary" data-act="new" data-start="true">开始生存</button>'}<button class="press" data-act="saveTransfer">导入／导出存档</button></div><p class="controls">${controlGuide}</p></div>`;
+    w.innerHTML=`<div class="inside"><div class="eyebrow">1.91d · 客船、物品名称与性别外观</div><h1>荒野微光</h1><p>选择你的角色外观，踏上群岛旅程。</p><div class="row">${exists?'<button class="press primary" data-act="continue" data-start="true">继续航行</button><button class="press" data-act="restart">新游戏</button>':'<button class="press primary" data-act="new" data-start="true">开始生存</button>'}<button class="press" data-act="saveTransfer">导入／导出存档</button></div><p class="controls">${controlGuide}</p></div>`;
   }else if(kind==='pause'){
     w.innerHTML=`<div class="inside"><h2>游戏暂停</h2><p>${frameFaultPaused?'游戏遇到异常并已暂停。点击「脱离卡点」重试。':saveFailed?'当前浏览器无法保留进度。':'进度自动保存在这台设备的浏览器里。'}</p><div class="row">${frameFaultPaused?'':'<button class="press primary" data-act="close">继续探索</button>'}<button class="press ${frameFaultPaused?'primary':''}" data-act="movementRecovery">脱离卡点</button><button class="press" data-act="saveTransfer">JSON 存档</button><button class="press primary" data-act="openSettings">完整游戏设置</button><button class="press" data-act="journeyGuide">旅途指南</button><button class="press" data-act="ruralCalendar">行历与天气</button><button class="press" data-act="saveNow">立即手动保存</button><button class="press" data-act="restart">重新开始</button></div><p class="controls">${controlGuide}</p></div>`;
   }else if(kind==='restart'){
@@ -6033,7 +6033,7 @@ function tickEntityRespawns(){
 function buildSaveExportText(fromTitle=false){
   if(!fromTitle){saveProsperPeople();captureIncidentActors();captureAnimalStates();captureBoarding();captureNightActors();refreshJourneyProgress();syncDungeonPersist();syncSchoolSave();state.rural.audio=ruralAudioDefaults();state.displayPrefs=displayPreferences();}
   const data=fromTitle?(loadGame()||state):state;
-  return JSON.stringify({app:'wildcraft',format:SAVE_FORMAT,version:'1.91c',exportedAt:new Date().toISOString(),data},null,2);
+  return JSON.stringify({app:'wildcraft',format:SAVE_FORMAT,version:'1.91d',exportedAt:new Date().toISOString(),data},null,2);
 }
 function validateSavePayload(text){
   const bad=error=>({ok:false,error});
@@ -6044,7 +6044,7 @@ function validateSavePayload(text){
   const coords=q=>record(q)&&Number.isFinite(q.x)&&Number.isFinite(q.y);
   const integer=(n,max)=>Number.isSafeInteger(n)&&n>=0&&n<=max;
   if(!checkSaveTree(parsed))return bad('存档数据过深或包含异常字符。');
-  if(parsed?.data&&(parsed.app!=='wildcraft'||!['1.87b','1.88','1.88a','1.88b','1.88c','1.89','1.90','1.91a','1.91b','1.91c'].includes(parsed.version)||
+  if(parsed?.data&&(parsed.app!=='wildcraft'||!['1.87b','1.88','1.88a','1.88b','1.88c','1.89','1.90','1.91a','1.91b','1.91c','1.91d'].includes(parsed.version)||
     parsed.version!=='1.87b'&&parsed.format!==SAVE_FORMAT))return bad('此游戏版本无法导入。');
   const s=parsed?.data??parsed;
   if(!record(s)||s.v!==1)return bad('不支持的存档格式。');
@@ -6177,7 +6177,7 @@ function exportSaveFile(){
   try{
     const blob=new Blob([txt],{type:'application/json;charset=utf-8'});
     const url=URL.createObjectURL(blob),a=document.createElement('a');
-    a.href=url;a.download=`wildcraft_v1.91c_day${gameDay()+1}.json`;document.body.appendChild(a);a.click();a.remove();
+    a.href=url;a.download=`wildcraft_v1.91d_day${gameDay()+1}.json`;document.body.appendChild(a);a.click();a.remove();
     setTimeout(()=>URL.revokeObjectURL(url),30000);
     setText($('saveStatus'),'已触发 JSON 存档下载（若移动端受限，可直接点「复制 JSON」）。');
   }catch{setText($('saveStatus'),'浏览器限制了文件下载，请点击「复制 JSON」手动保存。');}
@@ -11279,7 +11279,7 @@ function renderSettingsPanel(tabName){
     </div>`;
   }
 
-  $('window').innerHTML=panelFrame('游戏设置（V1.91c）',`<div class="set-tabs" role="tablist">${tabHtml}</div><div class="inside">${body}</div>`);
+  $('window').innerHTML=panelFrame('游戏设置（V1.91d）',`<div class="set-tabs" role="tablist">${tabHtml}</div><div class="inside">${body}</div>`);
   // 绑定滑块事件
   const bindRange=(id,valId,key)=>{
     const el=$(id);if(!el)return;
@@ -17694,7 +17694,7 @@ $('toggleMapBtn')?.addEventListener('click',e=>{
 
 // Deterministic test & diagnostics hook for verification scripts
 window.__WILDCRAFT_V188A__={
-  version:'1.91c',
+  version:'1.91d',
   SceneManager,
   generateDungeonLayout,
   validateDungeonLayout,
@@ -23667,11 +23667,12 @@ let inventorySelection='',inventoryDrop=false,inventoryPress=null,inventorySuppr
 function uiBtn(act,value,label,disabled=false,primary=false,extra=''){
   return `<button type="button" class="press${primary?' primary':''}" data-act="${act}" data-val="${escapeHtml(String(value??''))}"${disabled?' disabled':''}${extra?' '+extra:''}>${escapeHtml(label)}</button>`;
 }
+function invShortName(name){const a=Array.from(String(name||'').replace(/[（(].*$/,''));return a.slice(0,4).join('');}
 function invCell(id,k,count,options={}){
   const name=options.name||items[k][0];
   const durability=Number.isFinite(options.wear)&&items[k][4]?`<i class="inv-dur" style="width:${clamp(options.wear/items[k][4],0,1)*82}%"></i>`:'';
   return `<button type="button" class="inv-cell ${options.style||''}" data-act="invPick" data-val="${escapeHtml(id)}"${options.carried?' data-inventory-carried="'+k+'"':''}
-    title="${escapeHtml(name)}" aria-label="${escapeHtml(name+(count!=null?' ×'+count:''))}" aria-pressed="${inventorySelection===id}">${itemIcon(k)}${count!=null?`<b class="inv-count">${count}</b>`:''}${options.badge?`<span class="inv-badge">${escapeHtml(options.badge)}</span>`:''}${durability}</button>`;
+    title="${escapeHtml(name)}" aria-label="${escapeHtml(name+(count!=null?' ×'+count:''))}" aria-pressed="${inventorySelection===id}">${itemIcon(k)}<em class="inv-name">${escapeHtml(invShortName(name))}</em>${count!=null?`<b class="inv-count">${count}</b>`:''}${options.badge?`<span class="inv-badge">${escapeHtml(options.badge)}</span>`:''}${durability}</button>`;
 }
 function invEmpty(){
   return '<button type="button" class="inv-cell inv-empty" data-act="invBlank" aria-label="空物品格"></button>';
@@ -23964,7 +23965,12 @@ function inventoryBlocksClick(ev){
   inventorySuppress=null;return true;
 }
 
-const HAIR_SHAPES=['轻短发','侧分','齐耳短发','束马尾','双辫','卷发','平头'];
+const HAIR_SHAPES=['轻短发','侧分','齐耳短发','束马尾','双辫','卷发','平头','长直发','丸子头','波浪长发','侧编麻花','短刺发','利落背头','蓬松短卷'];
+const FEMALE_HAIR=[2,3,4,5,7,8,9,10],MALE_HAIR=[0,1,5,6,11,12,13];
+function hairAllowed(type,n){return (type==='female'?FEMALE_HAIR:MALE_HAIR).includes(n);}
+function defaultHair(type){return type==='female'?3:0;}
+function hairChoices(type,current){return HAIR_SHAPES.map((name,i)=>[i,name]).filter(([i])=>hairAllowed(type,i)||i===current);}
+function rowFits(row,idx,type){const g=row[idx];return !g||g==='f'&&type==='female';}
 const HAIR_COLORS=[
   ['乌黑','#332e33','#53474c'],['栗棕','#493031','#805242'],['深褐','#584132','#886144'],
   ['焦糖','#773e2d','#ba6742'],['铜红','#7f3938','#c96e52'],['麦金','#967143','#d6ad63'],
@@ -23990,13 +23996,21 @@ const OUTFITS=[
   ['frost','霜线呢大衣','coat','#4d586c','#8c9bae','#e2dbbd',155,3],
   ['night','星灯礼服','dress','#504875','#9182ad','#efd48a',225,3],
   ['anchor','港湾正装','formal','#3e5063','#778674','#dcc989',255,null],
-  ['pearl','珠光宴会服','formal','#655168','#bc9298','#fbdfa3',298,null]
+  ['pearl','珠光宴会服','formal','#655168','#bc9298','#fbdfa3',298,null],
+  ['sundress','向日葵连衣裙','dress','#d8a93e','#f2d479','#fff0b8',110,null,'f'],
+  ['pleat','海风百褶裙','skirt','#4b7c96','#9cc3d2','#f1ead0',96,null,'f'],
+  ['qun','青岚襦裙','qun','#3f7a6d','#8fc2a8','#e9d89c',140,null,'f'],
+  ['pinafore','面包坊吊带裙','pinafore','#8b5a4b','#d4a587','#f2e2c0',86,null,'f'],
+  ['snowcape','暮雪斗篷裙','dress','#6a4f74','#b497c0','#f1e8d8',178,3,'f'],
+  ['rosegown','玫瑰晚礼裙','gown','#9a3c5a','#d98aa1','#f6d9a0',268,null,'f']
 ];
 const HEADWEAR=[
   ['bare','无帽饰','none',null,0,null],['straw','海草宽檐帽','brim','#cca569',28,null],
   ['cap','帆布鸭舌帽','cap','#82959a',34,null],['beret','裁缝贝雷帽','beret','#a46576',52,null],
   ['winter','毛呢帽','winter','#8e95ac',62,3],['flower','碎花发饰','flower','#eac48f',37,0],
-  ['ribbon','海蓝系带','ribbon','#8bb9cd',43,null],['feather','赤羽帽','brim','#935443',76,2]
+  ['ribbon','海蓝系带','ribbon','#8bb9cd',43,null],['feather','赤羽帽','brim','#935443',76,2],
+  ['bow','蝴蝶结发带','bow','#d58a9a',32,null,'f'],['bonnet','荷叶软帽','bonnet','#e3d1b0',46,null,'f'],
+  ['pin','珍珠发夹','pin','#f1e6c8',58,null,'f']
 ];
 // Keys stay independent of the item catalog, so no cosmetic can be sold or duplicated.
 const OUTFIT_BY_ID=Object.fromEntries(OUTFITS.map(row=>[row[0],row]));
@@ -24004,15 +24018,16 @@ const HAT_BY_ID=Object.fromEntries(HEADWEAR.map(row=>[row[0],row]));
 const NPC_ART={
   'estate:gu':[0,2,3,'copper','cap'],'estate:su':[3,1,2,'garden','straw'],
   'estate:lu':[4,5,4,'fish','cap'],'estate:xu':[2,6,1,'survey','ribbon'],
-  [TAILOR_ID]:[4,4,2,'petal','beret'],
+  [TAILOR_ID]:[8,4,2,'petal','beret'],
   'south:trader:0':[4,2,3,'reed','straw'],'south:trader:1':[6,1,4,'copper','bare'],
   'south:trader:2':[1,7,2,'anchor','cap'],'living:watch':[0,8,5,'survey','winter'],
   'leisure:npc:lorne':[0,8,4,'shore','straw'],'leisure:npc:isa':[5,9,1,'frost','bare'],
-  'leisure:npc:roke':[6,0,3,'maple','cap'],'leisure:npc:mara':[3,5,4,'pearl','ribbon'],
+  'leisure:npc:roke':[6,0,3,'maple','cap'],'leisure:npc:mara':[3,5,4,'pinafore','ribbon'],
   'prosper:wood':[6,4,3,'copper','bare'],'prosper:garden':[4,6,1,'garden','flower'],
   'prosper:shore':[3,2,4,'shore','cap'],'prosper:merchant':[5,7,2,'sun','feather']
 };
 const personLooks=new Map();
+const FEMALE_NPCS=new Set([TAILOR_ID,'estate:su','estate:xu','south:trader:0','leisure:npc:isa','leisure:npc:mara','prosper:garden']);
 function initAppearance(s){
   const current=saveRecord(s.appearance)?s.appearance:{};
   const collect=(list,catalog,always)=>[always,...Object.keys(catalog).filter(id=>id!==always&&Array.isArray(list)&&list.includes(id))];
@@ -24026,8 +24041,9 @@ function namedLook(id){
   let look=personLooks.get(id);
   if(look)return look;
   const seed=Array.from(id).reduce((n,l)=>(n*37+l.charCodeAt(0))>>>0,17);
-  const data=Object.hasOwn(NPC_ART,id)?NPC_ART[id]:[seed%7,seed>>>4&7,(seed>>>9)%6,OUTFITS[seed%13][0],HEADWEAR[(seed>>>12)%6][0]];
-  look={hair:data[0],hairColor:data[1],skin:data[2],outfit:data[3],hat:data[4]};
+  const female=FEMALE_NPCS.has(id)||!Object.hasOwn(NPC_ART,id)&&(seed>>>3)%2===1;
+  const data=Object.hasOwn(NPC_ART,id)?NPC_ART[id]:[(female?FEMALE_HAIR:MALE_HAIR)[seed%(female?FEMALE_HAIR:MALE_HAIR).length],seed>>>4&7,(seed>>>9)%6,OUTFITS[seed%13][0],HEADWEAR[(seed>>>12)%6][0]];
+  look={type:female?'female':'male',hair:data[0],hairColor:data[1],skin:data[2],outfit:data[3],hat:data[4]};
   if(personLooks.size>190)personLooks.clear();
   personLooks.set(id,look);
   return look;
@@ -24056,16 +24072,29 @@ function drawPerson(g,x,y,look,angle,step=0,work=false,scale=2){
     put(-3,1+step,3,1,boot);put(1,1-step,3,1,boot);
   }
   g.translate(0,bob);
+  const skirtShape=female&&['dress','gown','qun','skirt','pinafore'].includes(shape);
   if(female){
+    // Narrow shoulders, defined waist and hips.
     put(-3,-13,6,3,outline);put(-3,-12,6,4,cloth);put(-2,-11,4,5,lit);
+    put(-2,-9,4,2,outline);put(-2,-9,4,1,cloth);
     put(-3,-7,6,2,outline);put(-3,-7,6,1,cloth);
     put(-4,-11,1,3,cloth);put(-4,-8,1,2,shade);
+    if(!skirtShape)put(-2,-8,4,1,trim);
   }else{
+    // Broad shoulders and a straight torso.
     put(-4,-13,8,8,outline);put(-3,-13,6,8,cloth);put(-2,-12,4,5,lit);
-    put(-5,-12,2,4,cloth);put(-5,-8,2,2,shade);
+    put(-5,-13,2,5,cloth);put(-5,-8,2,2,shade);put(-3,-6,6,1,'#3d3228');
   }
   put(3,-12-frontArm,2,4,cloth);put(3,-8-frontArm,2,2,skin);
-  if(shape==='coat'||shape==='dress'||shape==='formal'){
+  if(skirtShape){
+    const narrow=side?1:0,rows=shape==='gown'?[[-8,2,3],[-6,2,4],[-4,3,5],[-1,2,6]]:shape==='skirt'||shape==='pinafore'?[[-8,2,3],[-6,2,4],[-4,1,4]]:[[-8,2,3],[-6,2,4],[-4,2,5],[-2,1,5]];
+    for(const [ry,rh,hw] of rows){put(-(hw-narrow),ry,2*(hw-narrow),rh,cloth);if(ry<-3)put(-1,ry,2,rh,lit);}
+    const last=rows[rows.length-1],lw=last[2]-narrow;put(-lw,last[0]+last[1]-1,2*lw,1,trim);
+    if(shape==='dress'||shape==='gown')put(-2,-9,4,1,trim);
+    if(shape==='qun'){put(-3,-13,6,3,lit);put(-3,-10,6,1,trim);}
+    if(shape==='pinafore'){put(-3,-13,6,3,trim);put(-2,-13,1,5,cloth);put(1,-13,1,5,cloth);}
+    if(shape==='gown'){put(-3,-13,6,1,trim);}
+  }else if(shape==='coat'||shape==='dress'||shape==='formal'){
     put(-4,-8,8,shape==='dress'?6:5,cloth);put(-3,-7,6,3,lit);put(-4,-4,8,1,trim);
   }
   if(shape==='apron'){
@@ -24088,7 +24117,7 @@ function drawPerson(g,x,y,look,angle,step=0,work=false,scale=2){
       put(offset,-19,3,6,hair);put(offset-1,-14+(step?1:0),3,3,hairLight);
     }
     if(style===2||style===4){put(-5,-18,2,4,hair);put(4,-18,2,4,hair);}
-  }else{put(-4,-20,8,6,shade);put(-3,-21,6,7,skin);}
+  }else{put(-4,-20,8,6,shade);put(-3,-21,6,7,skin);put(-2,-15,4,2,skin);}
   if(side)put(4,-18,1,2,skin);
   // Layered silhouettes, fringe and directional face.
   put(-4,-22,8,2,hair);
@@ -24099,14 +24128,28 @@ function drawPerson(g,x,y,look,angle,step=0,work=false,scale=2){
   if(style===3){put(-5,-22,2,7,hair);put(-6,-17,2,4,hairLight);put(-2,-22,4,2,hairLight);}
   if(style===4){put(-5,-20,2,7,hair);put(3,-20,2,7,hair);put(-4,-14,1,3,hairLight);put(4,-14,1,3,hairLight);}
   if(style===5){put(-5,-21,2,5,hair);put(3,-22,2,5,hair);put(-2,-24,2,3,hairLight);put(1,-23,3,3,hairLight);}
-  if(back){put(-3,-21,6,6,hair);put(-2,-20,4,1,hairLight);if(style>=2&&style<=5)put(-2,-16,4,2,hair);}
+  if(style===7){put(-5,-21,2,11,hair);put(3,-21,2,11,hair);put(-5,-14,1,3,hairLight);put(-2,-22,4,1,hairLight);}
+  if(style===8){put(-2,-25,4,3,hairLight);put(-1,-24,2,2,hair);put(-4,-21,1,3,hair);put(3,-21,1,3,hair);}
+  if(style===9){put(-5,-21,2,4,hair);put(-6,-17,2,4,hairLight);put(-5,-13,2,3,hair);put(3,-21,2,4,hair);put(4,-17,2,4,hairLight);put(3,-13,2,3,hair);}
+  if(style===10){put(-4,-21,1,3,hair);put(3,-21,2,2,hair);put(3,-19,2,3,hairLight);put(4,-16,2,3,hair);put(4,-13,2,2,hairLight);}
+  if(style===11){put(-3,-24,1,2,hair);put(-1,-25,2,3,hair);put(1,-24,1,2,hair);put(3,-23,1,1,hair);}
+  if(style===12){put(-4,-21,1,3,hair);put(3,-21,1,3,hair);put(-3,-23,6,1,hairLight);}
+  if(style===13){put(-5,-22,10,3,hair);put(-4,-24,8,2,hairLight);put(-5,-20,2,2,hair);put(3,-20,2,2,hair);}
+  if(back){put(-3,-21,6,6,hair);put(-2,-20,4,1,hairLight);if(style>=2&&style<=5)put(-2,-16,4,2,hair);if(style===7||style===9||style===10)put(-4,-21,8,10,hair);}
   else if(side){put(2,-18,1,1,outline);put(3,-16,1,1,shade);}
-  else{put(-2,-18,1,1,outline);put(1,-18,1,1,outline);put(-1,-16,2,1,shade);}
+  else{
+    put(-2,-18,1,1,outline);put(1,-18,1,1,outline);
+    if(female){put(-3,-19,1,1,outline);put(2,-19,1,1,outline);put(-3,-16,1,1,'#e69a8c');put(2,-16,1,1,'#e69a8c');put(-1,-16,2,1,'#b5575a');}
+    else{put(-3,-19,2,1,hair);put(1,-19,2,1,hair);put(-1,-16,2,1,shade);}
+  }
   if(hat==='brim'){put(-6,-22,12,2,hatColor);put(-4,-25,8,3,hatColor);put(-4,-23,8,1,trim);}
   if(hat==='cap'){put(-4,-24,8,3,hatColor);put(side?1:-4,-22,side?6:9,1,trim);}
   if(hat==='beret'){put(-5,-24,9,2,hatColor);put(-2,-25,5,2,hatColor);put(-4,-22,7,1,trim);}
   if(hat==='winter'){put(-4,-24,8,4,hatColor);put(-4,-21,8,1,trim);put(-1,-26,2,2,trim);}
   if(hat==='ribbon')put(back?-1:3,-21,3,2,hatColor);
+  if(hat==='bow'){put(back?-3:2,-24,2,3,hatColor);put(back?0:5,-24,2,3,hatColor);put(back?-1:4,-23,1,1,trim);put(-4,-22,8,1,hatColor);}
+  if(hat==='bonnet'){put(-5,-24,10,3,hatColor);put(-6,-22,2,5,hatColor);put(4,-22,2,5,hatColor);put(-4,-22,8,1,trim);}
+  if(hat==='pin'){put(3,-23,2,2,hatColor);put(3,-25,1,2,'#fff6d4');put(4,-24,1,1,'#fff6d4');}
   if(hat==='flower'){put(2,-23,3,3,hatColor);put(3,-24,1,5,hatColor);put(3,-22,1,1,'#f9a67f');}
   g.restore();
 }
@@ -24201,7 +24244,7 @@ function renderWardrobe(){
   let choices='',details='';
   if(rows.length){
     const outfit=wardrobeTab==='outfit',choose=rows.find(row=>pick[0]===wardrobeTab&&row[0]===pick[1]);
-    choices=rows.filter(row=>look[property].includes(row[0])||shop&&wardrobeAvailable(row,wardrobeTab)).map(row=>{
+    choices=rows.filter(row=>look[property].includes(row[0])||shop&&wardrobeAvailable(row,wardrobeTab)&&rowFits(row,outfit?8:6,look.type)).map(row=>{
       const [id,name]=row,owned=look[property].includes(id),price=outfit?wardrobePrice(row):hatPrice(row);
       const color=outfit?row[3]:(row[3]||'#4b655d');
       return `<button class="look-choice press" data-act="lookPick" data-val="${wardrobeTab}|${id}" aria-pressed="${id===(choose?.[0]||look[wardrobeTab])}">
@@ -24211,11 +24254,11 @@ function renderWardrobe(){
       const owned=look[property].includes(choose[0]),price=outfit?wardrobePrice(choose):hatPrice(choose);
       details='<p class="look-name">'+choose[1]+'</p>'+
         (owned?uiBtn('lookWear',wardrobePick,'换上',look[wardrobeTab]===choose[0],true):
-          shop&&wardrobeAvailable(choose,wardrobeTab)?uiBtn('lookBuy',wardrobePick,'购买入藏 · '+price+' 金',state.v173.gold<price,true):'');
+          shop&&wardrobeAvailable(choose,wardrobeTab)&&rowFits(choose,outfit?8:6,look.type)?uiBtn('lookBuy',wardrobePick,'购买入藏 · '+price+' 金',state.v173.gold<price,true):'');
     }
   }else{
     const palette=wardrobeTab==='hair'?HAIR_SHAPES:wardrobeTab==='hairColor'?HAIR_COLORS:SKIN_COLORS;
-    choices=palette.map((entry,n)=>{
+    choices=palette.map((entry,n)=>[entry,n]).filter(([,n])=>wardrobeTab!=='hair'||hairAllowed(look.type,n)||look.hair===n).map(([entry,n])=>{
       const name=Array.isArray(entry)?entry[0]:entry;
       return `<button class="look-choice press" data-act="lookPick" data-val="${wardrobeTab}|${n}" aria-pressed="${pick[0]===wardrobeTab?Number(pick[1])===n:look[wardrobeTab]===n}">
         ${Array.isArray(entry)?'<i class="look-swatch pigment" style="--swatch:'+entry[1]+'"></i>':''}<span>${name}</span></button>`;
@@ -24225,7 +24268,7 @@ function renderWardrobe(){
   const buttons=Object.entries(LOOK_TABS).map(([id,label])=>uiBtn('lookTab',id,label,false,wardrobeTab===id)).join('');
   const w=$('window'),scroll=w.querySelector('.wardrobe-items')?.scrollTop||0;
   w.innerHTML=panelFrame(wardrobeShop?'晴日裁缝铺 · 林夏（裁缝）':'换装',`<div class="inside wardrobe">
-    <div class="wardrobe-label">${wardrobeShop?(shop?'现有 '+state.v173.gold+' 金 · 可先试穿':'已打烊。可整理已有收藏。'):'试穿预览'}<span>服装 ${look.outfits.length}/${OUTFITS.length} · 帽饰 ${look.hats.length-1}/${HEADWEAR.length-1}</span></div>
+    <div class="wardrobe-label">${wardrobeShop?(shop?'现有 '+state.v173.gold+' 金 · 可先试穿':'已打烊。可整理已有收藏。'):'试穿预览'}<span>服装 ${look.outfits.length}/${OUTFITS.filter(r=>look.outfits.includes(r[0])||rowFits(r,8,look.type)).length} · 帽饰 ${look.hats.length-1}/${HEADWEAR.filter(r=>look.hats.includes(r[0])||rowFits(r,6,look.type)).length-1}</span></div>
     ${wardrobeTypeControls()}<div class="inventory-actions">${buttons}</div><div class="wardrobe-columns"><div class="wardrobe-items">${choices}</div>
     <section class="wardrobe-view"><canvas width="144" height="130" id="lookPreview" aria-label="角色外观预览"></canvas>
     <div class="inventory-actions">${uiBtn('lookTurn','','转身')}${uiBtn('lookPose','',wardrobePose===0?'试走':wardrobePose===1?'工作':'待机')}</div>
@@ -24245,7 +24288,7 @@ function wardrobeAction(act,value){
   if(part==='outfit'||part==='hat'){
     const outfits=part==='outfit',row=(outfits?OUTFIT_BY_ID:HAT_BY_ID)[key];
     const owned=outfits?look.outfits:look.hats,shop=wardrobeShop&&tailorAccess();
-    if(!row||!owned.includes(key)&&!(shop&&wardrobeAvailable(row,part)))return true;
+    if(!row||!owned.includes(key)&&!(shop&&wardrobeAvailable(row,part)&&rowFits(row,outfits?8:6,look.type)))return true;
     if(act==='lookWear'&&owned.includes(key)){look[part]=key;save();}
     if(act==='lookBuy'&&value===wardrobePick&&!owned.includes(key)&&shop){
       const price=outfits?wardrobePrice(row):hatPrice(row);
@@ -24447,6 +24490,7 @@ function layoutAxis(){
 
 const CHARACTER_TYPES={male:'男性外观',female:'女性外观'};
 const STARTER_OUTFITS=['wander','linen','shore'];
+function starterOutfits(type){return type==='female'?[...STARTER_OUTFITS,'sundress','pleat','pinafore']:STARTER_OUTFITS;}
 let characterDraft=null,characterReturn='title',characterDirection=0,characterPose=0;
 function starterAppearance(type='male'){
   return {type,hair:type==='female'?3:0,hairColor:1,skin:1,outfit:'wander',outfits:['wander'],hat:'bare',hats:['bare']};
@@ -24474,8 +24518,8 @@ function renderCharacterCreation(){
     <div class="character-options"><div class="inventory-actions" role="group" aria-label="角色外观类型">
       ${Object.entries(CHARACTER_TYPES).map(([key,label])=>uiBtn('characterType',key,label,false,d.type===key,'aria-pressed="'+(d.type===key)+'"')).join('')}
     </div><div class="character-fields">
-      ${select('发型','hair',pairs(HAIR_SHAPES))}${select('发色','hairColor',pairs(HAIR_COLORS))}
-      ${select('肤色','skin',pairs(SKIN_COLORS))}${select('初始服装','outfit',STARTER_OUTFITS.map(k=>[k,OUTFIT_BY_ID[k][1]]))}
+      ${select('发型','hair',hairChoices(d.type,d.hair))}${select('发色','hairColor',pairs(HAIR_COLORS))}
+      ${select('肤色','skin',pairs(SKIN_COLORS))}${select('初始服装','outfit',starterOutfits(d.type).map(k=>[k,OUTFIT_BY_ID[k][1]]))}
     </div><p class="cards-help">两种外观共用相同的属性、装备和故事。</p></div>
     <div class="character-preview"><canvas id="characterPreview" width="138" height="118" aria-label="像素角色预览"></canvas>
       <div class="inventory-actions">${uiBtn('characterTurn','','转身 · '+['正面','左侧','背面','右侧'][characterDirection])}${uiBtn('characterPose','',characterPose?'待机':'试动作')}</div>
@@ -24485,7 +24529,7 @@ function renderCharacterCreation(){
 function characterSelect(event){
   if(mapMode!=='createCharacter'||!characterDraft)return;
   const control=event.target,key=control.dataset.characterField;
-  if(key==='outfit'&&STARTER_OUTFITS.includes(control.value)){characterDraft.outfit=control.value;paintCharacterPreview();return;}
+  if(key==='outfit'&&starterOutfits(characterDraft.type).includes(control.value)){characterDraft.outfit=control.value;paintCharacterPreview();return;}
   const range={hair:HAIR_SHAPES.length,hairColor:HAIR_COLORS.length,skin:SKIN_COLORS.length};
   const n=Number(control.value);
   if(Object.hasOwn(range,key)&&Number.isInteger(n)&&n>=0&&n<range[key]){
@@ -24502,7 +24546,11 @@ function mobileInterfaceAction(act,value){
   }
   if(act==='wardrobeType'){
     if(mapMode==='wardrobe'&&Object.hasOwn(CHARACTER_TYPES,value)){
-      state.appearance.type=value;save();wardrobePaint();syncWardrobeTypes();
+      const look=state.appearance;look.type=value;
+      if(!hairAllowed(value,look.hair))look.hair=defaultHair(value);
+      if(!rowFits(OUTFIT_BY_ID[look.outfit]||OUTFITS[0],8,value))look.outfit='wander';
+      if(!rowFits(HAT_BY_ID[look.hat]||HEADWEAR[0],6,value))look.hat='bare';
+      save();renderWardrobe();
     }
     return true;
   }
@@ -24515,8 +24563,9 @@ function mobileInterfaceAction(act,value){
     return true;
   }
   if(act==='characterType'&&Object.hasOwn(CHARACTER_TYPES,value)){
-    if(characterDraft.hair===starterAppearance(characterDraft.type).hair)characterDraft.hair=starterAppearance(value).hair;
     characterDraft.type=value;
+    if(!hairAllowed(value,characterDraft.hair))characterDraft.hair=defaultHair(value);
+    if(!starterOutfits(value).includes(characterDraft.outfit))characterDraft.outfit='wander';
   }
   if(act==='characterTurn')characterDirection=(characterDirection+1)%4;
   if(act==='characterPose')characterPose=characterPose?0:1;
@@ -25248,7 +25297,7 @@ function completePassenger(){
   }finally{passengerCommit=false;}
   if(hadPanel)closePanel();
   renderHotbar();save();
-  toast(land?'已抵达'+LIVING_PORTS[t.to].name+'。':'靠泊受阻，客船已退票。',3);
+  toast(land?'已抵达'+LIVING_PORTS[t.to].name+'。'+(state.builds.some(isBoat)?'你的船仍停在出发港。':''):'靠泊受阻，客船已退票。',3);
   return true;
 }
 function passengerAction(act,to){
@@ -25273,14 +25322,32 @@ function passengerAction(act,to){
     state.routes.passenger=null;estateGold(q.fee);toast('无法保存船票，请检查浏览器存档。');return true;
   }
   abortFishingContest('结束岸边活动，登上了客船。');
-  stopInput();cancelPlacement();passengerUntil=nowClock+1.35;
+  stopInput();cancelPlacement();passengerUntil=nowClock+3.6;
   openPanel('passengerVoyage');return true;
+}
+function ferryScene(){
+  return `<svg class="ferry-art" viewBox="0 0 320 150" role="img" aria-label="客船正在海上航行">
+    <defs><linearGradient id="ferrySky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#27494f"/><stop offset="1" stop-color="#5d8a88"/></linearGradient></defs>
+    <rect width="320" height="150" fill="url(#ferrySky)"/><circle cx="262" cy="34" r="14" fill="#f3d98c" opacity=".85"/>
+    <g class="ferry-boat">
+      <path d="M70 92h180l-22 28H96z" fill="#6b4630"/><path d="M78 92h164l-4 7H82z" fill="#96663f"/>
+      <rect x="150" y="30" width="4" height="62" fill="#4a3526"/><rect x="206" y="44" width="3" height="48" fill="#4a3526"/>
+      <path d="M154 34l52 52h-52z" fill="#efe6c6"/><path d="M154 36l-40 50h40z" fill="#d9cfa9"/><path d="M209 48l30 40h-30z" fill="#efe6c6"/>
+      <rect x="112" y="76" width="22" height="16" fill="#8a5b3a"/><rect x="117" y="80" width="5" height="6" fill="#f1d58b"/><rect x="125" y="80" width="5" height="6" fill="#f1d58b"/>
+      <path d="M154 30l16 5-16 5z" fill="#d55b4f"/>
+    </g>
+    <g class="ferry-wave a"><path d="M-20 118q20-10 40 0t40 0 40 0 40 0 40 0 40 0 40 0 40 0 40 0 40 0v40h-360z" fill="#2f6a78"/></g>
+    <g class="ferry-wave b"><path d="M-20 130q20-9 40 0t40 0 40 0 40 0 40 0 40 0 40 0 40 0 40 0 40 0v30h-360z" fill="#244f5c"/></g>
+  </svg>`;
 }
 function renderPassengerVoyage(){
   const t=state.routes.passenger;
   if(!t){closePanel();return;}
-  $('window').innerHTML=panelFrame('乘坐客船',`<div class="inside route-voyage"><span aria-hidden="true">⛵</span>
-    <p>${LIVING_PORTS[t.from].name} → ${LIVING_PORTS[t.to].name}</p><p>水手正在引船进港。</p></div>`,false);
+  const dur=Math.max(.6,passengerUntil-nowClock).toFixed(2);
+  $('window').innerHTML=panelFrame('乘坐客船',`<div class="inside route-voyage">${ferryScene()}
+    <p><strong>${LIVING_PORTS[t.from].name} → ${LIVING_PORTS[t.to].name}</strong></p>
+    <p>已支付 ${t.fee} 金，客船正在航行，约 ${Math.max(1,Math.ceil(t.duration/LIVING_HOUR))} 小时抵达。</p>
+    <div class="ferry-progress" style="--dur:${dur}s"><i></i></div></div>`,false);
 }
 
 const CARGO_MAX=20,CARGO_OPEN_MAX=8;
