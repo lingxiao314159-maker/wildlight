@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-XKDgo/Y8N5LvjOPfnh303vkF/D6MH4E4g33QeOKHsLs='; style-src 'unsafe-inline'; img-src data: blob:; base-uri 'none'; object-src 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-AMV6ixLej/5y+gcWHGk5IL1+N2lF6y/9JBNiq6fDA1I='; style-src 'unsafe-inline'; img-src data: blob:; base-uri 'none'; object-src 'none'; form-action 'none'">
 <meta name="theme-color" content="#0d2224">
 <title>荒野微光 V1.91d · 客船、物品名称与性别外观</title>
 <meta name="description" content="《荒野微光》V1.91d《客船、物品名称与性别外观》。按真实视口探索群岛，自选男女像素角色外观，随时制作所需装备。">
@@ -848,7 +848,7 @@ let wreckSite=null,mineBank=null,schools=[],trails=[];
 let vw=0,vh=0,dpr=1,zoom=1,nowClock=0,previous=0,hudAt=0,saveAt=0,saveFailed=false;
 let muted=false,sound=null,cooldown=0,swing=0,ouch=0,nextFish=0,nextWisp=0,hungerNotice=false;
 let navNotice='',sceneMoving=false;
-let dashUntil=0,dashReady=0,dashAngle=0,guardUntil=0;
+let dashUntil=0,dashReady=0,dashAngle=0,guardUntil=0,counterFxUntil=0,parryCounterBusy=false;
 const planted=['sapling','seed','rootPlot','dryPlot','fruitSapling','silverSapling'];
 const cropTypes=['seed','rootPlot','dryPlot','fruitSapling','silverSapling'];
 const fishTraps=['fishTrap','doubleTrap'];
@@ -3756,7 +3756,16 @@ $('hotbar').addEventListener('click',e=>{const b=e.target.closest('[data-slot]')
 $('pack').onclick=()=>openPanel('bag');$('craft').onclick=()=>openPanel('craft');$('tasks').onclick=()=>openPanel('taskControl');$('pause').onclick=()=>{save();openPanel('pause');};$('map').onclick=()=>openPanel('map');
 $('fishHud').addEventListener('click',e=>{if(e.target.closest('[data-fish-quit]'))abortFishingContest('已主动退出钓鱼比赛。');});
 $('livingOpen').onclick=()=>openPanel('living');
-$('interact').onclick=interact;$('dodge').onclick=dodge;
+$('interact').onclick=interact;
+let dodgePressAt=-1;
+$('dodge').addEventListener('pointerdown',e=>{
+  if(e.button!==0||editingLayout)return;
+  e.preventDefault();unlockSound();dodgePressAt=e.timeStamp;dodge();
+});
+$('dodge').addEventListener('click',e=>{
+  if(dodgePressAt>=0&&e.timeStamp-dodgePressAt<900){dodgePressAt=-1;return;}
+  dodge();
+});
 $('deck').onclick=fireDeck;$('deckMode').onclick=switchDeck;
 $('cycleTarget').onclick=cycleInteractTarget;
 $('toggleHotbar').onclick=()=>{const hb=$('hotbar'),c=hb.classList.toggle('collapsed');$('toggleHotbar').textContent=c?'▴':'▾';};
@@ -4347,6 +4356,11 @@ function drawPlayer(){
   else if(k==='bow'){line(ctx,9,5,17,9,'#ac7c50',2);line(ctx,17,9,9,14,'#ac7c50',2);line(ctx,9,5,9,14,'#eef0c4');}
   else if(['axe','ironAxe','pick','ironPick','obsidianPick','rod','hookRod','pry','hammer','warHammer','knife','venomDagger','shovel','shears','obsidianKnife','reedNet'].includes(k)){
     line(ctx,3,8,16,8,'#b38a57',2);if(!['rod','hookRod'].includes(k)){rect(ctx,13,4,k==='warHammer'?12:k==='hammer'?8:5,7,k==='obsidianKnife'||k==='obsidianPick'?'#8e7b99':['pry','knife'].includes(k)?'#d49462':'#b5bdb3');}
+  }
+  if(counterFxUntil>state.elapsed){
+    const f=Math.min(1,(counterFxUntil-state.elapsed)/.28);
+    ctx.strokeStyle=`rgba(158,255,241,${f})`;ctx.lineWidth=5;ctx.lineCap='round';ctx.beginPath();ctx.arc(0,0,38,-1.05,1.05);ctx.stroke();
+    ctx.strokeStyle=`rgba(255,255,255,${f*.9})`;ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,31,-.8,.8);ctx.stroke();ctx.lineCap='butt';
   }
   if(swing>0){ctx.strokeStyle=`rgba(248,225,170,${swing*3})`;ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,['spear','ironSpear','fangSpear','frostSpear','runeHalberd','bow','abyssHarpoon'].includes(k)?36:27,-.8,.8);ctx.stroke();}
   ctx.restore();
@@ -16064,7 +16078,7 @@ function resetCombatInput(){
 }
 function resetCombatEncounter(){
   resetCombatInput();
-  Object.assign(combatInput,{brokenUntil:0,rearmAt:0,guardLockUntil:0,counter:null,engagedUntil:0,noticeAt:0,scene:combatScene()});
+  Object.assign(combatInput,{brokenUntil:0,rearmAt:0,guardLockUntil:0,counter:null,engagedUntil:0,noticeAt:0,scene:combatScene()});counterFxUntil=0;parryCounterBusy=false;
 }
 function beginGuard(eventTime){
   if(!landCombatReady()||state.elapsed<Math.max(combatInput.brokenUntil,combatInput.guardLockUntil)||dashUntil>state.elapsed||state.player.stamina<STAMINA.parry)return false;
@@ -16150,12 +16164,40 @@ function executePlayerAttack(targets,move=null){
   beep(valid.length?117:210,valid.length?.10:.05,valid.length?'square':'sine');
   return true;
 }
+// Precise-parry riposte: one automatic strike at 200% of the current weapon's normal damage.
+const COUNTER_MOVE=Object.freeze({damage:2});
+function counterWeaponKey(){
+  const k=held();
+  if(Object.hasOwn(PLAYER_WEAPONS,k))return k;
+  const hand=state.gear.hand?.key;
+  return hand&&Object.hasOwn(PLAYER_WEAPONS,hand)?hand:'bare';
+}
+function prepareParryCounter(source){
+  const p=state.player;
+  if(!source||source.hp<=0||source.respawn||!visibleEntity(source))return null;
+  const k=counterWeaponKey(),weapon=weaponStats(k);
+  // Ranged weapons riposte at bare-hand distance: no counter from across the map.
+  const reach=weapon.ranged?PLAYER_WEAPONS.bare.reach:weapon.reach;
+  if(dist(p,source)>reach||!clearSight(p,source))return null;
+  return {k,weapon,hit:enemyImpact(source,p,weapon,COUNTER_MOVE,false,true)};
+}
+function applyParryCounter(source,pre){
+  if(parryCounterBusy||!pre||source.hp<=0||source.respawn)return false;
+  parryCounterBusy=true;
+  try{
+    face(source);swing=Math.max(swing,.24);counterFxUntil=state.elapsed+.28;
+    strikeEnemy(source,state.player,pre.k,pre.weapon,COUNTER_MOVE,null,pre);
+    journeyCount('counter',1);
+    beep(520,.06,'square');
+  }finally{parryCounterBusy=false;}
+  return true;
+}
 function enemyImpactPoint(e,p){
   const towardPlayer=Math.atan2(p.y-e.y,p.x-e.x);
   return angleDelta(e.angle,towardPlayer);
 }
 // A configuration-only damage calculation, shared by all encounter maps.
-function enemyImpact(e,p,weapon,move,counter){
+function enemyImpact(e,p,weapon,move,counter,flat=false){
   const traits=enemyTactics(e),now=state.elapsed;
   const recovery=e.combat==='recover'&&now<e.until,angle=enemyImpactPoint(e,p);
   const exposed=!!traits.core&&(recovery||e.armorOpenUntil>now);
@@ -16169,7 +16211,7 @@ function enemyImpact(e,p,weapon,move,counter){
   if(k==='runeHalberd'&&counter)bonus*=1.25;
   const base=weapon.damage*(move?.damage||1)*bonus;
   const skill=weapon.ranged?1:Math.min(1.5,1+(skillLevel('combat')-1)*.035)*(hasBuff('rageSalve')?1.29:1);
-  const timing=Math.min(2.25,weak+(counter?.33:0)+(recovery&&weak===1?.1:0));
+  const timing=flat?weak:Math.min(2.25,weak+(counter?.33:0)+(recovery&&weak===1?.1:0));
   const toughness=e.eliteTraits?.includes('tough')?.85:1;
   const factor=guarded?1-traits.armor*(1-pierce):1;
   return {damage:Math.max(1,Math.round(base*skill*timing*toughness*factor)),weak,guarded,pierce};
@@ -16182,16 +16224,16 @@ function stunEnemy(e,seconds){
   e.staggerSafeUntil=e.until+1.55;e.staggerUntil=e.until;
   return true;
 }
-function strikeEnemy(e,p,k,weapon,move,ammo){
+function strikeEnemy(e,p,k,weapon,move,ammo,auto=null){
   const t=state.elapsed;
   const opportunity=combatInput.counter;
-  const counter=!!opportunity&&opportunity.target===e&&opportunity.until>t;
+  const counter=!auto&&!!opportunity&&opportunity.target===e&&opportunity.until>t;
   if(counter){combatInput.counter=null;journeyCount('counter',1);}
-  const hit=enemyImpact(e,p,weapon,move,counter);
+  const hit=auto?auto.hit:enemyImpact(e,p,weapon,move,counter);
   e.hp-=hit.damage;e.hitFlash=t+.16;e.aggro=true;ruralCue('hit');
   if(combatProfile[e.type]||WILD_BEHAVIOUR[e.type]&&e.type!=='snowFox')engageCombat();
-  const label=counter?' 反击':hit.weak===2?' 核心':hit.weak>1?' 弱点':hit.guarded?' 护甲':'';
-  spawnDamageText(e.x,e.y-22,hit.damage+label,hit.weak>1||counter?'#ffe27a':hit.guarded?'#b7c2c4':'#fff5e6');
+  const label=auto?' 精准反击':counter?' 反击':hit.weak===2?' 核心':hit.weak>1?' 弱点':hit.guarded?' 护甲':'';
+  spawnDamageText(e.x,e.y-22,hit.damage+label,auto?'#9ffff0':hit.weak>1||counter?'#ffe27a':hit.guarded?'#b7c2c4':'#fff5e6');
   awardSkill('combat',1);discover('animals',e.type);
   makeParticles(e.x,e.y,hit.weak>1?'#ffd477':'#f5ba8b',hit.weak>1?11:7);
   if(e.hp<=0){finishDefeat(e);return;}
@@ -16233,11 +16275,13 @@ function resolvePlayerDamage(source,damage,info={}){
       combatInput.guardAt=-Infinity;ouch=.16;journeyCount('parry',1);
       if(shield)wear(k,1);
       if(source&&!info.projectile){
+        const riposte=prepareParryCounter(source);
         const traits=enemyTactics(source);
         if(!traits.great||kind==='normal'){
           stunEnemy(source,traits.great?.46:kind==='heavy'?.51:.71);
         }
         if(source.hp>0&&!source.respawn)combatInput.counter={target:source,until:t+1.15};
+        if(riposte)applyParryCounter(source,riposte);
       }
       makeParticles(p.x,p.y,'#a8f4ea',14);beep(690,.12,'triangle');beep(1080,.08);
       spawnDamageText(p.x,p.y-28,'精准格挡','#99fff1');triggerShake(2,.08);
