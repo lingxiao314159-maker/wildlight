@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-sr+DHYMsgdXuHWMZtc2sHH6IpLs3MEzatb5mJBGGkSs='; style-src 'unsafe-inline'; img-src data: blob:; base-uri 'none'; object-src 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-Y8XIropPzhCxFJz80Ve9ojnKOX6jQsP4lyvwAPIIFq0='; style-src 'unsafe-inline'; img-src data: blob:; base-uri 'none'; object-src 'none'; form-action 'none'">
 <meta name="theme-color" content="#0d2224">
 <title>荒野微光 V2.0.2b · 旅途的指引</title>
 <meta name="description" content="《荒野微光》V2.0.2b《旅途的指引》。和米娅一起初次出海，经营牧场，参与港湾建设，定制船只与家园。">
@@ -1990,6 +1990,8 @@ function interactionTarget(options=candidates()){
 }
 function landing(){
   const p=state.player,c=Math.floor(p.x/T),r=Math.floor(p.y/T),options=[];
+  const berth=validMooring(boat());
+  if(berth&&miaDestination(berth.bank))return berth.bank;
   for(let j=r-2;j<=r+2;j++)for(let i=c-2;i<=c+2;i++){
     const q=point(i,j);
     if(!lowTide()&&tile(i,j)===mineIsland.i+1&&j>=mineBank.r-1&&Math.abs(i-mineBank.c)<5)continue;
@@ -16423,7 +16425,10 @@ function makeFast(ship,id){
   if(atLessonHarbor(choice.b))travelCredit('harbor','dock');
   ship.moored=choice.b.id;ship.anchored=true;ship.fullSpeed=false;
   serviceBerthId=choice.b.id;
-  save();renderHarbor();toast('已系缆停泊。');
+  const delivered=finishMiaAtMooring(ship);
+  save();renderHarbor();
+  if(delivered)toast(MIA_ARRIVAL_NOTICE,4);
+  else toast('已系缆停泊。');
 }
 function castOff(ship){
   if(!ship?.moored||ship!==boat())return;
@@ -16605,6 +16610,10 @@ function renderHarbor(){
       body+='<div class="inventory-actions" style="margin-bottom:6px">'+uiBtn('v194FerryOpen',b.id,'⛵ 登上客船 / 跨岛客运',false,true)+'</div>';
     }
   }
+  if(b?.bank&&boat()===ship&&state.archipelago.mia.stage==='done'&&
+     state.travelGuide.story.welcome==='pending'&&miaDestination(b.bank)){
+    body+='<p class="cards-help" role="status">护送米娅回家 · 已完成。可以登岸前往灯塔湾。</p>';
+  }
   if(ship){
     const d=validMooring(ship),loss=passiveRate(ship);
     body+='<article class="entry"><strong>'+itemIcon(ship.type)+items[ship.type][0]+'</strong><p>耐久 '+ship.hp.toFixed(1)+' / '+ship.maxHp.toFixed(1)+
@@ -16645,8 +16654,7 @@ function handleNavalClick(act,val){
 function leaveShip(ship,q){
   state.journey.voyage=null;
   if(ship!==boat()||!q||!canTravel(q.x,q.y))return false;
-  const wasDelivered=state.travelGuide.story.landing;
-  miaDisembark(ship,q);
+  const delivered=miaDisembark(ship,q);
   v201GuideOnLand(ship,q);cancelNavalJob(ship);
   state.mounted=null;
   if(ship.type==='flagship'&&regionAt(q.x,q.y)===weatherIsland)state.flags.flagshipArrival=true;
@@ -16655,10 +16663,7 @@ function leaveShip(ship,q){
   if(tileAt(q.x,q.y))state.dock=q;
   unloadAnimals(ship,q);sailEscortLanding(ship,q);beep(310);save();
   if(mapMode!=='play')closePanel();
-  if(!wasDelivered&&state.travelGuide.story.landing){
-    toast('米娅：「到家了，谢谢你！」护送完成 · 30 金币、肉干 ×2',4);
-    return true;
-  }
+  if(delivered){toast(MIA_ARRIVAL_NOTICE,4);return true;}
   toast(ship.moored?'已登岸，船仍系在泊位。':ship.anchored?'已上岸，小锚已放下。':'已登岸，船留在水面。');
   return true;
 }
@@ -40791,21 +40796,23 @@ function miaEmbark(ship,bank){
   startMiaProtection(ship,bank);
   placeMia(ship);miaTalkAt=state.elapsed+4;miaHintAt=state.elapsed+12;
 }
-function miaDestination(q,ship){
-  const bank=publicBank('port');
-  return regionAt(q.x,q.y)?.i===17&&bank&&dist(q,bank)<=T*6&&dist(q,ship)<=T*5&&
-    !!livingFootpath(q,bank,17).length;
+function miaDestination(q){
+  return !!q&&regionAt(q.x,q.y)===tradeIsland&&canTravel(q.x,q.y);
+}
+function finishMiaAtMooring(ship){
+  if(state.archipelago.mia.stage!=='aboard'||ship.miaPassenger!==MIA_ID)return false;
+  const bank=validMooring(ship)?.bank;
+  return miaDestination(bank)&&miaDisembark(ship,bank);
 }
 function miaDisembark(ship,q){
   const m=state.archipelago.mia;
-  if(m.stage!=='aboard'||m.ship!==ship.id||ship.miaPassenger!==MIA_ID)return;
+  if(m.stage!=='aboard'||m.ship!==ship.id||ship.miaPassenger!==MIA_ID)return false;
   delete ship.miaPassenger;
-  const arrival=miaDestination(q,ship)&&m.origin&&regionAt(m.origin.x,m.origin.y)?.i!==17&&
-    m.miles>=T*8&&dist(m.origin,ship)>=T*6;
+  const arrival=miaDestination(q);
   Object.assign(m,{stage:arrival?'arrived':'ready',ship:null,miles:0,last:null,until:state.time+DAY*3});
-  placeMia(q);miaPath=[];
-  endMiaProtection();
-  if(arrival)completeMiaLanding(q);
+  placeMia(q);
+  if(arrival)return completeMiaLanding(q);
+  miaPath=[];endMiaProtection();return false;
 }
 function tickMiaEscort(dt){
   const m=state.archipelago.mia;
@@ -40813,6 +40820,9 @@ function tickMiaEscort(dt){
   const rec=state.v195c.npcs[MIA_ID],p=state.player,ship=boat();
   if(m.stage==='aboard'){
     if(!ship||ship.id!==m.ship||ship.hp<=0||ship.miaPassenger!==MIA_ID){interruptMiaVoyage();return;}
+    if(ship.moored&&finishMiaAtMooring(ship)){
+      save();toast(MIA_ARRIVAL_NOTICE,4);return;
+    }
     const delta=m.last?dist(m.last,ship):0;
     if(delta>0&&delta<30&&!state.boarding&&!state.dungeons.active){
       m.miles+=delta;m.last={x:ship.x,y:ship.y};
@@ -40821,9 +40831,16 @@ function tickMiaEscort(dt){
     tickMiaVoyageStory(m,ship);
     if(m.miles>T&&taskGuideLevel()!=='free'&&state.elapsed>=miaHintAt){
       const near=dist(ship,publicBank('port')||tradeIsland)<T*12;
-      toast(near?'米娅：从灯塔湾西侧码头附近找一处能登岸的地方。':'米娅：灯塔湾在南面，绕开浅礁再沿岸走。',3);
+      toast(near?'米娅：到灯塔湾了。我们可以在码头系缆，也可以找一片能登岸的海岸。':'米娅：灯塔湾在南面，绕开浅礁再沿岸走。',3);
       miaHintAt=state.elapsed+(taskGuideLevel()==='full'?28:65);
     }
+    return;
+  }
+  // Older saves can have both characters ashore with the escort still active.
+  if((m.stage==='arrived'||(m.stage==='ready'&&m.accepted&&m.origin))&&
+     estateLandHere()&&!isFerryPassenger()&&miaDestination(p)&&regionAt(rec.x,rec.y)===tradeIsland){
+    m.stage='arrived';
+    if(completeMiaLanding(p)){save();toast(MIA_ARRIVAL_NOTICE,4);}
     return;
   }
   if(state.time>=m.until){sendMiaHome();save();return;}
@@ -40846,7 +40863,7 @@ function miaGuide(lv=taskGuideLevel()){
   if(m.stage==='done')return '已护送米娅到家。';
   if(m.stage==='returned')return '米娅已自行安排返程。';
   if(m.stage==='arrived')return lv==='free'?'米娅还有话想说。':'在灯塔湾岸上与米娅交谈。';
-  if(m.stage==='aboard')return lv==='full'?'驾驶当前船只到灯塔湾西岸码头附近并登岸。靠港面板里可以选择「登岸」。':lv==='light'?'向南寻找灯塔湾的码头。':'米娅在船上。';
+  if(m.stage==='aboard')return lv==='full'?'驾驶当前船只到灯塔湾，在码头系缆或在灯塔湾海岸登岸。':lv==='light'?'向南寻找灯塔湾的码头。':'米娅在船上。';
   if(m.stage==='waiting')return lv==='full'?'在微光营地与米娅交谈，选择是否帮忙。':lv==='light'?'营地有位找不到回家航路的农夫。':'米娅提到了南边的村庄。';
   if(lv==='free')return '「有船的话，就沿海岸往南吧。」';
   if(lv==='light')return '备好能航行的船，带米娅到岸边一道登船。';
@@ -40897,14 +40914,8 @@ function miaAction(value){
     save();renderMiaEscort();return;
   }
   if(value==='decline'&&m.stage==='waiting'){state.travelGuide.story.nextCry=state.elapsed+90;save();closePanel();return;}
-  if(value==='finish'&&m.stage==='arrived'&&regionAt(state.player.x,state.player.y)?.i===17){
-    m.stage='done';
-    const rec=state.v195c.npcs[MIA_ID];rec.state='home';state.v195c.lastSchedHour=-1;
-    estateGold(30);yieldItem('jerky',2,state.player);
-    adjustV195cAffinity(MIA_ID,3,'在微光营地相遇后，一起航回了灯塔湾。');
-    journeyMark('social',MIA_ID);save();renderHotbar();closePanel();
-    toast('护送完成 · 30 金币、肉干 ×2',3.5);
-    return;
+  if(value==='finish'&&miaDestination(state.player)&&completeMiaLanding(state.player)){
+    save();closePanel();toast(MIA_ARRIVAL_NOTICE,4);return;
   }
   if(value==='board'&&m.stage==='ready'){
     const ship=miaAvailableBoat();
@@ -42149,6 +42160,7 @@ const TRAVEL_GUIDE_VERSION=1;
 const HARBOR_HOST='routes:sailor:port';
 const TRAVEL_GUARD='living:watch';
 const TRAVEL_BUILDER='rescue:builder:0';
+const MIA_ARRIVAL_NOTICE='米娅：「到家了，谢谢你！」护送完成 · 30 金币、肉干 ×2';
 let travelLessonPage='',trainingWind=null,travelCryMarker=0,travelGreeting=null,travelGuardCallAt=0,miaTalkAt=0;
 
 function prepareTravelGuide(s,revision){
@@ -42252,18 +42264,24 @@ function tickMiaVoyageStory(m,ship){
 }
 function completeMiaLanding(q){
   const m=state.archipelago.mia,s=state.travelGuide.story;
-  if(s.landing||m.stage!=='arrived')return;
-  s.landing=true;s.welcome='pending';s.arrival={x:q.x,y:q.y};s.welcomeUntil=state.elapsed+40;
-  m.stage='done';
+  if(m.stage!=='arrived')return false;
+  Object.assign(m,{stage:'done',seen:true,ship:null,last:null});
+  miaPath=[];endMiaProtection();
   const rec=state.v195c.npcs[MIA_ID];rec.state='home';state.v195c.lastSchedHour=-1;
-  estateGold(30);yieldItem('jerky',2,q);
-  adjustV195cAffinity(MIA_ID,3,'在微光营地相遇后，一起航回了灯塔湾。');
-  journeyMark('social',MIA_ID);renderHotbar();
+  if(!s.landing){
+    s.landing=true;s.welcome='pending';s.arrival={x:q.x,y:q.y};s.welcomeUntil=state.elapsed+40;
+    estateGold(30);yieldItem('jerky',2,q);
+    adjustV195cAffinity(MIA_ID,3,'在微光营地相遇后，一起航回了灯塔湾。');
+    journeyMark('social',MIA_ID);renderHotbar();
+  }
+  return true;
 }
 function tickHarborWelcome(dt){
   const s=state.travelGuide.story;
   if(s.welcome!=='pending'||!s.arrival)return;
   const p=state.player;
+  const berth=validMooring(boat());
+  if(berth&&dist(berth.bank,s.arrival)<T&&state.elapsed<s.welcomeUntil)return;
   if(state.elapsed>=s.welcomeUntil||!estateLandHere()||regionAt(p.x,p.y)?.i!==17||dist(p,s.arrival)>210){
     s.welcome='played';travelGreeting=null;save();return;
   }
