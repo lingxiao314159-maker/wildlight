@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-vAz32Xg+NEUXNi3s7vzSFHEeCEQcQT/zuKQIB0RSA4Y='; style-src 'unsafe-inline'; img-src data: blob:; base-uri 'none'; object-src 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-sr7wMgfpMUChz51Q62qtUvxiOB2lWZrscvGEgUZLZX8='; style-src 'unsafe-inline'; img-src data: blob:; base-uri 'none'; object-src 'none'; form-action 'none'">
 <meta name="theme-color" content="#0d2224">
 <title>荒野微光 V2.0.2c · 雇佣平衡</title>
 <meta name="description" content="《荒野微光》V2.0.2c《雇佣平衡》。大幅回调雇佣兵战斗力与自动猎杀效率，上调雇佣兵与公会生产雇工费用，保留全部精简 UI 与防重叠修复。">
@@ -958,7 +958,7 @@ Object.assign(items,{
 });
 items.bench[0]='工作台';items.bed[0]='木床';
 const garmentSlot={woolCape:'body',snowBoots:'feet',sunHat:'head',lightShirt:'body',rainCape:'body',hideArmor:'body',shellArmor:'body',heatGreaves:'feet',mistArmor:'body',mistCharm:'charm'};
-const buildKinds = ['raft','sail','fire','bench','furnace','chest','wall','gate','roof','bed','dock','fishTrap','crabTrap','rabbitTrap','saltRack','sapling','seed'];
+const buildKinds = ['raft','sail','flagship','fire','bench','furnace','chest','wall','gate','roof','bed','dock','fishTrap','crabTrap','rabbitTrap','saltRack','sapling','seed'];
 buildKinds.push('barrel','smoker','rootPlot','compost','trough');
 buildKinds.push('fridge','floor','stoneWall','rainRoof','shade','bridge','raisedDock','cargoChest','outpost','cistern','fruitSapling','dryPlot');
 buildKinds.push('strawMat','forge','bedLamp','brazier','sign','harborLight','doubleTrap','collector','beehive','oysterBasket','silverSapling','cherrySapling');
@@ -2041,7 +2041,7 @@ function launchSpot(k,origin=null){
     const q=point(i,j);
     if(dist(q,p)>maxPlayerDist)continue;
     if(origin&&dist(q,origin)>88)continue;
-    if(!canSail(q.x,q.y))continue;
+    if(!canSail(q.x,q.y,{type:k}))continue;
     if(k==='raft'&&!raftBank(q,true))continue;
     if(state.builds.some(b=>isBoat(b)&&dist(q,b)<26))continue;
     if(seaVessels.some(b=>b.hp>0&&dist(q,b)<32))continue;
@@ -2051,7 +2051,7 @@ function launchSpot(k,origin=null){
   return options.sort((a,b)=>dist(anchor,a)-dist(anchor,b))[0]||null;
 }
 const fences=['wall','stoneWall','gate'];
-const oceanBuilds=['raft','sail','advancedSail','dock','raisedDock','dryDock',...fishTraps];
+const oceanBuilds=['raft','sail','advancedSail','flagship','dock','raisedDock','dryDock',...fishTraps];
 function cancelPlacement(){$('hud').classList.remove('building');placing=null;buildCursor=null;movingBuild=null;placeDrag=null;placementItemIndex=0;$('buildControls').hidden=true;}
 function startPlacement(k,moving=null,itemIndex=0){
   if(moving&&!playerFacility(moving)){toast('委托建成的固定设施可通过告示牌管理。');return;}
@@ -2157,7 +2157,7 @@ function place(k,farmPoint=null){
     if(k==='trough'){hydrateFieldHerd(b);ranchRecords(b);}
     if(k==='sign')b.name='路牌';
     if(k==='doubleTrap'||k==='beehive')b.buffer=0;
-    if(defBoat)b.mods={};
+    if(defBoat){b.mods=k==='flagship'?{deckLamp:true}:{};if(k==='flagship'){b.hasAnchor=true;b.anchored=true;}}
     if(k==='supplyStation'){b.level=1;b.mat=6;b.work=0;}
     if(k==='autoDepot'){b.fuel=60;b.work=0;b.enabled=true;b.lastNote='已启动';}
   }
@@ -34203,7 +34203,7 @@ function checkBoatDeployValidity(k, q){
   ensureOceanMap();
   if(!q)return '附近没有可通航的空水面。';
   const c=Math.floor(q.x/T), r=Math.floor(q.y/T), id=index(c,r);
-  if(seaFreeze(q.x,q.y))return '冬季近岸已结冰，当前位置无法下水。';
+  if(seaFreeze(q.x,q.y)&&k!=='flagship')return '冬季近岸已结冰，当前位置无法下水。';
   if(rivers.has(id))return '内陆河道狭窄，无法部署船只。';
   if(reefIndex.has(id))return '该处有暗礁，请换旁边深水区部署。';
   if(!canSail(q.x,q.y,{type:k}))return '目标位置不是可通航水域。';
