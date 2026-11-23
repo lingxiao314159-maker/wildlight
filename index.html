@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-22qfywb4cbjqGOWE7pNSxSkj0OTvjKsqCByYKBNvLqE='; style-src 'unsafe-inline'; img-src data: blob:; base-uri 'none'; object-src 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-iyclUFCcK5erVCRKUAK4lULA5ir71uz79uyJ8wAjSaM='; style-src 'unsafe-inline'; img-src data: blob:; base-uri 'none'; object-src 'none'; form-action 'none'">
 <meta name="theme-color" content="#0d2224">
-<title>荒野微光 V2.0.1b · 物件与交互修复</title>
-<meta name="description" content="《荒野微光》V2.0.1b《物件与交互修复》。物件说明与实际效果同步，并修复设施管理与拆除入口。">
-<meta property="og:title" content="荒野微光 V2.0.1b · 物件与交互修复">
-<meta property="og:description" content="《荒野微光》V2.0.1b《物件与交互修复》。物件说明与实际效果同步，并修复设施管理与拆除入口。">
+<title>荒野微光 V2.0.1c · 节庆与商贸</title>
+<meta name="description" content="《荒野微光》V2.0.1c《节庆与商贸》。四季节庆优惠、商贸日和群岛行历公告。">
+<meta property="og:title" content="荒野微光 V2.0.1c · 节庆与商贸">
+<meta property="og:description" content="《荒野微光》V2.0.1c《节庆与商贸》。四季节庆优惠、商贸日和群岛行历公告。">
 <style>
 #placementStatus{align-self:center;padding:2px 6px;color:#dfedcf;font-size:11px}.route-tabs{position:sticky;top:0;z-index:1;padding:4px 0;background:#112629}.route-voyage{text-align:center}.ferry-art{display:block;width:min(100%,360px);margin:0 auto 8px;border-radius:8px;border:1px solid #496661;overflow:hidden}.ferry-boat{animation:ferryBob 1.1s ease-in-out infinite alternate;transform-origin:160px 100px}.ferry-wave.a{animation:ferryDrift 2.4s linear infinite}.ferry-wave.b{animation:ferryDrift 1.6s linear infinite reverse}.ferry-progress{width:min(100%,360px);height:6px;margin:8px auto 0;border-radius:3px;background:#102426;overflow:hidden}.ferry-progress i{display:block;height:100%;width:0;background:#b6e5ad;animation:ferryFill var(--dur,3.6s) linear forwards}@keyframes ferryBob{from{transform:translateY(-2px) rotate(-1.2deg)}to{transform:translateY(3px) rotate(1.2deg)}}@keyframes ferryDrift{from{transform:translateX(0)}to{transform:translateX(-40px)}}@keyframes ferryFill{to{width:100%}}@media(prefers-reduced-motion:reduce){.ferry-boat,.ferry-wave{animation:none}}.route-voyage span{display:inline-block;font-size:44px;animation:routeSwell .8s ease-in-out infinite alternate}.estate-panel progress{width:100%;accent-color:#b6e5ad}@keyframes routeSwell{from{transform:translate(-5px,1px) rotate(-5deg)}to{transform:translate(5px,-2px) rotate(5deg)}}@media(prefers-reduced-motion:reduce){.route-voyage span{animation:none}}
 :root{color-scheme:dark;--ink:#eff3e9;--dim:#a5b9ad;--edge:#486762;--panel:#102326;--mint:#b6e5ad;--gold:#f4c47b;--pad:clamp(9px,2vw,22px);font-family:system-ui,'Microsoft YaHei',sans-serif}
@@ -626,6 +626,7 @@ body{position:fixed;inset:auto;left:var(--game-view-x,0px);top:var(--game-view-y
 @media(any-pointer:coarse),(max-width:760px){
   .v201b-facilities .press,#hud .tools #v201bManageTarget{min-height:44px}
 }
+.commerce-bulletin{display:grid;gap:7px}.commerce-bulletin .grid{grid-template-columns:repeat(auto-fit,minmax(min(215px,100%),1fr))}.commerce-bulletin h3{margin:0}
 </style>
 </head>
 <body>
@@ -693,7 +694,7 @@ body{position:fixed;inset:auto;left:var(--game-view-x,0px);top:var(--game-view-y
 <div id="editLayoutBar" hidden><span>拖动右侧按钮。摇杆在操作布局设置中调整。</span><button class="press primary" id="doneEditLayout">保存布局</button><button class="press" id="backEditLayout">返回游戏</button><button class="press" id="resetEditLayout">重置</button></div>
 <div id="worldCatchup" class="world-catchup" role="status" hidden></div><div class="veil" id="veil"><section class="window title-window" id="window" role="dialog" aria-modal="true">
       <div class="inside">
-        <div class="eyebrow">2.0.1b · 物件与交互修复</div>
+        <div class="eyebrow">2.0.1c · 节庆与商贸</div>
         <h1>荒野微光</h1>
         <p role="status">正在启动游戏…</p>
         <p class="controls">如果一直停在这里，请下载 HTML 文件并用系统浏览器打开。</p>
@@ -709,7 +710,7 @@ const canvas=$('world');let ctx=canvas.getContext('2d');
 const W = 446, H = 292, T = 32, REACH = 60, DAY = 240;
 const SURFACE_W_182=416,SURFACE_H_182=272;
 const OLD_W=120,OLD_H=100,CHUNK=16;
-const SAVE = 'wildcraft.archipelago.v201b';
+const SAVE = 'wildcraft.archipelago.v201c';
 const TAILOR_ID='prosper:tailor';
 const TWO_PI = Math.PI * 2;
 const clamp = (n, low, high) => Math.max(low, Math.min(high, n));
@@ -1377,7 +1378,7 @@ function newState(){
     relics:[],builds:[],depleted:{},mounted:null,dock:{...HOME},camp:{...HOME},won:false,downs:0,nextId:1};
 }
 function loadGame(){
-  const keys=[SAVE,'wildcraft.archipelago.v201a','wildcraft.archipelago.v201','wildcraft.archipelago.v20','wildcraft.archipelago.v199d','wildcraft.archipelago.v199c','wildcraft.archipelago.v199b','wildcraft.archipelago.v199','wildcraft.archipelago.v198','wildcraft.archipelago.v197b','wildcraft.archipelago.v197','wildcraft.archipelago.v196b','wildcraft.archipelago.v196','wildcraft.archipelago.v195d','wildcraft.archipelago.v195c','wildcraft.archipelago.v195b','wildcraft.archipelago.v195','wildcraft.archipelago.v194c','wildcraft.archipelago.v194b','wildcraft.archipelago.v194','wildcraft.archipelago.v193','wildcraft.archipelago.v192','wildcraft.archipelago.v191d','wildcraft.archipelago.v191c','wildcraft.archipelago.v191b','wildcraft.archipelago.v191a','wildcraft.archipelago.v190','wildcraft.archipelago.v189','wildcraft.archipelago.v188c','wildcraft.archipelago.v188b','wildcraft.archipelago.v188a','wildcraft.archipelago.v188','wildcraft.archipelago.v187b','wildcraft.archipelago.v187a','wildcraft.archipelago.v186','wildcraft.archipelago.v185','wildcraft.archipelago.v184','wildcraft.archipelago.v183','wildcraft.archipelago.v182','wildcraft.archipelago.v181','wildcraft.archipelago.v181b','wildcraft.archipelago.v181a','wildcraft.archipelago.v18','wildcraft.archipelago.v18c','wildcraft.archipelago.v18b','wildcraft.archipelago.v18a','wildcraft.archipelago.v173'];
+  const keys=[SAVE,'wildcraft.archipelago.v201b','wildcraft.archipelago.v201a','wildcraft.archipelago.v201','wildcraft.archipelago.v20','wildcraft.archipelago.v199d','wildcraft.archipelago.v199c','wildcraft.archipelago.v199b','wildcraft.archipelago.v199','wildcraft.archipelago.v198','wildcraft.archipelago.v197b','wildcraft.archipelago.v197','wildcraft.archipelago.v196b','wildcraft.archipelago.v196','wildcraft.archipelago.v195d','wildcraft.archipelago.v195c','wildcraft.archipelago.v195b','wildcraft.archipelago.v195','wildcraft.archipelago.v194c','wildcraft.archipelago.v194b','wildcraft.archipelago.v194','wildcraft.archipelago.v193','wildcraft.archipelago.v192','wildcraft.archipelago.v191d','wildcraft.archipelago.v191c','wildcraft.archipelago.v191b','wildcraft.archipelago.v191a','wildcraft.archipelago.v190','wildcraft.archipelago.v189','wildcraft.archipelago.v188c','wildcraft.archipelago.v188b','wildcraft.archipelago.v188a','wildcraft.archipelago.v188','wildcraft.archipelago.v187b','wildcraft.archipelago.v187a','wildcraft.archipelago.v186','wildcraft.archipelago.v185','wildcraft.archipelago.v184','wildcraft.archipelago.v183','wildcraft.archipelago.v182','wildcraft.archipelago.v181','wildcraft.archipelago.v181b','wildcraft.archipelago.v181a','wildcraft.archipelago.v18','wildcraft.archipelago.v18c','wildcraft.archipelago.v18b','wildcraft.archipelago.v18a','wildcraft.archipelago.v173'];
   for(const key of keys){
     try{
       const raw=localStorage.getItem(key);
@@ -1391,6 +1392,7 @@ function loadGame(){
 
 function prepareSave(s){
   recoverCombatStats(s);
+  prepareCommerceNotices(s);
   s.packTier??=0;s.lots??={};s.piles??=[];s.markers??=[];s.flags??={};s.warmUntil??=0;s.coat??=false;
   s.player.water??=100;s.lastHit??=-20;s.bandagedUntil??=0;s.cave??=false;
   s.maps??=[];if(s.flags.blueprint&&!s.maps.includes(1))s.maps.push(1);
@@ -3137,7 +3139,7 @@ function openPanel(kind,reason=''){
   else if(kind==='mistSite')renderMistSite();
   else if(kind==='title'){
     const exists=!!loadGame();
-    w.innerHTML=`<div class="inside"><div class="eyebrow">2.0.1b · 物件与交互修复</div><h1>荒野微光</h1><p>在群岛求生、建造、远航。群岛百科保存每一次新发现。</p><div class="row">${exists?'<button class="press primary" data-act="continue" data-start="true">继续航行</button><button class="press" data-act="restart">新游戏</button>':'<button class="press primary" data-act="new" data-start="true">开始生存</button>'}<button class="press" data-act="saveTransfer">导入／导出存档</button></div><p class="controls">${controlGuide}</p></div>`;
+    w.innerHTML=`<div class="inside"><div class="eyebrow">2.0.1c · 节庆与商贸</div><h1>荒野微光</h1><p>在群岛求生、建造、远航。群岛百科保存每一次新发现。</p><div class="row">${exists?'<button class="press primary" data-act="continue" data-start="true">继续航行</button><button class="press" data-act="restart">新游戏</button>':'<button class="press primary" data-act="new" data-start="true">开始生存</button>'}<button class="press" data-act="saveTransfer">导入／导出存档</button></div><p class="controls">${controlGuide}</p></div>`;
   }else if(kind==='pause'){
     w.innerHTML=`<div class="inside"><h2>游戏暂停</h2><p>${frameFaultPaused?'游戏遇到异常并已暂停。点击「脱离卡点」重试。':saveFailed?'当前浏览器无法保留进度。':'进度自动保存在这台设备的浏览器里。'}</p><div class="row">${frameFaultPaused?'':'<button class="press primary" data-act="close">继续探索</button>'}<button class="press ${frameFaultPaused?'primary':''}" data-act="movementRecovery">脱离卡点</button><button class="press" data-act="saveTransfer">JSON 存档</button><button class="press primary" data-act="openSettings">完整游戏设置</button><button class="press" data-act="v20Atlas">群岛百科</button><button class="press" data-act="saveNow">立即手动保存</button><button class="press" data-act="restart">重新开始</button></div><p class="controls">${controlGuide}</p></div>`;
   }else if(kind==='restart'){
@@ -4934,6 +4936,7 @@ function frame(ms){
         while(left>HULL_EPSILON&&mapMode==='play'&&!worldCatchingUp()){const step=Math.min(.05,left);advance(step);left-=step;}
       }else if((mapMode==='prosperMarket'||mapMode==='wardrobe'&&wardrobeShop)&&insideStore())advanceStore(dt);
       else sceneMoving=false;
+      if(mapMode!=='title')commercePanelTick();
     }
   }catch(error){
     frameFaultPaused=true;
@@ -6386,7 +6389,7 @@ function tickEntityRespawns(){
 function buildSaveExportText(fromTitle=false){
   if(!fromTitle){saveProsperPeople();captureIncidentActors();captureAnimalStates();captureBoarding();captureNightActors();captureDuelEncounters();refreshJourneyProgress();syncDungeonPersist();syncSchoolSave();state.rural.audio=ruralAudioDefaults();state.displayPrefs=displayPreferences();}
   const data=fromTitle?(loadGame()||state):state;
-  return JSON.stringify({app:'wildcraft',format:SAVE_FORMAT,version:'2.0.1b',exportedAt:new Date().toISOString(),data},null,2);
+  return JSON.stringify({app:'wildcraft',format:SAVE_FORMAT,version:'2.0.1c',exportedAt:new Date().toISOString(),data},null,2);
 }
 function validateSavePayload(text){
   const bad=error=>({ok:false,error});
@@ -6397,7 +6400,7 @@ function validateSavePayload(text){
   const coords=q=>record(q)&&Number.isFinite(q.x)&&Number.isFinite(q.y);
   const integer=(n,max)=>Number.isSafeInteger(n)&&n>=0&&n<=max;
   if(!checkSaveTree(parsed))return bad('存档数据过深或包含异常字符。');
-  if(parsed?.data&&(parsed.app!=='wildcraft'||!['1.87b','1.88','1.88a','1.88b','1.88c','1.89','1.90','1.91a','1.91b','1.91c','1.91d','1.92','1.93','1.94','1.94b','1.94c','1.95','1.95b','1.95c','1.95d','1.96','1.96b','1.97','1.97 Dev','1.97b','1.98','1.98 Dev','1.99','1.99b','1.99c','1.99d','2.0','2.0.1','2.0.1a','2.0.1b'].includes(parsed.version)||
+  if(parsed?.data&&(parsed.app!=='wildcraft'||!['1.87b','1.88','1.88a','1.88b','1.88c','1.89','1.90','1.91a','1.91b','1.91c','1.91d','1.92','1.93','1.94','1.94b','1.94c','1.95','1.95b','1.95c','1.95d','1.96','1.96b','1.97','1.97 Dev','1.97b','1.98','1.98 Dev','1.99','1.99b','1.99c','1.99d','2.0','2.0.1','2.0.1a','2.0.1b','2.0.1c'].includes(parsed.version)||
     parsed.version!=='1.87b'&&parsed.format!==SAVE_FORMAT))return bad('此游戏版本无法导入。');
   const s=parsed?.data??parsed;
   if(!record(s)||s.v!==1)return bad('不支持的存档格式。');
@@ -6530,7 +6533,7 @@ function exportSaveFile(){
   try{
     const blob=new Blob([txt],{type:'application/json;charset=utf-8'});
     const url=URL.createObjectURL(blob),a=document.createElement('a');
-    a.href=url;a.download=`wildcraft_v1.91d_day${gameDay()+1}.json`;document.body.appendChild(a);a.click();a.remove();
+    a.href=url;a.download=`wildcraft_v2.0.1c_day${gameDay()+1}.json`;document.body.appendChild(a);a.click();a.remove();
     setTimeout(()=>URL.revokeObjectURL(url),30000);
     setText($('saveStatus'),'已触发 JSON 存档下载（若移动端受限，可直接点「复制 JSON」）。');
   }catch{setText($('saveStatus'),'浏览器限制了文件下载，请点击「复制 JSON」手动保存。');}
@@ -11686,7 +11689,7 @@ function renderSettingsPanel(tabName){
     </div>`;
   }
 
-  $('window').innerHTML=panelFrame('游戏设置（V2.0.1b）',`<div class="set-tabs" role="tablist">${tabHtml}</div><div class="inside">${body}</div>`);
+  $('window').innerHTML=panelFrame('游戏设置（V2.0.1c）',`<div class="set-tabs" role="tablist">${tabHtml}</div><div class="inside">${body}</div>`);
   // 绑定滑块事件
   const bindRange=(id,valId,key)=>{
     const el=$(id);if(!el)return;
@@ -12437,13 +12440,17 @@ function villageLog(hour,type,subject,text){
   if(logs.length>48)logs.splice(0,logs.length-48);
 }
 
-function buyPrice(id,g,remaining,source='market'){
+function marketBasePrice(id,g,remaining,source='market'){
   const v=state.living.ports[id],cap=marketCap(id);
   const stock=remaining??(v?v.stock[g.key]:state.v173.tradeStock.merchant?.[g.key])??0;
   const rel=stock/(v?cap:7);
   const bias=(PORT_PRICES[id].mul[g.key]||1);
   const demand=v?(1+(v.prosperity-50)*.0015)*(1-clamp(localStanding(id)*.0008,-.08,.08))*tradeTrustFactor(id,source)*aftermathFactor(id,g.key):1;
   return Math.max(2,Math.round(g.base*clamp((1.43-rel*.72)*bias*demand,.70,1.50)));
+}
+
+function buyPrice(id,g,remaining,source='market'){
+  return commercialPrice(marketBasePrice(id,g,remaining,source));
 }
 
 function salePrice(id,g,source='market'){
@@ -12455,7 +12462,7 @@ function refreshPort(id){
   const v=state.living.ports[id],cap=portCap(v);
   normalizePortStock(id,v);
   v.supply=Math.round(100*SUPPLY_KEYS.reduce((a,k)=>a+Math.min(1,(v.stock[k]||0)/Math.max(7,cap*.42)),0)/SUPPLY_KEYS.length);
-  for(const g of MARKET_GOODS)v.prices[g.key]=buyPrice(id,g);
+  for(const g of MARKET_GOODS)v.prices[g.key]=marketBasePrice(id,g);
 }
 
 function projectSite(id,k){
@@ -12621,7 +12628,8 @@ function marketExchange(id,k,buying,source='market'){
     state.v173.gold-=price;stock[k]=count-1;addPublicRevenue(id,Math.max(1,Math.floor(price*.08)));
   }else{
     if(!amount(k)||count>=marketCap(id))return;
-    const price=salePrice(id,g,source);
+    const price=resaleQuote(k,salePrice(id,g,source));
+    if(!price)return;
     v20MarketDeposit(id,k);take(k);v20EarnGold(price);stock[k]=count+1;
   }
   journeyMark('trader',id==='port'?(source==='smith'?'south:trader:1':'south:trader:2'):'market:'+id);
@@ -15242,10 +15250,10 @@ function useVillagePlace(e){
 function smithTradeButtons(){
   const id='port',stock=state.living.ports[id].stock;
   return '<div class="grid">'+marketGoods(id).filter(g=>SMITH_STOCK.has(g.key)).map(g=>{
-    const buy=buyPrice(id,g,undefined,'smith'),sell=salePrice(id,g,'smith'),n=stock[g.key];
+    const buy=buyPrice(id,g,undefined,'smith'),sell=resaleQuote(g.key,salePrice(id,g,'smith')),n=stock[g.key];
     return '<article class="entry"><strong>'+itemIcon(g.key)+' '+g.name+'</strong><p>库存 '+n+' · 持有 '+amount(g.key)+'</p><div class="inventory-actions">'+
       '<button class="press" data-act="smithBuy" data-val="'+g.key+'" '+(n&&state.v173.gold>=buy&&roomFor(g.key)?'':'disabled')+'>买 '+buy+' 金币</button>'+
-      '<button class="press" data-act="smithSell" data-val="'+g.key+'" '+(amount(g.key)&&n<marketCap(id)?'':'disabled')+'>卖 '+sell+' 金币</button></div></article>';
+      '<button class="press" data-act="smithSell" data-val="'+g.key+'" '+(sell&&amount(g.key)&&n<marketCap(id)?'':'disabled')+'>卖 '+sell+' 金币</button></div></article>';
   }).join('')+'</div>';
 }
 
@@ -15341,8 +15349,8 @@ function handleVillageClick(act,val){
   if(!smithOpen())return true;
   if(act==='smithRepair'){
     const cost=Object.hasOwn(items,val)&&amount(val)&&v20CanRepair(v20WorkbenchTarget(val),true)&&toolRepairCost(val,true);
-    if(!cost||!hasIngredients(cost)||state.v173.gold<5)return true;
-    state.v173.gold-=5;applyToolRepair(val,cost);
+    if(!cost||!hasIngredients(cost)||state.v173.gold<commercialPrice(5))return true;
+    state.v173.gold-=commercialPrice(5);applyToolRepair(val,cost);
     renderHotbar();save();renderVillagePlace();toast('季川修好了'+items[val][0]+'。');
   }else if(SMITH_STOCK.has(val))marketExchange('port',val,act==='smithBuy','smith');
   return true;
@@ -16097,7 +16105,7 @@ function yardFee(id,major){
   const trust=id==='port'?socialStanding('south:trader:1'):0;
   const service=major?18:8,alliance=state.society.factions.trade;
   const supplyCost=alliance<=-20?.12:alliance>=30?-.08:0;
-  return Math.round(service*clamp(1+supplyCost-localStanding(id)*.004-trust*.002,.55,1.65));
+  return commercialPrice(Math.round(service*clamp(1+supplyCost-localStanding(id)*.004-trust*.002,.55,1.65)));
 }
 function yardAccepts(id){
   return !id||localStanding(id)>-55&&(id!=='port'||socialStanding('south:trader:1')>-45);
@@ -16367,7 +16375,7 @@ function renderHarbor(){
   }else body+='<p>驾驶船只靠近水侧泊位，再选择系缆停泊。</p>';
   if(b?.port&&!boat())body+=routeMarketControls(b.port)+renderV195bPortShippingBtn(b.port);
   if(b?.port==='port'&&!boat())body+='<button class="press" data-act="hull">旗舰建造</button>';
-  if(mistRecoveryBerth()&&mistCurseRemaining())body+=uiBtn('mistRecover','','港湾休息 · 6 金',state.v173.gold<6);
+  if(mistRecoveryBerth()&&mistCurseRemaining())body+=uiBtn('mistRecover','','港湾休息 · '+commercialPrice(6)+' 金',state.v173.gold<commercialPrice(6));
   body+=renderV198HarborExtras(b,ship);
   $('window').innerHTML=panelFrame('船况与停泊','<div class="inside naval-panel">'+body+'</div>');
 }
@@ -18196,7 +18204,7 @@ $('toggleMapBtn')?.addEventListener('click',e=>{
 
 // Deterministic test & diagnostics hook for verification scripts
 window.__WILDCRAFT_V188A__={
-  version:'2.0.1b',
+  version:'2.0.1c',
   SceneManager,
   generateDungeonLayout,
   validateDungeonLayout,
@@ -20054,10 +20062,7 @@ function tickFestivals(){
   for(const [id,old] of Object.entries(state.rural.fest)){
     if(id!==f.id&&old.phase==='playing'){old.phase='closed';old.result='活动已结束，可在下次节庆再参加。';}
   }
-  if(f.live&&f.h>=7&&state.rural.notice!==f.id){
-    state.rural.notice=f.id;
-    toast('今天是'+f.name+'。灯塔湾已经布置好了，行历可查开放时间。',3.2);save();
-  }
+
   if(r?.phase==='playing'){
     const expiry=!f.live||f.h>=f.end||f.key==='summer'&&state.elapsed>=r.until;
     if(expiry){
@@ -20086,7 +20091,7 @@ function festivalFishHud(fh){
   fh.hidden=false;return true;
 }
 function ruralCalendar(){
-  const c=worldCalendar(),f=festivalInfo();
+  const c=worldCalendar();
   const cards=FESTIVAL_DEFS.map((d,i)=>{
     const at=c.year+':'+d.key,rec=state.rural.fest[at];
     const target=(c.year-1)*28+i*7+6;
@@ -20094,12 +20099,12 @@ function ruralCalendar(){
     const when=distance===0?'今天':distance<0?'本年已过':'还有 '+distance+' 天';
     return `<article class="entry"><strong>${seasonNames[i]}之月 6 日 · ${d.name}</strong><p>${when} · ${d.start}:00–${d.end}:00 · 灯塔湾</p>${rec?.result?`<p>${escapeHtml(rec.result)}</p>`:''}</article>`;
   }).join('');
-  $('window').innerHTML=panelFrame('群岛行历',`<div class="inside rural-panel"><p>第 ${c.year} 年 · ${seasonNames[c.season]}之月 ${c.seasonDay} 日 · ${c.text}</p><p class="cards-help">沿用每季七日的群岛日历。每季第 4 日开始预告，第 6 日举行节庆。</p>${weatherForecastHtml()}<div class="grid">${cards}</div><div class="inventory-actions"><button class="press" data-act="ruralLocateFestival">在海图标记节庆场地</button></div></div>`);
+  $('window').innerHTML=panelFrame('群岛行历',`<div class="inside rural-panel"><p>第 ${c.year} 年 · ${seasonNames[c.season]}之月 ${c.seasonDay} 日 · ${c.text}</p><p class="cards-help">沿用每季七日的群岛日历。每季第 4 日开始预告，第 6 日举行节庆。</p>${weatherForecastHtml()}${commerceBulletin()}<details><summary>本年节庆记录</summary><div class="grid">${cards}</div></details><div class="inventory-actions"><button class="press" data-act="ruralLocateFestival">在海图标记节庆场地</button></div></div>`);
 }
 function ruralFestivalPanel(){
   const f=festivalInfo(),r=festivalRecord(f),c=cultureFestivalAction(f,r);
   const score=r?` · 你的成绩 ${r.player}`:'';
-  const market=Object.entries(f.goods).filter(([k])=>items[k]).map(([k,n])=>`<button class="press" data-act="ruralBuy" data-val="${k}" ${!f.now||r?.sales[k]||state.v173.gold<n||!roomFor(k)?'disabled':''}>${items[k][0]} · ${n} 金</button>`).join('');
+  const market=Object.entries(f.goods).filter(([k])=>items[k]).map(([k,base])=>[k,v196PriceBreakdown(base,0,'special').final]).map(([k,n])=>`<button class="press" data-act="ruralBuy" data-val="${k}" ${!f.now||r?.sales[k]||state.v173.gold<n||!roomFor(k)?'disabled':''}>${items[k][0]} · ${n} 金</button>`).join('');
   $('window').innerHTML=panelFrame(f.name,`<div class="inside rural-panel"><p>${f.quote}</p>
     <p class="cards-help">${f.start}:00–${f.end}:00${score}${r?.result?' · '+escapeHtml(r.result):''}</p>
     <div class="inventory-actions">${c}<button class="press" data-act="ruralCalendar">看行历</button></div>
@@ -20132,9 +20137,9 @@ function ruralFestivalClick(act,k){
   if(mapMode!=='ruralFestival'||!f.now||!nearFestivalSite(f))return true;
   let r=festivalRecord(f,true);
   if(act==='ruralBuy'){
-    const cost=f.goods[k];
+    const cost=Object.hasOwn(f.goods,k)?v196PriceBreakdown(f.goods[k],0,'special').final:0;
     if(!cost||r.sales[k]||state.v173.gold<cost||!roomFor(k))return true;
-    state.v173.gold-=cost;r.sales[k]=true;addItem(k);ruralCue('buy');renderHotbar();save();ruralFestivalPanel();return true;
+    state.v173.gold-=cost;r.sales[k]=true;receivePurchased(k,[cost]);ruralCue('buy');renderHotbar();save();ruralFestivalPanel();return true;
   }
   if(act==='ruralStartFestival'&&r.phase==='available'){
     if(f.key==='summer'&&(!amount('rod')&&!amount('hookRod')||fishContest)){
@@ -21511,7 +21516,9 @@ function storePrice(id,k,base){
   const affDisc=id==='merchant'?0:clamp(localStanding('port'),0,80)*.001;
   const q=v196PriceBreakdown(base, affDisc);
   const listed=MARKET_GOODS.find(o=>o.key===k);
-  return Math.max(q.final, listed?Math.ceil(listed.base*1.35)+1:1);
+  const floor=listed?Math.ceil(listed.base*1.35)+1:1;
+  if(!q.festivalDisc)return Math.max(q.final,floor);
+  return v196PriceBreakdown(Math.max(base,floor),affDisc).final;
 }
 const STORE_SELL={jam:15,smokedFish:6,riverPerch:5,bigFish:7,fish:3,orchardFruit:4,silverFruit:5,root:3,berry:2};
 function storeAccess(id){
@@ -21547,8 +21554,9 @@ function storeTrade(id,k,count,buying){
     addItem(k,count,null,true);recordPurchase(k,index,count,price,prior);v201SortBagLots(k);
     if(k==='wateringCan')state.wear[k]=0;
   }else{
-    const price=shopBuyback(id)[k];
-    take(k,count);v20EarnGold(price*count);m.quota[k]=(m.quota[k]||0)+count;recordV196Ledger('sales', price*count);
+    const total=shopSaleTotal(k,count,shopBuyback(id)[k]);
+    if(!total)return false;
+    take(k,count);v20EarnGold(total);m.quota[k]=(m.quota[k]||0)+count;recordV196Ledger('sales', total);
   }
   const who=id==='merchant'?'prosper:merchant':'prosper:'+id;
   if(id!=='merchant')rememberPlayer(who,'trade','在小店进行了一次公平交易。',2,state.living.hour,8);
@@ -22295,6 +22303,7 @@ function initEstateState(s){
       cold:m.cold===true,status:m.status,settled:['arrived','lost','cancelled'].includes(m.status)||m.settled===true,
       trip:typeof m.trip==='string'&&/^freight:\d+$/.test(m.trip)?m.trip:null,fee:estateNumber(m.fee,0,60),estimate:estateNumber(m.estimate,0,2000),
       purchaseCost:routeInteger(m.purchaseCost,1,20000000)?m.purchaseCost:null,
+      purchaseUnits:Array.isArray(m.purchaseUnits)?m.purchaseUnits.slice(0,m.n).map(p=>validPaidCost(p)?p:null):null,
       actual:estateNumber(m.actual,0,2000),delivered:estateNumber(m.delivered,0,m.n),ended:estateTime(m.ended,upper),
       plot:Object.hasOwn(c.lots,m.plot)?m.plot:null,source:estateSafeText(m.source,100),fresh:null};
     if(routeInteger(m.spoiled,0,m.n))v.spoiled=m.spoiled;
@@ -22336,8 +22345,8 @@ function initEstateState(s){
   return c;
 }
 function shopBuyback(id){
-  if(id==='merchant')return merchantDemand();
-  return Object.fromEntries(Object.entries(ESTATE_SALES).filter(([,d])=>d.stores.includes(id)).map(([k])=>[k,unifiedSellPrice(k)]));
+  if(id==='merchant')return Object.fromEntries(Object.entries(merchantDemand()).filter(([k])=>isItemSellable(k)).map(([k,price])=>[k,Math.round(tradeDayQuote(price))]));
+  return Object.fromEntries(Object.entries(ESTATE_SALES).filter(([k,d])=>d.stores.includes(id)&&isItemSellable(k)).map(([k])=>[k,unifiedSellPrice(k)]));
 }
 function estateLandHere(){return !state.cave&&!state.boarding&&!activeDungeon&&!insideStore()&&!boat();}
 function estateAtPoint(e,range=REACH+6){
@@ -22403,13 +22412,14 @@ function estateSubmitManifest(from,source,k,n,cold){
   const quote=freightEstimate(from,source,k,n,cold);
   const fresh=estateFresh(source,k,n);
   const proof=source.box?source.box.stock[k]?.farm:state.rural.produce[k],tagged=farmMoved(proof,estateQuantity(source,k),n);
+  const purchaseUnits=purchaseUnitsAt(source,k,n);
   if(source.box)stockDebit(source.box,k,n);else take(k,n);
   estateGold(-quote.fee);
   if(source.plot)state.estate.lots[source.plot].ledger.fees+=quote.fee;
   addPublicRevenue(from,Math.floor(quote.fee*.25));
   const row={id:estateUnique('cargo'),k,n,from,to:quote.to,at:state.time,depart:quote.depart,eta:quote.eta,cold:!!(cold&&fresh),fresh,
     farm:tagged?{count:tagged,quality:proof.quality}:null,
-    status:'queued',settled:false,trip:null,fee:quote.fee,purchaseCost:quote.cost,estimate:quote.gross,actual:0,ended:0,delivered:0,plot:source.plot,source:source.id};
+    status:'queued',settled:false,trip:null,fee:quote.fee,purchaseCost:quote.cost,purchaseUnits,estimate:quote.gross,actual:0,ended:0,delivered:0,plot:source.plot,source:source.id};
   state.estate.freight.push(row);
   if(state.estate.freight.length>26){
     const archive=state.estate.freight.findIndex(m=>m.settled);
@@ -22441,7 +22451,8 @@ function estateWithdrawManifest(from,id){
   if(left.length){
     const n=amount(m.k),prior=state.routes.purchase[m.k];
     addItem(m.k,left.length,m.fresh?left.map(t=>state.elapsed+t):null,true);
-    if(m.purchaseCost!=null)recordPurchase(m.k,n,left.length,m.purchaseCost/m.n,prior);
+    if(m.purchaseUnits) itemRecord(state.routes.purchase[m.k]=prior||[],n,m.purchaseUnits.slice(spoiled,spoiled+left.length));
+    else if(m.purchaseCost!=null)recordPurchase(m.k,n,left.length,m.purchaseCost/m.n,prior);
     v201SortBagLots(m.k);
   }
   if(m.farm)rememberFarmHarvest(m.k,Math.min(left.length,m.farm.count),m.farm.quality);
@@ -22716,7 +22727,7 @@ function estatePlanBlock(id,key,physical=false){
   if(Object.values(state.estate.lots).some(l=>l.job))return '施工队正在处理已有委托。';
   if(key!==d.plans[0]&&!owner.done.includes(d.plans[0]))return '先完成基础工程。';
   const plan=ESTATE_PLANS[key];
-  if(state.v173.gold<plan.gold)return '施工金币不足。';
+  if(state.v173.gold<commercialPrice(plan.gold))return '施工金币不足。';
   if(Object.entries(plan.needs).some(([k,n])=>amount(k)<n))return '背包里还缺施工材料。';
   return estatePlanBlock(id,key,true);
 }
@@ -22726,7 +22737,8 @@ function estateStartPlan(id,key){
   if(block){toast(block);return false;}
   const l=state.estate.lots[id],plan=ESTATE_PLANS[key];
   for(const [k,n] of Object.entries(plan.needs)){take(k,n);estateCounts(l.ledger.builtMaterials,k,n);}
-  estateGold(-plan.gold);l.ledger.building+=plan.gold;
+  const fee=commercialPrice(plan.gold);
+  estateGold(-fee);l.ledger.building+=fee;
   l.job={key,start:state.time,worked:0,notice:false,blocked:false};
   refreshEstateClearance();
   assignLivingPeople(state.living.hour);
@@ -22950,7 +22962,7 @@ function estateSendLetter(to,topic,tone,gift,where){
   const fresh=gift?estateFresh(null,gift,1):null;
   if(gift&&(!estateLetterGift(gift)||!amount(gift)||fresh&&!(fresh[0]>0))){toast('附件缺失、无法寄送或已变质。');return false;}
   if(topic==='invite'&&!estateHome(where)){toast('请在灯塔湾选择一处已能接待访客的家园。');return false;}
-  const box=state.estate.outbox,pending=box.filter(x=>!x.done),fee=gift?3:2;
+  const box=state.estate.outbox,pending=box.filter(x=>!x.done),fee=commercialPrice(gift?3:2);
   if(pending.length>=6||pending.some(x=>x.to===to)||state.v173.gold<fee){toast('邮费不足、已有同一收件人的信在途，或当批信件已满。');return false;}
   if(box.length>=76){const old=box.findIndex(x=>x.done);if(old>=0)box.splice(old,1);}
   const id=estateUnique('letter'),exp=fresh?state.time+fresh[0]:0;
@@ -23344,8 +23356,8 @@ function estateRights(id){
     const s=ESTATE_STAFF[k];
     return s.name+' '+s.pay+' 金／工作日';
   }).join('、')||'住宅由玩家自行管理';
-  return '<p>'+d.kind+' · 灯塔湾 · '+d.size[0]+' × '+d.size[1]+' 格</p><p>永久产权 '+d.price+' 金 · 基础施工 '+base.gold+
-    ' 金，另需 '+escapeHtml(estateItemList(base.needs))+'。</p><p>购地与基础施工最低需 '+(d.price+base.gold)+' 金。'+
+  return '<p>'+d.kind+' · 灯塔湾 · '+d.size[0]+' × '+d.size[1]+' 格</p><p>永久产权 '+d.price+' 金 · 基础施工 '+commercialPrice(base.gold)+
+    ' 金，另需 '+escapeHtml(estateItemList(base.needs))+'。</p><p>购地与基础施工最低需 '+(d.price+commercialPrice(base.gold))+' 金。'+
     escapeHtml(d.perks)+'</p><p>'+escapeHtml(staff)+'。经营按实际用水、饲料与托运另计。</p>'+
     (l?'<p>已登记在你的名下。</p>':'<p>产权为一次性买断，购地后可自行决定何时委托施工。</p>');
 }
@@ -23392,9 +23404,9 @@ function estateRenderLot(v){
     const p=ESTATE_PLANS[key],done=l.done.includes(key);
     const label=j?.key===key?(j.blocked?'施工点受阻':j.worked<Math.ceil(p.hours/3)?'地基':'主体施工')+
       ' · '+j.worked+'/'+p.hours+' 个时段':done?'已完工':'可申报';
-    return '<article class="entry"><strong>'+p.name+'</strong><p>'+label+'</p><p>'+p.gold+' 金 · '+escapeHtml(estateItemList(p.needs))+
+    return '<article class="entry"><strong>'+p.name+'</strong><p>'+label+'</p><p>'+commercialPrice(p.gold)+' 金 · '+escapeHtml(estateItemList(p.needs))+
       ' · '+p.hours+' 个白天施工时段</p>'+estateButton('estPlan',key,'确认材料与费用',done||!!j||!here&&!estateLandDesk())+
-      (v.confirm===key?'<p>本次支付 '+p.gold+' 金及上述材料。</p>'+estateButton('estBuild',key,'确认委托',false,true):'')+'</article>';
+      (v.confirm===key?'<p>本次支付 '+commercialPrice(p.gold)+' 金及上述材料。</p>'+estateButton('estBuild',key,'确认委托',false,true):'')+'</article>';
   }).join('');
   const home=estateBuildRole(id,'homeDoor');
   const sign=home?estateButton('estSign','','刻名并安装门牌',!here&&!estateLandDesk()):'';
@@ -23466,14 +23478,14 @@ function estateRenderMail(v){
     const known=estateKnown();
     if(!known.length){estateHtml('写信',nav+'<p>在村里和一位居民交谈后，就可以给他寄信。</p>');return;}
     const gifts=inventoryKeys().filter(k=>amount(k)&&estateLetterGift(k));
-    estateHtml('写信',nav+'<p>正文按主题、语气编写，约 1–2 个游戏日送达。邮费 2 金，附礼 3 金。</p><div class="estate-fields">'+
+    estateHtml('写信',nav+'<p>正文按主题、语气编写，约 1–2 个游戏日送达。邮费 '+commercialPrice(2)+' 金，附礼 '+commercialPrice(3)+' 金。</p><div class="estate-fields">'+
       '<label>收件人 <select class="field" id="estate-letter-to">'+known.map(n=>estateOption(n.id,n.name)).join('')+'</select></label>'+
       '<label>主题 <select class="field" id="estate-letter-topic">'+Object.entries(ESTATE_MAIL_THEMES).map(([k,n])=>estateOption(k,n)).join('')+'</select></label>'+
       '<label>语气 <select class="field" id="estate-letter-tone">'+Object.entries(ESTATE_MAIL_TONES).map(([k,n])=>estateOption(k,n)).join('')+'</select></label>'+
       '<label>附赠一件 <select class="field" id="estate-letter-gift">'+estateOption('','无')+gifts.map(k=>estateOption(k,items[k][0])).join('')+'</select></label>'+
       '<label>邀请地点 <select class="field" id="estate-letter-where">'+estateOption('','仅邀请主题需要地点')+
       estateMailHomes().map(v=>estateOption(v.key,v.name)).join('')+'</select></label></div>'+
-      estateButton('estSend','','确认支付邮费并寄出',state.v173.gold<2,true));
+      estateButton('estSend','','确认支付邮费并寄出',state.v173.gold<commercialPrice(2),true));
     return;
   }
   if(v.page==='outbox'){
@@ -23969,10 +23981,10 @@ function transferGear(k,slotToRemove=null){
   const oldCondition=slot==='hand'?(v20Durable(old?.key)?old.wear:state.wear[old?.key]):old?.wear;
   const [from,key,idx]=inventorySelection.split('|');
   if(k&&v20Durable(k)&&mapMode==='bag'&&from==='pack'&&key===k)selectCarriedUnit(k,Number(idx)||0);
-  const unit=k&&v20Carried(k);
+  const unit=k&&v20Carried(k),paid=k&&merchandiseCost(k);
   const nextCondition=k?(unit?.wear??state.wear[k]??null):null;
   if(k)take(k);
-  state.gear[slot]=k?{key:k,wear:nextCondition,used:unit?.used===true}:null;
+  state.gear[slot]=k?{key:k,wear:nextCondition,used:unit?.used===true,...(paid?{paid}:null)}:null;
   if(slot==='hand'){
     state.handActive=!!k;
     if(k&&v20Durable(k))v20WearAccess(state,k);
@@ -23981,7 +23993,7 @@ function transferGear(k,slotToRemove=null){
   }
   if(old){
     const index=amount(old.key);
-    addItem(old.key);
+    if(Number.isSafeInteger(old.paid)&&old.paid>0)receivePurchased(old.key,[old.paid]);else addItem(old.key);
     if(v20Durable(old.key))state.routes.units[old.key][index]=v20Unit(old.key,oldCondition,old.used);
     else if(oldCondition!=null)state.wear[old.key]=oldCondition;
   }
@@ -24430,14 +24442,15 @@ function shopGrid(){
   const m=marketStoreState(id);
   const goods=storeEntries(id).map(([k,price,n,note])=>({k,price:storePrice(id,k,price),stock:n-(m.bought[k]||0),note,mode:'buy'}));
   const sale=Object.entries(shopBuyback(id)).map(([k,price])=>({k,price,stock:5-(m.quota[k]||0),note:'本期收购',mode:'sell'}));
-  const button=row=>invCell('shop|'+row.mode+'|'+row.k,row.k,row.stock,{style:row.stock?'':'inv-muted',badge:row.price+' 金'});
+  const button=row=>invCell('shop|'+row.mode+'|'+row.k,row.k,row.stock,{style:row.stock?'':'inv-muted',badge:(row.mode==='sell'?resaleQuote(row.k,row.price):row.price)+' 金'});
   const row=[...goods,...sale].find(r=>(inventorySelection==='shop|'+r.mode+'|'+r.k||!inventorySelection)&&r.k===sel.key&&r.mode===sel.mode);
   let detail='';
   if(row){
     const {k,price,stock,mode,note}=row,block=storeTradeError(id,k,sel.count,mode==='buy');
-    detail=invDetails(k,`<p class="inv-meta">${price} 金币／件 · ${mode==='buy'?'库存 ':'可收购 '}${stock} · 持有 ${amount(k)}</p>
+    const first=mode==='buy'?price:resaleQuote(k,price),total=mode==='buy'?sel.count*price:shopSaleTotal(k,sel.count,price);
+    detail=invDetails(k,`<p class="inv-meta">${first} 金币／首件 · ${mode==='buy'?'库存 ':'可收购 '}${stock} · 持有 ${amount(k)}</p>
       <p>${escapeHtml(note)}</p><div class="inventory-actions">${uiBtn('prosperQty','-1','−',sel.count<2)}<b>${sel.count} 件</b>
-      ${uiBtn('prosperQty','1','+',sel.count>4)}${uiBtn('prosperConfirm',mode+'|'+k,(mode==='buy'?'购买':'出售')+' · '+sel.count*price+' 金币',!!block,true)}${mode==='buy'?uiBtn('v195bShopDeliver',id+'|'+k+'|'+sel.count,'付费送货 (+12金)',!!block||state.v173.gold<sel.count*price+12):''}</div>`+
+      ${uiBtn('prosperQty','1','+',sel.count>4)}${uiBtn('prosperConfirm',mode+'|'+k,(mode==='buy'?'购买':'出售')+' · '+total+' 金币',!!block,true)}${mode==='buy'?uiBtn('v195bShopDeliver',id+'|'+k+'|'+sel.count,'付费送货 (+'+commercialPrice(12)+'金)',!!block||state.v173.gold<sel.count*price+commercialPrice(12)):''}</div>`+
       (block?'<p class="low">'+escapeHtml(block)+'</p>':''));
   }
   renderInvWindow(title,'<p class="inv-shop-head">'+escapeHtml(d?d.keeper+' · '+storeHours(d)+' · '+d.tone:'宋渡 · 流浪行商')+
@@ -24448,10 +24461,10 @@ function portGrid(id,stock){
   const goods=marketGoods(id),chosen=source==='port'&&goods.find(g=>g.key===k);
   let detail='';
   if(chosen){
-    const price=buyPrice(id,chosen),sell=salePrice(id,chosen),n=stock[k]||0;
+    const price=buyPrice(id,chosen),sell=resaleQuote(k,salePrice(id,chosen)),n=stock[k]||0;
     detail=invDetails(k,`<p class="inv-meta">库存 ${n}/${marketCap(id)} · 背包 ${amount(k)}</p><p>${escapeHtml(sourceFor(k))}</p>`+
       '<div class="inventory-actions">'+uiBtn('tradeBuy',k,'买入 · '+price+' 金币',state.v173.gold<price||!n||!roomFor(k),true)+
-      uiBtn('tradeSell',k,'卖出 · '+sell+' 金币',!amount(k)||n>=marketCap(id))+'</div>');
+      uiBtn('tradeSell',k,'卖出 · '+sell+' 金币',!sell||!amount(k)||n>=marketCap(id))+'</div>');
   }
   return invShell([invGroup('港口商品',goods.map(g=>invCell('port|'+g.key,g.key,stock[g.key]||0,{badge:buyPrice(id,g)+' 金'})))],detail)+renderV195QuickSellSection();
 }
@@ -24964,8 +24977,8 @@ function openWardrobe(shop=false){
   }
   openPanel('wardrobe');
 }
-function wardrobePrice(row){return Math.ceil(row[6]*(1-clamp(socialStanding(TAILOR_ID),0,60)*.0015));}
-function hatPrice(row){return Math.ceil(row[4]*(1-clamp(socialStanding(TAILOR_ID),0,60)*.0015));}
+function wardrobePrice(row){return commercialPrice(Math.ceil(row[6]*(1-clamp(socialStanding(TAILOR_ID),0,60)*.0015)));}
+function hatPrice(row){return commercialPrice(Math.ceil(row[4]*(1-clamp(socialStanding(TAILOR_ID),0,60)*.0015)));}
 function wardrobeAvailable(row,tab){
   const season=tab==='outfit'?row[7]:row[5];
   return season==null||season===seasonAt();
@@ -25425,7 +25438,7 @@ function prepareRoutesSave(s){
   const ticket=prior.passenger;
   if(ticket&&portIds.includes(ticket.from)&&portIds.includes(ticket.to)&&ticket.from!==ticket.to&&
      Number.isFinite(ticket.duration)&&ticket.duration>0&&ticket.duration<=DAY&&routeCoordinate(ticket.origin)&&
-     routeInteger(ticket.fee,20,100))out.passenger=ticket;
+     routeInteger(ticket.fee,18,100))out.passenger=ticket;
   s.routes=out;
   return s;
 }
@@ -25484,7 +25497,8 @@ function purchaseCost(source,k,n){
   return n*list[0];
 }
 function selectCarriedUnit(k,index){
-  for(const kind of ['packed','costs','cloth','units']){
+  if(!Number.isInteger(index)||index<0||index>=amount(k))return;
+  for(const kind of ['packed','costs','purchase','cloth','units']){
     const list=state.routes[kind][k];
     if(list){const [chosen]=list.splice(index,1);list.unshift(chosen??null);}
   }
@@ -26014,7 +26028,7 @@ function passengerRoute(from,to){
   if(!path||!land)return null;
   const length=path.slice(1).reduce((n,q,i)=>n+dist(q,path[i]),0);
   const improved=publicProject('dock').done&&(from==='rescue'||to==='rescue');
-  return {length,fee:clamp(18+Math.ceil(length/270)-(improved?8:0),20,100),duration:Math.ceil(length/110)+(improved?0:10),land};
+  return {length,fee:commercialPrice(clamp(18+Math.ceil(length/270)-(improved?8:0),20,100)),duration:Math.ceil(length/110)+(improved?0:10),land};
 }
 function passengerAt(id){
   return estatePortHere(id)||estateAtPoint(passengerSailors[id],75)||estateAtPoint(publicBank(id),75);
@@ -26121,7 +26135,7 @@ function freightValue(to,k,n,room=true){
   for(let i=1;i<=count;i++){
     const after=stock+i;
     if(g){
-      const next=Math.min(buyPrice(to,g,after,'market'),buyPrice(to,g,after,'smith'));
+      const next=Math.min(marketBasePrice(to,g,after,'market'),marketBasePrice(to,g,after,'smith'));
       gross+=Math.min(def.cap,Math.max(1,Math.min(next-1,Math.floor(next*.78),CRAFT_RESALE_CAP.get(k)??Infinity)));
     }else{
       const local=after/cap;
@@ -26133,7 +26147,7 @@ function freightValue(to,k,n,room=true){
 function freightPrice(from,k,n,cold,fromPlot=false,course=null){
   if(!Object.hasOwn(ESTATE_SALES,k)||!portIds.includes(from)||!routeInteger(n,1,CARGO_MAX))return null;
   const to=portIds.find(id=>id!==from),remote=freightValue(to,k,n);
-  const fee=3+Math.ceil(n*.6)+(cold&&shelfLife[k]?2+Math.ceil(n/8):0)+(fromPlot?2:0);
+  const fee=commercialPrice(3+Math.ceil(n*.6)+(cold&&shelfLife[k]?2+Math.ceil(n/8):0)+(fromPlot?2:0));
   const h=estateAtHour(),today=Math.floor(h/24)*24;
   const expected=h%24<6?today+6:h%24>=17?today+30:h+1;
   const path=course||freightPath();
@@ -26745,8 +26759,8 @@ function renderHunterGuildPanel(){
 
   const shopHtml=HUNTER_GUILD_SHOP.map((s,i)=>{
     const locked=rank.tier<s.minTier;
-    const canBuy=!locked&&state.v173.gold>=s.gold&&hasIngredients(s.cost)&&roomFor(s.key,s.qty||1,s.cost);
-    const reqStr=`${s.gold} 金币 + `+Object.entries(s.cost).map(([k,n])=>`${items[k][0]} ${amount(k)}/${n}`).join(' · ');
+    const canBuy=!locked&&state.v173.gold>=commercialPrice(s.gold)&&hasIngredients(s.cost)&&roomFor(s.key,s.qty||1,s.cost);
+    const reqStr=`${commercialPrice(s.gold)} 金币 + `+Object.entries(s.cost).map(([k,n])=>`${items[k][0]} ${amount(k)}/${n}`).join(' · ');
     return `<article class="entry">
       <strong>${items[s.key]?.[1]||''} ${s.name} ${locked?`<span class="hunter-tag warn">需 ${HUNTER_RANKS[s.minTier-1].code} 级</span>`:''}</strong>
       <p>${s.desc}</p><p class="req">${reqStr}</p>
@@ -26838,10 +26852,10 @@ function handleV192Action(act,val){
   if(act==='hunterBuy'){
     const item=HUNTER_GUILD_SHOP[Number(val)];
     if(!item||hunterRankForRep(h.rep).tier<item.minTier)return true;
-    if(state.v173.gold<item.gold||!hasIngredients(item.cost)||!roomFor(item.key,item.qty||1,item.cost))return true;
-    state.v173.gold-=item.gold;
+    if(state.v173.gold<commercialPrice(item.gold)||!hasIngredients(item.cost)||!roomFor(item.key,item.qty||1,item.cost))return true;
+    state.v173.gold-=commercialPrice(item.gold);
     for(const [k,n] of Object.entries(item.cost))take(k,n);
-    addItem(item.key,item.qty||1);
+    receivePurchased(item.key,purchasePrices(commercialPrice(item.gold),item.qty||1));
     beep(600,.12);toast(`兑换成功：${item.name}！`,2.8);renderHotbar();save();renderHunterGuildPanel();return true;
   }
   return false;
@@ -27162,7 +27176,7 @@ function helperHireCost(npcId,days=1){
   if(!cfg)return 999;
   const sc=socialStanding(npcId);
   const disc=sc>=45?.70:sc>=16?.85:1;
-  return Math.max(8,Math.round(cfg.dailyGold*days*disc));
+  return commercialPrice(Math.max(8,Math.round(cfg.dailyGold*days*disc)));
 }
 
 function v193HelperHireCard(id){
@@ -27294,7 +27308,7 @@ function buildVisitorPayload(kind,npcId,home){
     const offers=[
       {buy:'steel',n:1,gold:42,desc:'行商顺路带来的 1 块精炼钢，愿以 42 金币出售。'},
       {buy:'silkBandage',n:2,gold:30,desc:'行商特供 2 卷蛛丝绷带，30 金币打包带走。'},
-      {sell:'jerky',n:2,gold:36,desc:'行商急收 2 份肉干，愿出 36 金币高价收购。'}
+      {sell:'jerky',n:2,gold:36,desc:'行商急收 2 份肉干，愿按当期报价收购。'}
     ];
     return offers[Math.floor(Math.random()*offers.length)];
   }
@@ -27462,11 +27476,11 @@ function renderV193VisitorPanel(){
   let body='';
   if(vis.kind==='merchant'){
     if(p.buy){
-      const ok=state.v173.gold>=p.gold&&roomFor(p.buy,p.n);
-      body=`<p>${p.desc}</p><div class="inventory-actions"><button class="press primary" data-act="v193VisitorDo" data-val="accept" ${ok?'':'disabled'}>购买（${p.gold} 金币）</button><button class="press" data-act="v193VisitorDo" data-val="decline">婉拒送客</button></div>`;
+      const ok=state.v173.gold>=commercialPrice(p.gold)&&roomFor(p.buy,p.n);
+      body=`<p>${escapeHtml((p.buy?'可购 ':'可售 ')+items[p.buy||p.sell][0]+' ×'+p.n)}</p><div class="inventory-actions"><button class="press primary" data-act="v193VisitorDo" data-val="accept" ${ok?'':'disabled'}>购买（${commercialPrice(p.gold)} 金币）</button><button class="press" data-act="v193VisitorDo" data-val="decline">婉拒送客</button></div>`;
     }else{
       const ok=amount(p.sell)>=p.n;
-      body=`<p>${p.desc}</p><div class="inventory-actions"><button class="press primary" data-act="v193VisitorDo" data-val="accept" ${ok?'':'disabled'}>出售（得 ${p.gold} 金币）</button><button class="press" data-act="v193VisitorDo" data-val="decline">婉拒送客</button></div>`;
+      body=`<p>${escapeHtml((p.buy?'可购 ':'可售 ')+items[p.buy||p.sell][0]+' ×'+p.n)}</p><div class="inventory-actions"><button class="press primary" data-act="v193VisitorDo" data-val="accept" ${ok?'':'disabled'}>出售（得 ${shopSaleTotal(p.sell,p.n,Math.round(tradeDayQuote(p.gold/p.n)))} 金币）</button><button class="press" data-act="v193VisitorDo" data-val="decline">婉拒送客</button></div>`;
     }
   }else if(vis.kind==='hunter'){
     body=`<p>${escapeHtml(p.text)}</p><div class="inventory-actions"><button class="press primary" data-act="v193VisitorDo" data-val="accept">收下补给并记下线索</button><button class="press" data-act="v193VisitorDo" data-val="decline">道谢送客</button></div>`;
@@ -27598,13 +27612,15 @@ function handleV193Action(act,val){
     if(val==='accept'){
       if(vis.kind==='merchant'){
         if(p.buy){
-          if(state.v173.gold<p.gold||!roomFor(p.buy,p.n)){vis.handled=false;return true;}
-          state.v173.gold-=p.gold;addItem(p.buy,p.n);
+          if(state.v173.gold<commercialPrice(p.gold)||!roomFor(p.buy,p.n)){vis.handled=false;return true;}
+          const cost=commercialPrice(p.gold);
+          state.v173.gold-=cost;receivePurchased(p.buy,purchasePrices(cost,p.n));
           toast(`向${vis.name}购入 ${items[p.buy][0]} ×${p.n}！`,3);
         }else{
           if(amount(p.sell)<p.n){vis.handled=false;return true;}
-          take(p.sell,p.n);v20EarnGold(p.gold);
-          toast(`售出 ${items[p.sell][0]} ×${p.n}，获得 ${p.gold} 金币！`,3);
+          const cash=shopSaleTotal(p.sell,p.n,Math.round(tradeDayQuote(p.gold/p.n)));
+          take(p.sell,p.n);v20EarnGold(cash);
+          toast(`售出 ${items[p.sell][0]} ×${p.n}，获得 ${cash} 金币！`,3);
         }
         rememberPlayer(vis.npcId,'v193Visit','我在你家园门口做成了一笔买卖。',4,state.living.hour,24);
       }else if(vis.kind==='hunter'){
@@ -28988,29 +29004,29 @@ function unifiedSellPrice(k){
     const ratio=clamp(state.wear[k]/items[k][4], .25, 1);
     ref *= ratio;
   }
-  return Math.max(1, Math.floor(ref * 0.4));
+  return Number.isFinite(ref)&&ref>0?Math.max(1, Math.floor(ref * tradeRate())):0;
 }
 
 function renderV195QuickSellSection(){
   const sellable=Object.keys(state.bag).filter(k=>amount(k)>0 && isItemSellable(k));
   if(!sellable.length)return '';
   const rows=sellable.slice(0,12).map(k=>{
-    const unit=unifiedSellPrice(k), cnt=amount(k);
+    const quote=unifiedSellPrice(k),unit=resaleQuote(k,quote),cnt=amount(k);
     return `<article class="entry"><strong>${itemIcon(k,'sm')}${items[k][0]} ×${cnt}</strong>
-      <p>统一收购价（40%）：${unit} 金/件</p>
+      <p>基础收购 ${tradeRateText()} · 第一件 ${unit} 金/件</p>
       <div class="inventory-actions">
         <button class="press" data-act="v195SellOne" data-val="${k}">卖 1 件 (+${unit}金)</button>
-        ${cnt>1?`<button class="press primary" data-act="v195SellAll" data-val="${k}">全卖 (+${unit*cnt}金)</button>`:''}
+        ${cnt>1?`<button class="press primary" data-act="v195SellAll" data-val="${k}">全卖 (+${shopSaleTotal(k,cnt,quote)}金)</button>`:''}
       </div></article>`;
   }).join('');
-  return `<h3 class="incident-heading">出售随身战利品与产物（统一 40% 买价）</h3><div class="grid">${rows}</div>`;
+  return `<h3 class="incident-heading">出售随身战利品与产物（基础收购 ${tradeRateText()}）</h3><div class="grid">${rows}</div>`;
 }
 
 function smithGoldRepairFee(k, curWear){
   const max=items[k]?.[4]||0;
   if(!max || curWear>=max-0.5)return 0;
   const missing=clamp((max-curWear)/max, 0, 1);
-  return Math.max(1, Math.round(itemRefPrice(k) * 0.30 * missing));
+  return commercialPrice(Math.max(1, Math.round(itemRefPrice(k) * 0.30 * missing)));
 }
 
 function renderV195SmithRepairs(){
@@ -29235,11 +29251,11 @@ function renderV195BlackMarket(){
   bm.discovered=true;
   const rows=bm.current.map((item,i)=>{
     const left=Math.max(0, item.stock-(item.bought||0));
-    const canBuy=left>0 && (state.v173.gold||0)>=item.price && roomFor(item.k);
+    const canBuy=left>0 && (state.v173.gold||0)>=commercialPrice(item.price) && roomFor(item.k);
     return `<article class="entry"><strong>${itemIcon(item.k,'sm')}${items[item.k][0]}</strong>
       <p>${item.note} · 剩余 ${left}/${item.stock}</p>
-      <p class="req">售价：${item.price} 金币</p>
-      <button class="press primary" data-act="v195BmBuy" data-val="${i}" ${canBuy?'':'disabled'}>${left<=0?'已售罄':(state.v173.gold||0)<item.price?'金币不足':'购买'}</button></article>`;
+      <p class="req">售价：${commercialPrice(item.price)} 金币</p>
+      <button class="press primary" data-act="v195BmBuy" data-val="${i}" ${canBuy?'':'disabled'}>${left<=0?'已售罄':(state.v173.gold||0)<commercialPrice(item.price)?'金币不足':'购买'}</button></article>`;
   }).join('');
   const previewNames=bm.next.map(k=>items[k]?.[0]||k).join(' · ');
   $('window').innerHTML=panelFrame('神秘黑市 · 墨影',`<div class="inside">
@@ -29516,11 +29532,12 @@ function handleV195Action(act, val){
   if(act==='v195SellOne'||act==='v195SellAll'){
     if(!isItemSellable(val)||!amount(val))return true;
     const cnt=act==='v195SellAll'?amount(val):1;
-    const unit=unifiedSellPrice(val), gain=unit*cnt;
+    const gain=shopSaleTotal(val,cnt,unifiedSellPrice(val));
+    if(!gain)return true;
     take(val, cnt);
     v20EarnGold(gain);
     beep(540,.1);
-    toast(`售出 ${items[val][0]} ×${cnt}，获得 ${gain} 金币（统一 40% 价）。`,2.6);
+    toast(`售出 ${items[val][0]} ×${cnt}，获得 ${gain} 金币。`,2.6);
     renderHotbar(); save();
     if(mapMode==='portMarket')renderPortMarketPanel();
     else if(mapMode==='v195BlackMarket')renderV195BlackMarket();
@@ -29545,10 +29562,10 @@ function handleV195Action(act, val){
     const bm=ensureBlackMarketCycle(), idx=Number(val), item=bm.current[idx];
     if(!item)return true;
     const left=item.stock-(item.bought||0);
-    if(left<=0||(state.v173.gold||0)<item.price||!roomFor(item.k))return true;
-    state.v173.gold-=item.price;
+    if(left<=0||!commercialPrice(item.price)||(state.v173.gold||0)<commercialPrice(item.price)||!roomFor(item.k))return true;
+    state.v173.gold-=commercialPrice(item.price);
     item.bought=(item.bought||0)+1;
-    addItem(item.k, 1);
+    receivePurchased(item.k,[commercialPrice(item.price)]);
     beep(640,.14);
     toast(`在神秘黑市购入【${items[item.k][0]}】！`,2.8);
     renderHotbar(); save(); renderV195BlackMarket();
@@ -29807,10 +29824,10 @@ function renderV195bIntelPanel(){
     avail[t] = state.v195b.chests.find(c=>c.tier===t && !c.opened && !c.intelSold);
   }
   const buyRows = ['common','iron','rare'].map(t=>{
-    const cfg = WILD_CHEST_TIERS[t], hit = avail[t], ok = !!hit && (state.v173.gold||0)>=cfg.intelPrice;
+    const cfg = WILD_CHEST_TIERS[t], hit = avail[t], ok = !!hit && (state.v173.gold||0)>=commercialPrice(cfg.intelPrice);
     return `<article class="entry"><strong>${cfg.name}情报</strong>
-      <p>预计总价值 ~${cfg.value} 金 · 情报费 ${cfg.intelPrice} 金（20%）</p>
-      <button class="press primary" data-act="v195bBuyIntel" data-val="${t}" ${ok?'':'disabled'}>${!hit?'暂无可售有效情报':ok?`购买情报 (${cfg.intelPrice}金)`:'金币不足'}</button></article>`;
+      <p>预计总价值 ~${cfg.value} 金 · 情报费 ${commercialPrice(cfg.intelPrice)} 金（20%）</p>
+      <button class="press primary" data-act="v195bBuyIntel" data-val="${t}" ${ok?'':'disabled'}>${!hit?'暂无可售有效情报':ok?`购买情报 (${commercialPrice(cfg.intelPrice)}金)`:'金币不足'}</button></article>`;
   }).join('');
   const logRows = (state.v195b.intelLog||[]).slice(-10).reverse().map(l=>{
     const ch = state.v195b.chests.find(c=>c.id===l.chestId);
@@ -29849,7 +29866,7 @@ function renderV195bToolUpgradeHtml(){
   const eligible = Object.keys(state.wear).filter(k=>ownsTool(k)&&items[k]?.[4]&&!['flask','wateringCan','torch','tallowTorch'].includes(k));
   const rows = eligible.map(k=>{
     const lv = state.v195b.toolMods[k] || 0;
-    const fee = lv===0 ? 60 : 140;
+    const fee = commercialPrice(lv===0 ? 60 : 140);
     const ok = lv<2 && (state.v173.gold||0)>=fee;
     const desc = ['axe','ironAxe','pick','ironPick','obsidianPick','breachPick'].includes(k) ? '采伐/采矿效率 +12%，上限 +15% 耐久'
                : ['rod','hookRod'].includes(k) ? '捕鱼效率提升，上限 +15% 耐久'
@@ -29869,7 +29886,7 @@ function renderV195bHomeUpgradesPanel(){
     {k:'workshop', name:'工坊便利工具架', max:2, prices:[90,210], desc:'提升制作与营地维护效率'}
   ];
   const rows = defs.map(d=>{
-    const lv = u[d.k] || 0, fee = d.prices[lv] || 0, ok = lv<d.max && (state.v173.gold||0)>=fee;
+    const lv = u[d.k] || 0, fee = commercialPrice(d.prices[lv]), ok = lv<d.max && (state.v173.gold||0)>=fee;
     return `<article class="entry"><strong>${d.name} · Lv.${lv}/${d.max}</strong>
       <p>${d.desc}</p>
       <button class="press primary" data-act="v195bBuyHomeUp" data-val="${d.k}" ${ok?'':'disabled'}>${lv>=d.max?'已满级':ok?`升级 (${fee}金)`:'金币不足'}</button></article>`;
@@ -29897,7 +29914,7 @@ function renderV195bShippingPanel(){
   const fromName = LIVING_PORTS[fromPort].name, toName = LIVING_PORTS[toPort].name;
   const sendable = Object.keys(state.bag).filter(k=>amount(k)>0 && !DROP_PROTECTED.has(k) && !items[k]?.[4] && !forgeCloth(k) && !buildKinds.includes(k));
   const sendRows = sendable.slice(0,8).map(k=>{
-    const cnt = Math.min(amount(k), 16), fee = v196PriceBreakdown(clamp(12 + Math.ceil(cnt*1.5), 10, 80), 0).final;
+    const cnt = Math.min(amount(k), 16), fee = v201cShippingFee(cnt);
     const ok = (state.v173.gold||0) >= fee;
     return `<article class="entry"><strong>${itemIcon(k,'sm')}${items[k][0]} ×${cnt}</strong>
       <p>${fromName} → ${toName} · 运费 ${fee} 金币（约 0.5 游戏日抵达）</p>
@@ -30022,7 +30039,7 @@ function renderV195bGuildPanel(){
         return `<article class="entry"><strong>${md.name} · HP ${rec?Math.ceil(rec.hp):md.hp}/${md.hp}</strong>
           <p>${md.desc} · 好感 ${aff} · 报价 ${price} 金/日</p>
           ${injured?`<p><span class="v195b-badge warn">重伤休养中</span> 预计 ${Math.ceil((rec.injuredUntil-state.time)/DAY*10)/10} 天后康复</p>
-            <button class="press" data-act="v195bMercHeal" data-val="${md.id}" ${(state.v173.gold||0)>=25&&!rec.healPaid?'':'disabled'}>${rec.healPaid?'已安排疗养':'付费加急治疗 (25金)'}</button>`
+            <button class="press" data-act="v195bMercHeal" data-val="${md.id}" ${(state.v173.gold||0)>=commercialPrice(25)&&!rec.healPaid?'':'disabled'}>${rec.healPaid?'已安排疗养':'付费加急治疗 ('+commercialPrice(25)+'金)'}</button>`
           :active?`<p><span class="v195b-badge">在队 · ${MERC_CMD_LABELS[rec.cmd]}</span> 合同剩 ${leftSec} 秒</p>
             <div class="inventory-actions">${cmdBtns}</div>
             <div class="inventory-actions" style="margin-top:4px">
@@ -30113,7 +30130,7 @@ function tickV195bWorkers(dt){
             continue;
           }
         }else if(fCfg.autoBuy && (fCfg.spent||0) < fCfg.budget){
-          const buyCost = Math.ceil(6 * 1.1) + Math.max(1, Math.round(2*mul));
+          const buyCost = commercialPrice(Math.ceil(6 * 1.1)) + Math.max(1, Math.round(2*mul));
           if((state.v173.gold||0) >= buyCost && (fCfg.spent||0)+buyCost <= fCfg.budget){
             const bx = boxes[0];
             const spot = adjacentLand({x:bx.x+T*1.2, y:bx.y}, 90);
@@ -30331,8 +30348,8 @@ function handleV195bAction(act, val){
     ensureWildChests();
     const cfg = WILD_CHEST_TIERS[val];
     const ch = state.v195b.chests.find(c=>c.tier===val && !c.opened && !c.intelSold);
-    if(!cfg || !ch || (state.v173.gold||0)<cfg.intelPrice) return true;
-    state.v173.gold -= cfg.intelPrice;
+    if(!cfg || !ch || (state.v173.gold||0)<commercialPrice(cfg.intelPrice)) return true;
+    state.v173.gold -= commercialPrice(cfg.intelPrice);
     ch.intelSold = true;
     state.v195b.intelLog.push({ chestId:ch.id, tier:val, regionName:ch.regionName, areaHint:ch.areaHint, completed:false });
     syncGoldHud(); beep(580,.12);
@@ -30351,7 +30368,7 @@ function handleV195bAction(act, val){
     save(); renderHarbor(); return true;
   }
   if(act==='v195bUpgradeTool'){
-    const lv = state.v195b.toolMods[val] || 0, fee = lv===0?60:140;
+    const lv = state.v195b.toolMods[val] || 0, fee = commercialPrice(lv===0?60:140);
     if(lv>=2 || !ownsTool(val) || (state.v173.gold||0)<fee) return true;
     state.v173.gold -= fee;
     state.v195b.toolMods[val] = lv + 1;
@@ -30366,52 +30383,56 @@ function handleV195bAction(act, val){
   if(act==='v195bBuyHomeUp'){
     const prices = { storage:[80,180,320], comfort:[60,150], workshop:[90,210] }[val];
     const lv = state.v195b.homeUpgrades[val] || 0;
-    if(!prices || lv>=prices.length || (state.v173.gold||0)<prices[lv]) return true;
-    state.v173.gold -= prices[lv];
+    if(!prices || lv>=prices.length || (state.v173.gold||0)<commercialPrice(prices[lv])) return true;
+    state.v173.gold -= commercialPrice(prices[lv]);
     state.v195b.homeUpgrades[val] = lv + 1;
     syncGoldHud(); beep(700,.16);
     toast(`🏡 家园升级成功（Lv.${lv+1}）！效果已永久生效。`, 3);
     save(); renderV195bHomeUpgradesPanel(); return true;
   }
   if(act==='v195bShopDeliver'){
-    const [sid, k, cStr] = (val||'').split('|'), cnt = Number(cStr)||1;
+    const [sid, k, cStr] = (val||'').split('|'),cnt=Number(cStr);
+    if(mapMode!=='prosperMarket'||prosperousMarket?.id!==sid||prosperousMarket.mode!=='buy'||prosperousMarket.key!==k||prosperousMarket.count!==cnt||storeTradeError(sid,k,cnt,true))return true;
     const offer = storeEntries(sid).find(r=>r[0]===k);
     if(!offer) return true;
-    const price = storePrice(sid, k, offer[1]) * cnt + 12;
+    const unit=storePrice(sid,k,offer[1]),fee=commercialPrice(12),price=unit*cnt+fee;
     const m = marketStoreState(sid);
     if((offer[2]-(m.bought[k]||0))<cnt || (state.v173.gold||0)<price) return true;
     state.v173.gold -= price;
     m.bought[k] = (m.bought[k]||0) + cnt;
-    state.v195b.deliveries.push({ k, n:cnt, arriveAt:state.elapsed+60, notified:false });
+    state.v195b.deliveries.push({ k, n:cnt, paid:unit, arriveAt:state.elapsed+60, notified:false });
     syncGoldHud(); beep(560,.12);
-    toast(`📦 已下单付费送货：${items[k][0]} ×${cnt}（含 12 金送货费），60 秒后送达！`, 3.2);
-    save(); shopGrid(); return true;
+    toast(`📦 已下单付费送货：${items[k][0]} ×${cnt}（含 ${fee} 金送货费），60 秒后送达！`, 3.2);
+    prosperousMarket.key='';inventorySelection='';save();shopGrid();return true;
   }
   if(act==='v195bClaimDelivery'){
     const idx = Number(val), dl = state.v195b.deliveries[idx];
     if(!dl || state.elapsed<dl.arriveAt) return true;
     if(!roomFor(dl.k, dl.n)){ toast('背包空间不足，货物仍在待领区保留。'); return true; }
-    addItem(dl.k, dl.n);
+    if(Number.isSafeInteger(dl.paid)&&dl.paid>0)receivePurchased(dl.k,Array(dl.n).fill(dl.paid));else addItem(dl.k,dl.n);
     state.v195b.deliveries.splice(idx, 1);
     beep(620,.12); toast(`已领取送货商品：${items[dl.k][0]} ×${dl.n}！`, 2.8);
     renderHotbar(); save(); renderV195bHomeUpgradesPanel(); return true;
   }
   if(act==='v195bShipSend'){
-    const [fp, tp, k, nStr, feeStr] = (val||'').split('|');
-    const n = Number(nStr)||1, fee = Number(feeStr)||15;
-    if(amount(k)<n || (state.v173.gold||0)<fee) return true;
-    take(k, n);
+    const [fp,tp,k,nStr,feeStr]=(val||'').split('|');
+    const n=Number(nStr),fee=v201cShippingFee(n);
+    if(mapMode!=='v195bShipping'||fp!==activeShipPort||!Object.hasOwn(LIVING_PORTS,fp)||!Object.hasOwn(LIVING_PORTS,tp)||fp===tp||
+      !routeInteger(n,1,16)||fee!==Number(feeStr)||!isItemSellable(k)||items[k][4]||forgeCloth(k)||amount(k)<n||state.v173.gold<fee)return true;
+    const records=carriedRecords(k,n);
+    take(k,n);
     state.v173.gold -= fee; recordV196Ledger('shipping', -fee);
-    state.v195b.shipments.push({ from:fp, to:tp, k, n, arriveAt:state.elapsed+120, notified:false });
+    state.v195b.shipments.push({ from:fp, to:tp, k, n, ...records, arriveAt:state.elapsed+120, notified:false });
     syncGoldHud(); beep(540,.12);
     toast(`⚓ 已发出货运：${items[k][0]} ×${n} → ${LIVING_PORTS[tp].name}（-${fee} 金币）。`, 3.2);
     renderHotbar(); save(); renderV195bShippingPanel(); return true;
   }
   if(act==='v195bShipClaim'){
     const idx = Number(val), sh = state.v195b.shipments[idx];
-    if(!sh || state.elapsed<sh.arriveAt) return true;
+    if(!sh || sh.to!==activeShipPort||state.elapsed<sh.arriveAt) return true;
     if(!roomFor(sh.k, sh.n)){ toast('背包空间不足，货物安全寄存于港口。'); return true; }
-    addItem(sh.k, sh.n);
+    const index=amount(sh.k);
+    addItem(sh.k,sh.n,null,true);attachItemRecords(sh.k,index,sh.n,sh);v201SortBagLots(sh.k);
     state.v195b.shipments.splice(idx, 1);
     beep(640,.14); toast(`已提取港口货运：${items[sh.k][0]} ×${sh.n}！`, 2.8);
     renderHotbar(); save(); renderV195bShippingPanel(); return true;
@@ -30484,10 +30505,11 @@ function handleV195bAction(act, val){
   }
   if(act==='v195bMercHeal'){
     const rec = state.v195b.guild.mercs.find(m=>m.npcId===val);
-    if(!rec || rec.healPaid || (state.v173.gold||0)<25) return true;
-    state.v173.gold -= 25; rec.healPaid = true;
+    if(!rec || rec.healPaid || (state.v173.gold||0)<commercialPrice(25)) return true;
+    const fee=commercialPrice(25);
+    state.v173.gold -= fee; rec.healPaid = true;
     rec.injuredUntil = Math.min(rec.injuredUntil, state.time + DAY*0.5);
-    syncGoldHud(); toast('已支付 25 金安排诊治，休养时间大幅缩短！', 3);
+    syncGoldHud(); toast('已支付 '+fee+' 金安排诊治，休养时间大幅缩短！', 3);
     save(); renderV195bGuildPanel(); return true;
   }
   if(act==='v195bFireMerc'){
@@ -31632,8 +31654,8 @@ function renderV195dBuildPanel(){
   }).join('');
 
   const blueprintRows = Object.entries(V195D_LARGE_BUILDINGS).map(([k,d])=>{
-    const ok = (state.v173?.gold||0)>=d.gold && hasIngredients(d.cost);
-    const req = Object.entries(d.cost).map(([ik,n])=>`${items[ik]?.[0]||ik} ${amount(ik)}/${n}`).join(' · ') + ` · 金币 ${d.gold}`;
+    const ok = (state.v173?.gold||0)>=v196PriceBreakdown(d.gold).final && hasIngredients(d.cost);
+    const req = Object.entries(d.cost).map(([ik,n])=>`${items[ik]?.[0]||ik} ${amount(ik)}/${n}`).join(' · ') + ` · 金币 ${v196PriceBreakdown(d.gold).final}`;
     return `<article class="entry"><strong>${d.name}</strong>
       <p>${d.desc}</p>
       <p class="req">${req}</p>
@@ -31704,14 +31726,14 @@ function hasGameMasterTitle(){
   return !!state?.v196?.titles?.gameMaster;
 }
 
-function v196PriceBreakdown(basePrice, affinityDiscFrac=0){
-  const base = Math.max(1, Math.round(basePrice));
+function v196PriceBreakdown(basePrice, affinityDiscFrac=0, kind='regular', titleEligible=true, festival=seasonalCommerce().festival){
+  const base = Number.isFinite(basePrice)&&basePrice>0?Math.max(1,Math.round(basePrice)):0;
   const affDisc = clamp(affinityDiscFrac || 0, 0, 0.25);
-  const titleDisc = hasGameMasterTitle() ? 0.10 : 0;
-  // 总折扣上限严格封顶 25%，防止叠加失控与价格套利
-  const totalDisc = Math.min(0.25, affDisc + titleDisc);
-  const final = Math.max(1, Math.round(base * (1 - totalDisc)));
-  return { base, affDisc, titleDisc, totalDisc, final };
+  const titleDisc = titleEligible&&hasGameMasterTitle() ? 0.10 : 0;
+  const festivalDisc = festival?FESTIVAL_DISCOUNT[kind]:0;
+  const totalDisc = Math.min(festival?FESTIVAL_DISCOUNT.cap:.25, affDisc + titleDisc + festivalDisc);
+  const final = base?Math.max(1, Math.round(base * (1 - totalDisc)+(festival?1e-9:0))):0;
+  return { base, affDisc, titleDisc, festivalDisc, totalDisc, final };
 }
 
 function recordV196Ledger(cat, delta){
@@ -31810,16 +31832,16 @@ function v196EnsureBuyerDay(buyerId){
   return bs;
 }
 
-function v196QuoteSellUnit(buyerId, k){
+function v196QuoteSellUnit(buyerId, k, index=0){
   const buyer = V196_BUYERS[buyerId];
   if(!buyer || !buyer.goods[k]) return 0;
   const bs = v196EnsureBuyerDay(buyerId);
-  const base = buyer.goods[k];
+  const base = tradeDayQuote(buyer.goods[k]);
   const islandMul = v196IslandDemandMul(k);
   const soldToday = bs.sold[k] || 0;
   const demandMul = soldToday >= 24 ? 0.75 : 1.0;
   const budgetMul = bs.spent >= buyer.budget ? 0.50 : 1.0;
-  return Math.max(1, Math.round(base * islandMul * demandMul * budgetMul));
+  return resaleQuote(k,Math.max(1, Math.round(base * islandMul * demandMul * budgetMul)),index);
 }
 
 function v196SafeSellableCount(k){
@@ -31836,7 +31858,7 @@ function v196SellBatch(buyerId, k, reqCount){
   const bs = v196EnsureBuyerDay(buyerId);
   let totalGold = 0;
   for(let i=0; i<count; i++){
-    const unit = v196QuoteSellUnit(buyerId, k);
+    const unit = v196QuoteSellUnit(buyerId, k, i);
     totalGold += unit;
     bs.sold[k] = (bs.sold[k] || 0) + 1;
     bs.spent += unit;
@@ -33129,6 +33151,8 @@ function renderV196bEventPanel(){
   const buyExpPrice = v196PriceBreakdown(24, 0).final;
   const btns = tpl.options.map(op=>{
     let lbl = op.label;
+    if(ev.tplId==='traveler_camp' && op.id==='trade') lbl = '购买肉干和绷带 · '+v196PriceBreakdown(18).final+' 金';
+    if(ev.tplId==='visiting_merchant' && op.id==='sell_wood') lbl = '出售木头 ×10 · '+Math.floor(shopSaleTotal('wood',10,tradeDayQuote(32)/10)+1e-9)+' 金';
     if(ev.tplId==='visiting_merchant' && op.id==='buy_rare') lbl = `购入 2 铁锭 + 1 晶石（${buyRarePrice} 金）`;
     if(ev.tplId==='expedition_return' && op.id==='buy') lbl = `花 ${buyExpPrice} 金收购外岛特产`;
     return `<button class="press ${op.id==='leave'?'':'primary'}" data-act="v196bEventOpt" data-val="${ev.id}|${op.id}">${escapeHtml(lbl)}</button>`;
@@ -33208,7 +33232,7 @@ function resolveV196bEvent(evId, optId){
       const fee = v196PriceBreakdown(18, 0).final;
       if((state.v173.gold||0) < fee){ toast(`金币不足（需 ${fee} 金）。`); return; }
       state.v173.gold -= fee; recordV196Ledger('production', -fee); syncGoldHud();
-      yieldItem('jerky', 2); yieldItem('bandage', 1);
+      receiveTradeBundle({jerky:2,bandage:1},fee);
       outcome = `花 ${fee} 金币换取了肉干×2、绷带×1，旅人营地不久后将拔营远行。`;
     }
   }else if(tid === 'lost_explorer'){
@@ -33268,12 +33292,13 @@ function resolveV196bEvent(evId, optId){
       const fee = v196PriceBreakdown(42, 0).final;
       if((state.v173.gold||0) < fee){ toast(`金币不足（需 ${fee} 金）。`); return; }
       state.v173.gold -= fee; recordV196Ledger('production', -fee); syncGoldHud();
-      yieldItem('iron', 2); yieldItem('crystal', 1);
+      receiveTradeBundle({iron:2,crystal:1},fee);
       outcome = `花 ${fee} 金币从临时行商处购入铁锭×2、发光晶石×1！`;
     }else if(optId === 'sell_wood'){
       if(amount('wood') < 10){ toast('需要木头 ×10。'); return; }
-      take('wood', 10); v20EarnGold(32); recordV196Ledger('sales', 32); syncGoldHud();
-      outcome = '向临时行商出售 10 木头，获得 32 金币！';
+      const total=shopSaleTotal('wood',10,tradeDayQuote(32)/10),cash=Math.floor(total+1e-9);
+      take('wood',10);v20EarnGold(cash);recordV196Ledger('sales',cash);syncGoldHud();
+      outcome='向临时行商出售 10 木头，获得 '+cash+' 金币！';
     }
   }else if(tid === 'missing_traveler'){
     v.completedChains.missing_traveler = true;
@@ -33295,7 +33320,7 @@ function resolveV196bEvent(evId, optId){
       if((state.v173.gold||0) < fee){ toast(`金币不足（需 ${fee} 金）。`); return; }
       state.v173.gold -= fee; recordV196Ledger('production', -fee); syncGoldHud();
       const k = ev.extra?.lootItem || 'iron';
-      yieldItem(k, 3);
+      receiveTradeBundle({[k]:3},fee);
       outcome = `花 ${fee} 金币从探险队购入 ${items[k]?.[0]||k} ×3！`;
     }else{
       const ct = Math.random() < 0.5 ? v196bSpawnClueTreasure(ev.extra?.expName||'归来探险队') : null;
@@ -33482,7 +33507,7 @@ function handleV196bAction(act, val){
       if((state.v173.gold||0) < fee){ toast(`金币不足（需 ${fee} 金）。`); return true; }
       state.v173.gold -= fee; recordV196Ledger('production', -fee); syncGoldHud();
       const k = ex.loot[0] || 'iron';
-      yieldItem(k, 2); ex.traded = true;
+      receiveTradeBundle({[k]:2},fee); ex.traded = true;
       toast(`向探险队换得 ${items[k]?.[0]||k} ×2！`, 3);
       renderHotbar(); save(); renderV196bExpCampPanel();
     }else if(mode === 'join' && !ex.joined){
@@ -34791,11 +34816,11 @@ function mistShopHtml(){
   if(storeHour()<7||storeHour()>=19)return '<p>营业时间 07:00–19:00</p>';
   const detail=Object.entries(MIST_STOCK).map(([key,rec])=>{
     const n=s.stock[key];
-    return '<article class="entry"><strong>'+itemIcon(key)+' '+items[key][0]+'</strong><p>库存 '+n+' · '+rec.price+' 金</p>'+
-      mistButton('buy|'+key,'买入',!n||state.v173.gold<rec.price||!roomFor(key),true)+'</article>';
+    return '<article class="entry"><strong>'+itemIcon(key)+' '+items[key][0]+'</strong><p>库存 '+n+' · '+commercialPrice(rec.price)+' 金</p>'+
+      mistButton('buy|'+key,'买入',!n||state.v173.gold<commercialPrice(rec.price)||!roomFor(key),true)+'</article>';
   }).join('');
   const requests=Object.entries(MIST_BUYBACK).map(([k,price])=>mistButton('sell|'+k,
-    '出售 '+items[k][0]+' · '+price+' 金（余 '+(3-s.sold[k])+'）',!amount(k)||s.sold[k]>=3)).join('');
+    '出售 '+items[k][0]+' · '+resaleQuote(k,Math.round(tradeDayQuote(price)))+' 金（余 '+(3-s.sold[k])+'）',!amount(k)||s.sold[k]>=3)).join('');
   return '<p>随身 '+state.v173.gold+' 金</p><div class="grid">'+detail+'</div><h3>本日收购</h3><div class="inventory-actions">'+requests+'</div>';
 }
 function mistStoryText(key,s){
@@ -34851,7 +34876,7 @@ function renderMistSite(){
     if(mistFinished(state)&&!s.claims.ending)actions+=mistButton('reward','领受居民谢礼',false,true);
   }
   if(key==='shop'&&s.town>=2)actions+=mistShopHtml();
-  if(key==='shelter'&&s.town>=3)actions+='<p>旅店休息 · 8 金币，可补充心神、体力与少量伤势。</p>'+
+  if(key==='shelter'&&s.town>=3)actions+='<p>旅店休息 · '+commercialPrice(8)+' 金币，可补充心神、体力与少量伤势。</p>'+
     mistButton('rest','入住休息',state.v173.gold<8||!mistCanRest(),true);
   if(e.type==='mistValeResident'){
     actions='<p>'+escapeHtml({mender:'过湾时认准潮标。第一块栈桥是我和邻居一起换的。',grocer:'原来的账本还在柜台。这里每天早晨补货。',keeper:'灯刚亮的时候，我闻见了从前晒海带的味道。'}[key])+'</p>';
@@ -34939,17 +34964,18 @@ function mistSiteAction(value){
   }
   if(key==='shop'&&act==='buy'&&s.town>=2&&Object.hasOwn(MIST_STOCK,arg)&&storeHour()>=7&&storeHour()<19){
     const rec=MIST_STOCK[arg];
-    if(s.stock[arg]>0&&state.v173.gold>=rec.price&&roomFor(arg)){
-      s.stock[arg]--;estateGold(-rec.price);addItem(arg);changed=true;
+    if(s.stock[arg]>0&&state.v173.gold>=commercialPrice(rec.price)&&roomFor(arg)){
+      s.stock[arg]--;estateGold(-commercialPrice(rec.price));receivePurchased(arg,[commercialPrice(rec.price)]);changed=true;
     }
   }
   if(key==='shop'&&act==='sell'&&s.town>=2&&Object.hasOwn(MIST_BUYBACK,arg)&&storeHour()>=7&&storeHour()<19){
     if(amount(arg)>0&&s.sold[arg]<3){
-      take(arg);estateGold(MIST_BUYBACK[arg]);s.sold[arg]++;changed=true;
+      const price=resaleQuote(arg,Math.round(tradeDayQuote(MIST_BUYBACK[arg])));
+      take(arg);estateGold(price);s.sold[arg]++;changed=true;
     }
   }
-  if(key==='shelter'&&act==='rest'&&s.town>=3&&state.v173.gold>=8&&mistCanRest()){
-    estateGold(-8);
+  if(key==='shelter'&&act==='rest'&&s.town>=3&&state.v173.gold>=commercialPrice(8)&&mistCanRest()){
+    estateGold(-commercialPrice(8));
     const p=state.player,gap=LIVING_HOUR*2;
     p.mind=clamp(p.mind+26,0,100);p.hp=clamp(p.hp+12,0,playerMaxHP());p.stamina=100;
     state.time+=gap;state.elapsed+=gap;campTimeStep(gap);expireFood();settleLivingWorld();
@@ -34970,8 +34996,8 @@ function mistAction(act,value){
   if(act==='mistSiteAct'){mistSiteAction(value);return true;}
   if(act==='mistRecover'){
     const berth=mistRecoveryBerth();
-    if(mapMode==='harbor'&&berth&&mistCurseRemaining()>0&&state.v173.gold>=6){
-      estateGold(-6);clearMistCurse();save();renderHarbor();toast('在平静的港湾歇了一会儿。幽海余悸已消退。',3);
+    if(mapMode==='harbor'&&berth&&mistCurseRemaining()>0&&state.v173.gold>=commercialPrice(6)){
+      estateGold(-commercialPrice(6));clearMistCurse();save();renderHarbor();toast('在平静的港湾歇了一会儿。幽海余悸已消退。',3);
     }
     return true;
   }
@@ -35718,7 +35744,7 @@ function caseShopHere(ending,key){return (ending==='law'?key==='inventory':key==
 function caseTradePrice(ending,k){
   const offer=CASE_OFFERS[ending]?.[k];
   if(!offer)return null;
-  return offer[0];
+  return commercialPrice(offer[0]);
 }
 function availableCaseStock(ending,k){
   return (CASE_OFFERS[ending]?.[k]?.[1]||0)-(state.cases.trade.day===caseDay()?state.cases.trade.sold[k]||0:0);
@@ -35735,7 +35761,7 @@ function caseBuy(ending,k){
   const trade=state.cases.trade;
   if(trade.day!==caseDay()){trade.day=caseDay();trade.sold={};}
   trade.sold[k]=(trade.sold[k]||0)+1;
-  estateGold(-cost);addItem(k);renderHotbar();toast('已购入'+items[k][0]+'。');return true;
+  estateGold(-cost);receivePurchased(k,[cost]);renderHotbar();toast('已购入'+items[k][0]+'。');return true;
 }
 function caseRewardMarkup(k){
   const q=caseQuest(k);
@@ -36463,12 +36489,12 @@ function forgeSubmitBlock(k){
   if(spec[4]&&!forgeHasPlan(spec[4]))return '未登记图纸';
   if(!forgeAccess(spec[0]))return '请在工匠营业时到店';
   if(!hasIngredients(spec[1]))return '材料不足';
-  if(state.v173.gold<spec[2])return '金币不足';
+  if(state.v173.gold<commercialPrice(spec[2]))return '金币不足';
   return '';
 }
 function forgeSubmit(k){
   if(forgeSubmitBlock(k))return false;
-  const [worker,cost,fee,days]=FORGE_CONTRACTS[k],start=state.time;
+  const [worker,cost,baseFee,days]=FORGE_CONTRACTS[k],start=state.time,fee=commercialPrice(baseFee);
   for(const [key,n] of Object.entries(cost))take(key,n);
   estateGold(-fee);
   const orders=state.forging.orders;
@@ -36514,9 +36540,9 @@ function forgeRepairSpec(k,mode){
   if(!v20Durable(k)||mode==='field'&&k==='repairKit')return null;
   const cls=FORGE_ARMOR[k]?.[2]||FORGE_SHIELDS[k]||'medium';
   if(mode==='field')return {fee:0,recover:.18,cost:cls==='heavy'?{iron:1,rope:1}:cls==='light'?{fiber:2}:{wood:1,rope:1}};
-  if(mode==='full')return {fee:cls==='heavy'?29:cls==='medium'?13:6,recover:1,cost:cls==='heavy'?{steel:1,metalFitting:2,hide:1}:
+  if(mode==='full')return {fee:commercialPrice(cls==='heavy'?29:cls==='medium'?13:6),recover:1,cost:cls==='heavy'?{steel:1,metalFitting:2,hide:1}:
     cls==='medium'?{iron:1,hide:1,rope:1}:{fiber:3,hide:1,rope:1}};
-  return {fee:cls==='heavy'?13:cls==='medium'?7:3,recover:.38,cost:cls==='heavy'?{metalFitting:1,hide:1}:cls==='medium'?{hide:1,rope:1}:{fiber:2}};
+  return {fee:commercialPrice(cls==='heavy'?13:cls==='medium'?7:3),recover:.38,cost:cls==='heavy'?{metalFitting:1,hide:1}:cls==='medium'?{hide:1,rope:1}:{fiber:2}};
 }
 function forgeFieldAccess(){
   return mapMode==='forgeRepair'&&mistSurface()&&!boat()&&ownsTool('repairKit')&&(state.wear.repairKit??0)>=6&&state.elapsed-state.lastHit>=4;
@@ -36586,7 +36612,7 @@ function renderForgePanel(){
     body+=(history?'<h3>工单记录</h3><div class="grid">'+history+'</div>':'')+
       '<h3>可委托项目</h3><div class="grid">'+Object.entries(FORGE_CONTRACTS).map(([k,[w,cost,fee,days,plan]])=>{
         const block=forgeSubmitBlock(k);
-        return '<article class="entry"><strong>'+itemIcon(k)+items[k][0]+'</strong><p>'+forgeWorkerName[w]+' · '+fee+' 金 · '+days+' 游戏日</p>'+
+        return '<article class="entry"><strong>'+itemIcon(k)+items[k][0]+'</strong><p>'+forgeWorkerName[w]+' · '+commercialPrice(fee)+' 金 · '+days+' 游戏日</p>'+
           (FORGE_ARMOR[k]?'<p>'+forgeGearLabel(k)+'</p>':k==='largeTravelBag'?'<p>交付后把 35 格升级至 42 格。</p>':'<p>'+itemStats(k)+'</p>')+
           '<p>'+materialButtons(cost)+'</p>'+(plan?'<p>'+(forgeHasPlan(plan)?'图纸已登记':'图纸未登记 · '+FORGE_PLANS[plan][3])+'</p>':'')+
           uiBtn('forgeSubmit',k,block||'提交工单',!!block,true)+'</article>';
@@ -36877,8 +36903,8 @@ function duelShieldService(){
   const owned=forgeOwns('shellShield'),d=state.duel;
   if(!owned)return '';
   let body='<article class="entry"><strong>硬壳盾校装</strong><p>现用 '+duelShieldSpec('shellShield').title+'。';
-  if(!d.heavyPermit)body+='工费 '+DUEL_FORGE_FEE+' 金、'+materialButtons(DUEL_FORGE_COST)+'。</p>'+
-    uiBtn('duelHeavy','unlock','校装为特殊重盾',!forgeAccess('smith')||state.v173.gold<DUEL_FORGE_FEE||!hasIngredients(DUEL_FORGE_COST),true);
+  if(!d.heavyPermit)body+='工费 '+commercialPrice(DUEL_FORGE_FEE)+' 金、'+materialButtons(DUEL_FORGE_COST)+'。</p>'+
+    uiBtn('duelHeavy','unlock','校装为特殊重盾',!forgeAccess('smith')||state.v173.gold<commercialPrice(DUEL_FORGE_FEE)||!hasIngredients(DUEL_FORGE_COST),true);
   else body+='可在铁匠处切换，保留同一件盾与当前耐久。</p>'+uiBtn('duelHeavy','switch',d.heavy?'切回高级盾':'切为特殊重盾',!forgeAccess('smith'));
   return body+'</article>';
 }
@@ -36887,9 +36913,9 @@ function duelUi(act,value){
   if(mapMode!=='gearForge'||!forgeAccess('smith')||!forgeOwns('shellShield'))return true;
   const d=state.duel;
   if(value==='unlock'&&!d.heavyPermit){
-    if(state.v173.gold<DUEL_FORGE_FEE||!hasIngredients(DUEL_FORGE_COST))return true;
+    if(state.v173.gold<commercialPrice(DUEL_FORGE_FEE)||!hasIngredients(DUEL_FORGE_COST))return true;
     for(const [k,n] of Object.entries(DUEL_FORGE_COST))take(k,n);
-    estateGold(-DUEL_FORGE_FEE);d.heavyPermit=true;d.heavy=true;
+    estateGold(-commercialPrice(DUEL_FORGE_FEE));d.heavyPermit=true;d.heavy=true;
   }else if(value==='switch'&&d.heavyPermit)d.heavy=!d.heavy;
   renderHotbar();save();renderForgePanel();return true;
 }
@@ -38227,7 +38253,7 @@ function installItemDescriptions(){
 function v201bRecipeMaterials(k){
   if(FORGE_CONTRACTS[k]){
     const [,cost,gold]=FORGE_CONTRACTS[k];
-    return ' · 定制 '+estateItemList(cost)+'，工费 '+gold+' 金。';
+    return ' · 定制 '+estateItemList(cost)+'，工费 '+commercialPrice(gold)+' 金。';
   }
   const rows=recipes.filter(r=>r[0]===k);
   return rows.length?' · 配方 '+rows.map(r=>estateItemList(r[2])+' → '+recipeYield(r)+' 件').join('／'):'';
@@ -38317,6 +38343,137 @@ function facilityConfirm(id){
   renderHotbar();
   v201SaveFeedback(Object.keys(materials).length?'已拆除，回收 '+estateItemList(materials)+'。':'已拆除，无可回收材料。');
   renderManage();
+}
+
+const SEASON_DAYS=7, TRADE_DAY=3, FESTIVAL_DAY=6;
+const FESTIVAL_DISCOUNT={regular:.10,special:.20,cap:.40};
+const BASE_BUYBACK=.40, TRADE_BUYBACK=.60;
+const FESTIVAL_ACTIVITIES={spring:'在节庆田畦播种并浇水',summer:'在岸台参加钓鱼比赛',autumn:'提交亲手种植的农产品参加评比',winter:'寻找并点亮村庄小路上的三盏星灯'};
+let commerceClockTime=null, commerceClock=null;
+function seasonalCommerce(){
+  if(commerceClockTime!==state.time){
+    const calendar=worldCalendar();
+    commerceClockTime=state.time;
+    commerceClock={calendar,festival:calendar.seasonDay===FESTIVAL_DAY&&festivalInfo().now,trade:calendar.seasonDay===TRADE_DAY};
+  }
+  return commerceClock;
+}
+function commercialPrice(base,kind='regular'){
+  if(!Number.isFinite(base)||base<=0)return 0;
+  return seasonalCommerce().festival?v196PriceBreakdown(base,0,kind,false).final:base;
+}
+function tradeRate(){return seasonalCommerce().trade?TRADE_BUYBACK:BASE_BUYBACK;}
+function tradeRateText(){return Math.round(tradeRate()*100)+'%';}
+function tradeDayQuote(base){return base*(seasonalCommerce().trade?Math.round(TRADE_BUYBACK*100)/Math.round(BASE_BUYBACK*100):1);}
+function merchandiseCost(k,index=0){return state.routes.purchase[k]?.[index];}
+function validPaidCost(n){return Number.isSafeInteger(n)&&n>0&&n<=1000000;}
+function purchaseUnitsAt(source,k,n){
+  const list=source?.box?source.box.stock[k]?.purchaseUnits:state.routes.purchase[k];
+  const costs=list?.slice(0,n).map(v=>validPaidCost(v)?v:null);
+  return costs?.some(Boolean)?costs:null;
+}
+// Exact units move with the existing bag, ground and storage records.
+function resaleQuote(k,quote,index=0){
+  const cost=merchandiseCost(k,index);
+  if(!Number.isFinite(quote)||quote<=0)return 0;
+  return validPaidCost(cost)?Math.min(quote,cost):quote;
+}
+function shopSaleTotal(k,n,unit){
+  let total=0;
+  for(let i=0;i<n;i++)total+=resaleQuote(k,unit,i);
+  return total;
+}
+function receivePurchased(k,prices){
+  const index=amount(k), prior=state.routes.purchase[k];
+  addItem(k,prices.length,null,true);
+  if(amount(k)!==index+prices.length)return;
+  itemRecord(state.routes.purchase[k]=prior||[],index,prices);
+  v201SortBagLots(k);
+}
+function purchasePrices(total,n){
+  return Array.from({length:n},(_,i)=>Math.floor(total/n)+(i<total%n?1:0));
+}
+function receiveTradeBundle(goods,total){
+  const keys=Object.entries(goods).flatMap(([k,n])=>Array(n).fill(k));
+  purchasePrices(total,keys.length).forEach((paid,i)=>{
+    const k=keys[i];
+    if(roomFor(k))receivePurchased(k,[paid]);
+    else {
+      groundDrop(k,1,state.player.x,state.player.y);
+      state.piles.at(-1).purchaseUnits=[paid];
+    }
+  });
+}
+function v201cShippingFee(n){return v196PriceBreakdown(clamp(12+Math.ceil(n*1.5),10,80),0).final;}
+
+function activityWindow(season,day,start,end){
+  const c=seasonalCommerce().calendar;
+  const days=SEASON_DAYS*FESTIVAL_DEFS.length;
+  const base=(c.year-1)*days+season*SEASON_DAYS+day;
+  const gap=base-c.day;
+  if(!gap){
+    const now=c.hour*60+c.minute;
+    if(now<start*60)return {label:'今日举行 · 尚未开始',minutes:start*60-now};
+    if(now<end*60)return {label:'正在进行',minutes:end*60-now,ending:true};
+    return {label:'今日已结束',minutes:days*1440+start*60-now};
+  }
+  const until=(gap>0?gap:days+gap)*1440+start*60-(c.hour*60+c.minute);
+  return {label:'下次活动',minutes:until};
+}
+function activityDuration(m){
+  const d=Math.floor(m/1440),h=Math.floor(m%1440/60),min=m%60;
+  return (d?d+' 天 ':'')+(h?h+' 小时 ':'')+(!d&&min?min+' 分钟':'')||'即将到达';
+}
+function activityTime(hour){return String(hour).padStart(2,'0')+':00';}
+function festivalCommerceNotice(){
+  const {calendar:c,festival,trade}=seasonalCommerce(),f=FESTIVAL_DEFS[c.season];
+  const reminders=state.commerceNotices;
+  let key,text;
+  if(c.seasonDay===TRADE_DAY-1){key='tradePreview';text='明日商贸日！整理好准备出售的物资，商人会提高收购价。';}
+  if(trade){key='tradeToday';text='今日商贸日！基础收购比例提高至 '+Math.round(TRADE_BUYBACK*100)+'%。';}
+  if(c.seasonDay===FESTIVAL_DAY-1){key='festivalPreview';text='明日将举办'+f.name+'！可前往灯塔湾参加活动和购物。';}
+  if(festival){key='festivalNow';text=f.name+'正在举行！普通商品和商业服务九折，节庆特色商品八折。';}
+  if(!key||reminders[key]===c.day)return;
+  reminders[key]=c.day;
+  toast(text,4);save();
+}
+function prepareCommerceNotices(s){
+  const raw=s.commerceNotices, day=worldCalendar(s.time).day;
+  s.commerceNotices={};
+  for(const key of ['tradePreview','tradeToday','festivalPreview','festivalNow']){
+    const x=raw?.[key];if(Number.isSafeInteger(x)&&x>0&&x<=day)s.commerceNotices[key]=x;
+  }
+}
+function commercePanelTick(){
+  const phase=seasonalCommerce();
+  const renewed=lastCommercePhase!==null&&lastCommercePhase!==phase.festival;
+  lastCommercePhase=phase.festival;
+  if(renewed&&insideStore()){
+    if(mapMode==='prosperMarket')shopGrid();
+    if(mapMode==='wardrobe'&&wardrobeShop)renderWardrobe();
+  }
+  if(mapMode==='play'&&!worldCatchingUp())festivalCommerceNotice();
+}
+let lastCommercePhase=null;
+
+function commerceBulletin(){
+  const c=seasonalCommerce().calendar;
+  const rows=[];
+  const add=(season,day,start,end,title,description,benefit,place,rec)=>{
+    const when=activityWindow(season,day,start,end);
+    rows.push(`<article class="entry"><strong>${title}</strong><p>${seasonNames[season]}之月 ${day} 日 · ${activityTime(start)}–${activityTime(end)} · ${place}</p>
+      <p><span class="pill ${when.ending?'good':''}">${when.label}</span> ${when.ending?'剩余':when.label.includes('尚未')?'距开始':'还需'} ${activityDuration(when.minutes)}</p>
+      <p>${description}。 ${benefit}。</p>${rec?.result?'<p>'+escapeHtml(rec.result)+'</p>':''}</article>`);
+  };
+  for(const [i,f] of FESTIVAL_DEFS.entries()){
+    add(i,TRADE_DAY,0,24,seasonNames[i]+'季商贸日','开放正常收购的各地商人',
+      '基础收购比例 '+Math.round(BASE_BUYBACK*100)+'% → '+Math.round(TRADE_BUYBACK*100)+'%','各地商业网点');
+    add(i,FESTIVAL_DAY,f.start,f.end,f.name,FESTIVAL_ACTIVITIES[f.key],
+      '普通商品与商业服务 '+(1-FESTIVAL_DISCOUNT.regular)*10+' 折 · 节庆特色商品 '+(1-FESTIVAL_DISCOUNT.special)*10+' 折','灯塔湾',
+      state.rural.fest[c.year+':'+f.key]);
+  }
+  return `<section class="commerce-bulletin"><h3>节庆与商贸公告</h3><p class="cards-help">每年 ${SEASON_DAYS*FESTIVAL_DEFS.length} 日。节庆优惠可与适用称号叠加，总优惠最高 ${Math.round(FESTIVAL_DISCOUNT.cap*100)}%。同一批购入商品直接转卖时以实际购价为上限。</p>
+    <div class="grid">${rows.join('')}</div></section>`;
 }
 
 installInventoryForge();
