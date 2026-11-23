@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-DeWecH5xalqmT0VvLkHxZclb6WYhRwN77OMq7ZETcP0='; style-src 'unsafe-inline'; img-src data: blob:; base-uri 'none'; object-src 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-ZUtAV2F3lOkbV9wR7tYLd+iFnD2KoiKngLOryPmvhWI='; style-src 'unsafe-inline'; img-src data: blob:; base-uri 'none'; object-src 'none'; form-action 'none'">
 <meta name="theme-color" content="#0d2224">
-<title>荒野微光 V2.0.1d 补丁版 · 触控滚动与生态修复</title>
-<meta name="description" content="《荒野微光》V2.0.1d 补丁版。P0 弹窗单层流畅滚动与触控隔离修复、双击快捷存取仓储、特色生态岛屿樱花树与樱花树苗、修复陆地漂流瓶、小幅加强夜间与血月野兽。">
-<meta property="og:title" content="荒野微光 V2.0.1d 补丁版 · 触控滚动与生态修复">
-<meta property="og:description" content="《荒野微光》V2.0.1d 补丁版。P0 弹窗滚动修复、双击存取、生态樱花树、修复陆地漂流瓶、夜间与血月野兽加强。">
+<title>荒野微光 V2.0.1e · 田园与冒险</title>
+<meta name="description" content="《荒野微光》V2.0.1e。新增开局与设置三档引导强度可选、P0 弹窗单层滚动与触控隔离修复、双击快捷存取仓储、特色生态岛屿樱花树与樱花树苗、修复陆地漂流瓶并小幅加强夜间与血月野兽。">
+<meta property="og:title" content="荒野微光 V2.0.1e · 田园与冒险">
+<meta property="og:description" content="《荒野微光》V2.0.1e。开局与设置三档引导强度、弹窗触控修复、双击存取、生态樱花树、漂流瓶与夜间血月加强。">
 <style>
 #placementStatus{align-self:center;padding:2px 6px;color:#dfedcf;font-size:11px}.route-tabs{position:sticky;top:0;z-index:1;padding:4px 0;background:#112629}.route-voyage{text-align:center}.ferry-art{display:block;width:min(100%,360px);margin:0 auto 8px;border-radius:8px;border:1px solid #496661;overflow:hidden}.ferry-boat{animation:ferryBob 1.1s ease-in-out infinite alternate;transform-origin:160px 100px}.ferry-wave.a{animation:ferryDrift 2.4s linear infinite}.ferry-wave.b{animation:ferryDrift 1.6s linear infinite reverse}.ferry-progress{width:min(100%,360px);height:6px;margin:8px auto 0;border-radius:3px;background:#102426;overflow:hidden}.ferry-progress i{display:block;height:100%;width:0;background:#b6e5ad;animation:ferryFill var(--dur,3.6s) linear forwards}@keyframes ferryBob{from{transform:translateY(-2px) rotate(-1.2deg)}to{transform:translateY(3px) rotate(1.2deg)}}@keyframes ferryDrift{from{transform:translateX(0)}to{transform:translateX(-40px)}}@keyframes ferryFill{to{width:100%}}@media(prefers-reduced-motion:reduce){.ferry-boat,.ferry-wave{animation:none}}.route-voyage span{display:inline-block;font-size:44px;animation:routeSwell .8s ease-in-out infinite alternate}.estate-panel progress{width:100%;accent-color:#b6e5ad}@keyframes routeSwell{from{transform:translate(-5px,1px) rotate(-5deg)}to{transform:translate(5px,-2px) rotate(5deg)}}@media(prefers-reduced-motion:reduce){.route-voyage span{animation:none}}
 :root{color-scheme:dark;--ink:#eff3e9;--dim:#a5b9ad;--edge:#486762;--panel:#102326;--mint:#b6e5ad;--gold:#f4c47b;--pad:clamp(9px,2vw,22px);font-family:system-ui,'Microsoft YaHei',sans-serif}
@@ -702,6 +702,10 @@ body:not([data-state="playing"]) #hud:not(.editing-layout) *{pointer-events:none
   .veil{--window-room:calc(var(--game-view-h,100dvh) - max(8px,env(safe-area-inset-top)) - max(8px,env(safe-area-inset-bottom)))}
   .window{max-height:var(--window-room)!important}
 }
+
+.guide-picker{margin-top:10px;padding:9px 10px;border:1px solid #486762;border-radius:8px;background:#142b2e;display:grid;gap:6px}
+.guide-picker strong{font-size:12px;color:var(--gold)}
+.guide-picker .cards-help{margin:0!important}
 </style>
 </head>
 <body>
@@ -769,7 +773,7 @@ body:not([data-state="playing"]) #hud:not(.editing-layout) *{pointer-events:none
 <div id="editLayoutBar" hidden><span>拖动右侧按钮。摇杆在操作布局设置中调整。</span><button class="press primary" id="doneEditLayout">保存布局</button><button class="press" id="backEditLayout">返回游戏</button><button class="press" id="resetEditLayout">重置</button></div>
 <div id="worldCatchup" class="world-catchup" role="status" hidden></div><div class="veil" id="veil"><section class="window title-window" id="window" role="dialog" aria-modal="true">
       <div class="inside">
-        <div class="eyebrow">2.0.1d 补丁版 · 田园与冒险</div>
+        <div class="eyebrow">2.0.1e · 田园与冒险</div>
         <h1>荒野微光</h1>
         <p role="status">正在启动游戏…</p>
         <p class="controls">如果一直停在这里，请下载 HTML 文件并用系统浏览器打开。</p>
@@ -785,7 +789,7 @@ const canvas=$('world');let ctx=canvas.getContext('2d');
 const W = 446, H = 292, T = 32, REACH = 60, DAY = 240;
 const SURFACE_W_182=416,SURFACE_H_182=272;
 const OLD_W=120,OLD_H=100,CHUNK=16;
-const SAVE = 'wildcraft.archipelago.v201d';
+const SAVE = 'wildcraft.archipelago.v201e';
 const TAILOR_ID='prosper:tailor';
 const TWO_PI = Math.PI * 2;
 const clamp = (n, low, high) => Math.max(low, Math.min(high, n));
@@ -1455,7 +1459,7 @@ function newState(){
     relics:[],builds:[],depleted:{},mounted:null,dock:{...HOME},camp:{...HOME},won:false,downs:0,nextId:1};
 }
 function loadGame(){
-  const keys=[SAVE,'wildcraft.archipelago.v201c','wildcraft.archipelago.v201b','wildcraft.archipelago.v201a','wildcraft.archipelago.v201','wildcraft.archipelago.v20','wildcraft.archipelago.v199d','wildcraft.archipelago.v199c','wildcraft.archipelago.v199b','wildcraft.archipelago.v199','wildcraft.archipelago.v198','wildcraft.archipelago.v197b','wildcraft.archipelago.v197','wildcraft.archipelago.v196b','wildcraft.archipelago.v196','wildcraft.archipelago.v195d','wildcraft.archipelago.v195c','wildcraft.archipelago.v195b','wildcraft.archipelago.v195','wildcraft.archipelago.v194c','wildcraft.archipelago.v194b','wildcraft.archipelago.v194','wildcraft.archipelago.v193','wildcraft.archipelago.v192','wildcraft.archipelago.v191d','wildcraft.archipelago.v191c','wildcraft.archipelago.v191b','wildcraft.archipelago.v191a','wildcraft.archipelago.v190','wildcraft.archipelago.v189','wildcraft.archipelago.v188c','wildcraft.archipelago.v188b','wildcraft.archipelago.v188a','wildcraft.archipelago.v188','wildcraft.archipelago.v187b','wildcraft.archipelago.v187a','wildcraft.archipelago.v186','wildcraft.archipelago.v185','wildcraft.archipelago.v184','wildcraft.archipelago.v183','wildcraft.archipelago.v182','wildcraft.archipelago.v181','wildcraft.archipelago.v181b','wildcraft.archipelago.v181a','wildcraft.archipelago.v18','wildcraft.archipelago.v18c','wildcraft.archipelago.v18b','wildcraft.archipelago.v18a','wildcraft.archipelago.v173'];
+  const keys=[SAVE,'wildcraft.archipelago.v201d','wildcraft.archipelago.v201c','wildcraft.archipelago.v201b','wildcraft.archipelago.v201a','wildcraft.archipelago.v201','wildcraft.archipelago.v20','wildcraft.archipelago.v199d','wildcraft.archipelago.v199c','wildcraft.archipelago.v199b','wildcraft.archipelago.v199','wildcraft.archipelago.v198','wildcraft.archipelago.v197b','wildcraft.archipelago.v197','wildcraft.archipelago.v196b','wildcraft.archipelago.v196','wildcraft.archipelago.v195d','wildcraft.archipelago.v195c','wildcraft.archipelago.v195b','wildcraft.archipelago.v195','wildcraft.archipelago.v194c','wildcraft.archipelago.v194b','wildcraft.archipelago.v194','wildcraft.archipelago.v193','wildcraft.archipelago.v192','wildcraft.archipelago.v191d','wildcraft.archipelago.v191c','wildcraft.archipelago.v191b','wildcraft.archipelago.v191a','wildcraft.archipelago.v190','wildcraft.archipelago.v189','wildcraft.archipelago.v188c','wildcraft.archipelago.v188b','wildcraft.archipelago.v188a','wildcraft.archipelago.v188','wildcraft.archipelago.v187b','wildcraft.archipelago.v187a','wildcraft.archipelago.v186','wildcraft.archipelago.v185','wildcraft.archipelago.v184','wildcraft.archipelago.v183','wildcraft.archipelago.v182','wildcraft.archipelago.v181','wildcraft.archipelago.v181b','wildcraft.archipelago.v181a','wildcraft.archipelago.v18','wildcraft.archipelago.v18c','wildcraft.archipelago.v18b','wildcraft.archipelago.v18a','wildcraft.archipelago.v173'];
   for(const key of keys){
     try{
       const raw=localStorage.getItem(key);
@@ -1540,10 +1544,13 @@ const isBoat = b => boats.includes(b?.type);
 const boat = () => state.builds.find(b=>b.id===state.mounted) || null;
 const amount = k => state.bag[k]||0;
 const held = () => activeHand();
-function initialize(fresh,appearance=null){
+function initialize(fresh,appearance=null,guideLevel=null){
   const previousSave=fresh?null:loadGame();
   const next=previousSave||prepareSave({...newState(),appearance});
-  if(!previousSave)next.routes.layout="spaced";
+  if(!previousSave){
+    next.routes.layout="spaced";
+    if(guideLevel&&Object.hasOwn(V201_GUIDE_INTENSITIES,guideLevel))applyGuideIntensity(guideLevel,next,false);
+  }
   installGameState(next,!previousSave);
   save();
 }
@@ -1565,7 +1572,12 @@ function installGameState(next,showWelcome,loadAudio=false){
   cancelPlacement();toastUntil=0;notices.length=0;noticeCurrent=null;$('toast').textContent='';$('hud').hidden=false;
   closePanel();renderHotbar();updateHud();
   if(state.routes.passenger){passengerUntil=nowClock+2;openPanel('passengerVoyage');}
-  if(showWelcome)toast('靠近树木采木。营地北侧旧坑道与海岸沉船可深入探索！',5);
+  if(showWelcome){
+    const gl=currentGuideIntensity(state);
+    if(gl==='free')toast('自由探索模式已开启，祝航行顺利。',2.6);
+    else if(gl==='light')toast('轻量提示已开启：危险与高危环境仍会提醒，旅途指南随时可查。',3.4);
+    else toast('靠近树木采木。营地北侧旧坑道与海岸沉船可深入探索！',5);
+  }
 }
 const packSize=()=>PACK_CAPACITIES[state.packTier];
 const bulkBuilds=new Set([...planted,'wall','gate','floor','stoneWall','bridge']);
@@ -3242,7 +3254,7 @@ function openPanel(kind,reason=''){
   else if(kind==='mistSite')renderMistSite();
   else if(kind==='title'){
     const exists=!!loadGame();
-    w.innerHTML=`<div class="inside"><div class="eyebrow">2.0.1d 补丁版 · 田园与冒险</div><h1>荒野微光</h1><p>在群岛求生、建造、远航。本次补丁修复弹窗单层滚动与触控隔离、新增双击快捷存取仓储、特色生态岛屿樱花树与樱花树苗、修复陆地漂流瓶并小幅加强夜间与血月野兽。</p><div class="row">${exists?'<button class="press primary" data-act="continue" data-start="true">继续航行</button><button class="press" data-act="restart">新游戏</button>':'<button class="press primary" data-act="new" data-start="true">开始生存</button>'}<button class="press" data-act="saveTransfer">导入／导出存档</button></div><p class="controls">${controlGuide}</p></div>`;
+    w.innerHTML=`<div class="inside"><div class="eyebrow">2.0.1e · 田园与冒险</div><h1>荒野微光</h1><p>在群岛求生、建造、远航。支持开局与设置自由切换三档引导强度（完整引导／轻量提示／自由探索），包含弹窗流畅滚动修复、双击快捷存取、生态樱花树种植与夜间血月野兽强化。</p><div class="row">${exists?'<button class="press primary" data-act="continue" data-start="true">继续航行</button><button class="press" data-act="restart">新游戏</button>':'<button class="press primary" data-act="new" data-start="true">开始生存</button>'}<button class="press" data-act="saveTransfer">导入／导出存档</button></div><p class="controls">${controlGuide}</p></div>`;
   }else if(kind==='pause'){
     w.innerHTML=`<div class="inside"><h2>游戏暂停</h2><p>${frameFaultPaused?'游戏遇到异常并已暂停。点击「脱离卡点」重试。':saveFailed?'当前浏览器无法保留进度。':'进度自动保存在这台设备的浏览器里。'}</p><div class="row">${frameFaultPaused?'':'<button class="press primary" data-act="close">继续探索</button>'}<button class="press ${frameFaultPaused?'primary':''}" data-act="movementRecovery">脱离卡点</button><button class="press" data-act="saveTransfer">JSON 存档</button><button class="press primary" data-act="openSettings">完整游戏设置</button><button class="press" data-act="v20Atlas">群岛百科</button><button class="press" data-act="saveNow">立即手动保存</button><button class="press" data-act="restart">重新开始</button></div><p class="controls">${controlGuide}</p></div>`;
   }else if(kind==='restart'){
@@ -6506,7 +6518,7 @@ function tickEntityRespawns(){
 function buildSaveExportText(fromTitle=false){
   if(!fromTitle){saveProsperPeople();captureIncidentActors();captureAnimalStates();captureBoarding();captureNightActors();captureDuelEncounters();refreshJourneyProgress();syncDungeonPersist();syncSchoolSave();state.rural.audio=ruralAudioDefaults();state.displayPrefs=displayPreferences();}
   const data=fromTitle?(loadGame()||state):state;
-  return JSON.stringify({app:'wildcraft',format:SAVE_FORMAT,version:'2.0.1d',exportedAt:new Date().toISOString(),data},null,2);
+  return JSON.stringify({app:'wildcraft',format:SAVE_FORMAT,version:'2.0.1e',exportedAt:new Date().toISOString(),data},null,2);
 }
 function validateSavePayload(text){
   const bad=error=>({ok:false,error});
@@ -6517,7 +6529,7 @@ function validateSavePayload(text){
   const coords=q=>record(q)&&Number.isFinite(q.x)&&Number.isFinite(q.y);
   const integer=(n,max)=>Number.isSafeInteger(n)&&n>=0&&n<=max;
   if(!checkSaveTree(parsed))return bad('存档数据过深或包含异常字符。');
-  if(parsed?.data&&(parsed.app!=='wildcraft'||!['1.87b','1.88','1.88a','1.88b','1.88c','1.89','1.90','1.91a','1.91b','1.91c','1.91d','1.92','1.93','1.94','1.94b','1.94c','1.95','1.95b','1.95c','1.95d','1.96','1.96b','1.97','1.97 Dev','1.97b','1.98','1.98 Dev','1.99','1.99b','1.99c','1.99d','2.0','2.0.1','2.0.1a','2.0.1b','2.0.1c','2.0.1d'].includes(parsed.version)||
+  if(parsed?.data&&(parsed.app!=='wildcraft'||!['1.87b','1.88','1.88a','1.88b','1.88c','1.89','1.90','1.91a','1.91b','1.91c','1.91d','1.92','1.93','1.94','1.94b','1.94c','1.95','1.95b','1.95c','1.95d','1.96','1.96b','1.97','1.97 Dev','1.97b','1.98','1.98 Dev','1.99','1.99b','1.99c','1.99d','2.0','2.0.1','2.0.1a','2.0.1b','2.0.1c','2.0.1d','2.0.1d Dev','2.0.1e','2.0.1e Dev'].includes(parsed.version)||
     parsed.version!=='1.87b'&&parsed.format!==SAVE_FORMAT))return bad('此游戏版本无法导入。');
   const s=parsed?.data??parsed;
   if(!record(s)||s.v!==1)return bad('不支持的存档格式。');
@@ -11797,6 +11809,7 @@ function renderSettingsPanel(tabName){
     body=`<div class="set-group">
       <div class="set-item"><label><span>死亡惩罚</span><small>轻度保留物品。标准掉落 20% 普通材料，保留 3 天。严酷掉落 40%，保留 1 天。</small></label><div class="inventory-actions">${Object.entries(DEATH_RULES).map(([k,r])=>'<button class="press '+(mode===k?'primary':'')+'" data-act="deathMode" data-val="'+k+'">'+r.name+'</button>').join('')}</div></div>
       <div class="set-item"><label><span>游戏难度</span><small>影响敌人强度、饥渴速度及野生资源再生。制作配方共用。</small></label><div class="inventory-actions">${[['casual','休闲'],['standard','标准'],['hard','困难']].map(([k,n])=>`<button class="press ${s.difficulty===k?'primary':''}" data-act="setOpt" data-val="difficulty:${k}">${n}</button>`).join('')}</div></div>
+      <div class="set-item"><label><span>引导强度</span><small>${V201_GUIDE_INTENSITIES[currentGuideIntensity()].desc}</small></label><div class="inventory-actions">${Object.entries(V201_GUIDE_INTENSITIES).map(([k,d])=>`<button class="press ${currentGuideIntensity()===k?'primary':''}" data-act="setGuideIntensity" data-val="${k}">${d.label}</button>`).join('')}</div></div>
       <div class="set-item"><label><span>伤害数字显示</span><small>命中时显示浮动伤害数值</small></label><button class="press" data-act="toggleBool" data-val="dmgNumbers">${s.dmgNumbers?'开启':'关闭'}</button></div>
       <div class="set-item"><label><span>NPC 主动邀请弹窗</span><small>关闭后仍保留头顶黄色感叹号，可自行点击交互</small></label><button class="press" data-act="toggleBool" data-val="npcInvitePopup">${s.npcInvitePopup!==false?'开启':'关闭'}</button></div>
       <div class="set-item"><label><span>家园 NPC 访客互动</span><small>关闭后熟悉居民不会再上门打扰你的营地</small></label><button class="press" data-act="toggleBool" data-val="homeVisitors">${s.homeVisitors!==false?'开启':'关闭'}</button></div>
@@ -11825,7 +11838,7 @@ function renderSettingsPanel(tabName){
     </div>`;
   }
 
-  $('window').innerHTML=panelFrame('游戏设置（V2.0.1d）',`<div class="set-tabs" role="tablist">${tabHtml}</div><div class="inside">${body}</div>`);
+  $('window').innerHTML=panelFrame('游戏设置（V2.0.1e）',`<div class="set-tabs" role="tablist">${tabHtml}</div><div class="inside">${body}</div>`);
   // 绑定滑块事件
   const bindRange=(id,valId,key)=>{
     const el=$(id);if(!el)return;
@@ -25455,7 +25468,7 @@ function starterAppearance(type='male'){
 }
 function beginCharacterCreation(){
   characterReturn=mapMode==='restart'?'restart':'title';
-  characterDraft=starterAppearance();characterDirection=0;characterPose=0;
+  characterDraft={...starterAppearance(),guideLevel:'full'};characterDirection=0;characterPose=0;
   openPanel('createCharacter');
 }
 function paintCharacterPreview(){
@@ -25478,7 +25491,12 @@ function renderCharacterCreation(){
     </div><div class="character-fields">
       ${select('发型','hair',hairChoices(d.type,d.hair))}${select('发色','hairColor',pairs(HAIR_COLORS))}
       ${select('肤色','skin',pairs(SKIN_COLORS))}${select('初始服装','outfit',starterOutfits(d.type).map(k=>[k,OUTFIT_BY_ID[k][1]]))}
-    </div><p class="cards-help">两种外观共用相同的属性、装备和故事。</p></div>
+    </div><p class="cards-help">两种外观共用相同的属性、装备和故事。</p>
+    <section class="guide-picker" role="group" aria-label="引导强度选择">
+      <strong>引导强度（局内设置随时可调整）</strong>
+      <div class="inventory-actions">${Object.entries(V201_GUIDE_INTENSITIES).map(([gk,gd])=>uiBtn('characterGuide',gk,gd.label,false,(d.guideLevel||'full')===gk,'aria-pressed="'+((d.guideLevel||'full')===gk)+'"')).join('')}</div>
+      <p class="cards-help">${V201_GUIDE_INTENSITIES[d.guideLevel||'full'].desc}</p>
+    </section></div>
     <div class="character-preview"><canvas id="characterPreview" width="138" height="118" aria-label="像素角色预览"></canvas>
       <div class="inventory-actions">${uiBtn('characterTurn','','转身 · '+['正面','左侧','背面','右侧'][characterDirection])}${uiBtn('characterPose','',characterPose?'待机':'试动作')}</div>
     </div></div><div class="character-footer">${uiBtn('characterCancel','','返回')}${uiBtn('characterStart','','开始生存',false,true)}</div>`);
@@ -25512,14 +25530,15 @@ function mobileInterfaceAction(act,value){
     }
     return true;
   }
-  if(!['characterType','characterTurn','characterPose','characterCancel','characterStart'].includes(act))return false;
+  if(!['characterType','characterGuide','characterTurn','characterPose','characterCancel','characterStart'].includes(act))return false;
   if(mapMode!=='createCharacter'||!characterDraft)return true;
   if(act==='characterCancel'){cancelCharacterCreation();return true;}
   if(act==='characterStart'){
-    const look=characterDraft;characterDraft=null;
-    initialize(true,{...look,outfits:[...new Set(['wander',look.outfit])]});
+    const {guideLevel,...look}=characterDraft;characterDraft=null;
+    initialize(true,{...look,outfits:[...new Set(['wander',look.outfit])]},guideLevel||'full');
     return true;
   }
+  if(act==='characterGuide'&&Object.hasOwn(V201_GUIDE_INTENSITIES,value))characterDraft.guideLevel=value;
   if(act==='characterType'&&Object.hasOwn(CHARACTER_TYPES,value)){
     characterDraft.type=value;
     if(!hairAllowed(value,characterDraft.hair))characterDraft.hair=defaultHair(value);
@@ -37929,6 +37948,44 @@ const V201_GUIDES={
   E07:['探索',0,false,'地区声望刚发生变化。港口服务、当地反应及部分委托会参考地区声望。'],
   E08:['探索',0,false,'正在使用港口货箱。确认船停在附近码头后，可用「装船」把货物转到合法泊位的货舱。']
 };
+const V201_GUIDE_INTENSITIES={
+  full:{label:'完整引导',desc:'开启任务追踪、首次操作指引与全部危险预警，适合初次上手。'},
+  light:{label:'轻量提示',desc:'关闭常规操作教学，仅保留危险预警与核心目标，适合熟悉生存玩法的玩家。'},
+  free:{label:'自由探索',desc:'关闭主动指引与任务追踪 HUD，随时可在「旅途指南」与设置中重新开启。'}
+};
+function currentGuideIntensity(s=state){
+  const g=s?.guideState?.settings;
+  if(!g)return 'full';
+  if(g.normal)return 'full';
+  if(g.danger)return 'light';
+  return 'free';
+}
+function applyGuideIntensity(level,s=state,sync=true){
+  if(!s||!Object.hasOwn(V201_GUIDE_INTENSITIES,level))return false;
+  if(!s.guideState)initV201(s);
+  const g=s.guideState.settings;
+  if(level==='full'){
+    g.normal=true;g.danger=true;g.mode='context';
+    s.journey.guide='on';s.journey.hideUntil=0;
+    s.mainTracking=true;if(s.cases)s.cases.fold=false;
+  }else if(level==='light'){
+    g.normal=false;g.danger=true;g.mode='brief';
+    s.journey.guide='quiet';s.journey.hideUntil=0;
+    s.mainTracking=true;if(s.cases)s.cases.fold=false;
+  }else{
+    g.normal=false;g.danger=false;g.mode='brief';
+    s.journey.guide='off';s.journey.hideUntil=0;
+    s.mainTracking=false;if(s.cases)s.cases.fold=true;
+  }
+  if(s===state&&v201GuideRuntime){
+    for(const k of [...v201GuideRuntime.pending]){
+      const isDanger=Boolean(V201_GUIDES[k]?.[1]);
+      if(isDanger?!g.danger:!g.normal)v201GuideRuntime.pending.delete(k);
+    }
+  }
+  if(sync&&s===state){updateCaseTracker();save();updateHud();}
+  return true;
+}
 const V201_DEFAULT_GUIDE={normal:true,danger:true,mode:'context'};
 const V201_GUIDE_MODES={context:'情境式',brief:'精简',full:'完整'};
 let v201GuideRuntime=null,v201GuideCategory='all';
@@ -38042,9 +38099,11 @@ function v201GuideHud(climate){
   }
 }
 function v201GuidePanel(){
-  const {seen,settings}=state.guideState,topics=['all','航海','生存','建造','战斗','探索'];
+  const {seen,settings}=state.guideState,level=currentGuideIntensity(),topics=['all','航海','生存','建造','战斗','探索'];
   const rows=Object.entries(V201_GUIDES).filter(([k,v])=>seen[k]&&(v201GuideCategory==='all'||v201GuideCategory===v[0]));
   return '<div class="v201-guide"><div class="inventory-actions">'+
+    Object.entries(V201_GUIDE_INTENSITIES).map(([k,d])=>uiBtn('setGuideIntensity',k,d.label,false,k===level)).join('')+
+    '</div><p class="cards-help">当前引导强度：<strong>'+V201_GUIDE_INTENSITIES[level].label+'</strong> · '+V201_GUIDE_INTENSITIES[level].desc+'</p><div class="inventory-actions">'+
     uiBtn('v201GuideSetting','normal','普通指引 '+(settings.normal?'开启':'关闭'),false,settings.normal)+
     uiBtn('v201GuideSetting','danger','危险提醒 '+(settings.danger?'开启':'关闭'),false,settings.danger)+
     Object.entries(V201_GUIDE_MODES).map(([k,t])=>uiBtn('v201GuideMode',k,t,false,k===settings.mode)).join('')+
@@ -38053,6 +38112,13 @@ function v201GuidePanel(){
     (rows.length?'<div class="grid">'+rows.map(([,v])=>'<article class="entry"><strong>'+v[0]+(v[1]?' · 危险提醒':' · 操作指引')+'</strong><p>'+escapeHtml(v[3])+'</p></article>').join('')+'</div>':'<p>这个分类暂无已触发的指引。</p>')+'</div>';
 }
 function v201GuideUi(act,val){
+  if(act==='setGuideIntensity'&&Object.hasOwn(V201_GUIDE_INTENSITIES,val)&&['settings','journeyGuide'].includes(mapMode)){
+    applyGuideIntensity(val,state,true);
+    toast('引导强度已切换为：'+V201_GUIDE_INTENSITIES[val].label,2.2);
+    if(mapMode==='settings')renderSettingsPanel();
+    else renderJourneyGuide();
+    return true;
+  }
   if(mapMode!=='journeyGuide'||journeyGuideTab!=='context')return false;
   if(act==='v201GuideCategory'&&['all','航海','生存','建造','战斗','探索'].includes(val))v201GuideCategory=val;
   else if(act==='v201GuideSetting'&&['normal','danger'].includes(val)){
