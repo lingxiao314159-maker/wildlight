@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-EIk3KBDFnaVz3WeBC7U9BhQXqMC+/2uDvYDHv7UITE8='; style-src 'unsafe-inline'; img-src data: blob:; base-uri 'none'; object-src 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-22qfywb4cbjqGOWE7pNSxSkj0OTvjKsqCByYKBNvLqE='; style-src 'unsafe-inline'; img-src data: blob:; base-uri 'none'; object-src 'none'; form-action 'none'">
 <meta name="theme-color" content="#0d2224">
-<title>荒野微光 V2.0.1a · 群岛优化补丁</title>
-<meta name="description" content="《荒野微光》V2.0.1a《群岛优化补丁》。灯塔湾扩建，房产规划与群岛百科任务统计修正。">
-<meta property="og:title" content="荒野微光 V2.0.1a · 群岛优化补丁">
-<meta property="og:description" content="《荒野微光》V2.0.1a《群岛优化补丁》。灯塔湾扩建，房产规划与群岛百科任务统计修正。">
+<title>荒野微光 V2.0.1b · 物件与交互修复</title>
+<meta name="description" content="《荒野微光》V2.0.1b《物件与交互修复》。物件说明与实际效果同步，并修复设施管理与拆除入口。">
+<meta property="og:title" content="荒野微光 V2.0.1b · 物件与交互修复">
+<meta property="og:description" content="《荒野微光》V2.0.1b《物件与交互修复》。物件说明与实际效果同步，并修复设施管理与拆除入口。">
 <style>
 #placementStatus{align-self:center;padding:2px 6px;color:#dfedcf;font-size:11px}.route-tabs{position:sticky;top:0;z-index:1;padding:4px 0;background:#112629}.route-voyage{text-align:center}.ferry-art{display:block;width:min(100%,360px);margin:0 auto 8px;border-radius:8px;border:1px solid #496661;overflow:hidden}.ferry-boat{animation:ferryBob 1.1s ease-in-out infinite alternate;transform-origin:160px 100px}.ferry-wave.a{animation:ferryDrift 2.4s linear infinite}.ferry-wave.b{animation:ferryDrift 1.6s linear infinite reverse}.ferry-progress{width:min(100%,360px);height:6px;margin:8px auto 0;border-radius:3px;background:#102426;overflow:hidden}.ferry-progress i{display:block;height:100%;width:0;background:#b6e5ad;animation:ferryFill var(--dur,3.6s) linear forwards}@keyframes ferryBob{from{transform:translateY(-2px) rotate(-1.2deg)}to{transform:translateY(3px) rotate(1.2deg)}}@keyframes ferryDrift{from{transform:translateX(0)}to{transform:translateX(-40px)}}@keyframes ferryFill{to{width:100%}}@media(prefers-reduced-motion:reduce){.ferry-boat,.ferry-wave{animation:none}}.route-voyage span{display:inline-block;font-size:44px;animation:routeSwell .8s ease-in-out infinite alternate}.estate-panel progress{width:100%;accent-color:#b6e5ad}@keyframes routeSwell{from{transform:translate(-5px,1px) rotate(-5deg)}to{transform:translate(5px,-2px) rotate(5deg)}}@media(prefers-reduced-motion:reduce){.route-voyage span{animation:none}}
 :root{color-scheme:dark;--ink:#eff3e9;--dim:#a5b9ad;--edge:#486762;--panel:#102326;--mint:#b6e5ad;--gold:#f4c47b;--pad:clamp(9px,2vw,22px);font-family:system-ui,'Microsoft YaHei',sans-serif}
@@ -620,6 +620,12 @@ body{position:fixed;inset:auto;left:var(--game-view-x,0px);top:var(--game-view-y
 .v201-guide .entry strong{font-size:13px}
 .v201-guide .entry p{font-size:12px}
 @media(max-width:480px){.v201-filter .press,.v201-filter .field{min-height:44px}}
+.v201b-facilities .inventory-actions{gap:6px;flex-wrap:wrap}
+.v201b-facilities .v201b-focused{border-color:#9cbd8e}
+.v201b-facilities .v201b-block{margin:6px 0;color:#f4c58b}
+@media(any-pointer:coarse),(max-width:760px){
+  .v201b-facilities .press,#hud .tools #v201bManageTarget{min-height:44px}
+}
 </style>
 </head>
 <body>
@@ -650,7 +656,7 @@ body{position:fixed;inset:auto;left:var(--game-view-x,0px);top:var(--game-view-y
       <div class="panel quest" id="ferryHud" hidden></div>
     </div>
     <div class="right">
-      <div class="tools"><button class="press" id="pack">背包</button><button class="press" id="craft">制作</button><button class="press" id="tasks">旅途</button><button class="press" id="livingOpen">百科</button><button class="press" id="pause" aria-label="设置">设置</button></div>
+      <div class="tools"><button class="press" id="pack">背包</button><button class="press" id="craft">制作</button><button class="press" id="v201bManageTarget" type="button" hidden>设施</button><button class="press" id="tasks">旅途</button><button class="press" id="livingOpen">百科</button><button class="press" id="pause" aria-label="设置">设置</button></div>
       <div class="map-wrap">
         <button class="panel map" id="map" aria-label="打开地图"><canvas id="radar" width="132" height="114"></canvas><small id="location"></small><span id="dungeonProg" class="dungeon-badge" hidden></span></button>
         <button class="map-toggle" id="toggleMapBtn" type="button" hidden aria-label="折叠或展开小地图">收起小地图</button>
@@ -687,7 +693,7 @@ body{position:fixed;inset:auto;left:var(--game-view-x,0px);top:var(--game-view-y
 <div id="editLayoutBar" hidden><span>拖动右侧按钮。摇杆在操作布局设置中调整。</span><button class="press primary" id="doneEditLayout">保存布局</button><button class="press" id="backEditLayout">返回游戏</button><button class="press" id="resetEditLayout">重置</button></div>
 <div id="worldCatchup" class="world-catchup" role="status" hidden></div><div class="veil" id="veil"><section class="window title-window" id="window" role="dialog" aria-modal="true">
       <div class="inside">
-        <div class="eyebrow">2.0.1a · 群岛优化补丁</div>
+        <div class="eyebrow">2.0.1b · 物件与交互修复</div>
         <h1>荒野微光</h1>
         <p role="status">正在启动游戏…</p>
         <p class="controls">如果一直停在这里，请下载 HTML 文件并用系统浏览器打开。</p>
@@ -703,7 +709,7 @@ const canvas=$('world');let ctx=canvas.getContext('2d');
 const W = 446, H = 292, T = 32, REACH = 60, DAY = 240;
 const SURFACE_W_182=416,SURFACE_H_182=272;
 const OLD_W=120,OLD_H=100,CHUNK=16;
-const SAVE = 'wildcraft.archipelago.v201a';
+const SAVE = 'wildcraft.archipelago.v201b';
 const TAILOR_ID='prosper:tailor';
 const TWO_PI = Math.PI * 2;
 const clamp = (n, low, high) => Math.max(low, Math.min(high, n));
@@ -835,7 +841,7 @@ const recipes = [
   ['rod','tools',{wood:2,fiber:2},'在水边或船上使用，可钓到鲜鱼。'],
   ['raft','build',{wood:8,fiber:2},'足以抵达所有岛屿。带些木头，可以在船上修补。'],
   ['fire','build',{wood:3,stone:3},'烹饪、恢复心神，也能登记为昏倒后的营地。'],
-  ['chest','build',{wood:5,fiber:1},'在陆地放置。可存放十类物品，箱内物资不会因昏倒而丢失。'],
+  ['chest','build',{wood:5,fiber:1},'在陆地放置，昏倒时箱内物资留在原处。'],
   ['bench','build',{wood:5,stone:2},'在附近可制作铁斧与帆船。'],
   ['furnace','build',{stone:7,wood:2},'让铁矿变成铁锭。每次熔炼耗费一份木头。'],
   ['ironAxe','tools',{wood:2,iron:2},'一次砍倒普通树，耐久更高。','bench'],
@@ -925,7 +931,7 @@ recipes.push(
   ['shade','build',{wood:3,fiber:3},'降低附近沙漠的耗水。适合绿洲和干河床前哨。'],
   ['bridge','build',{wood:5,rope:1},'在浅溪和潮滩相邻处放置，让涨水时也能渡过。'],
   ['raisedDock','build',{wood:8,limestone:2,rope:1},'在沿岸浅水或潮水水道建造，全天可靠岸。','bench'],
-  ['cargoChest','build',{wood:7,rope:1},'16 类容量，码头附近可直接把库存装船。'],
+  ['cargoChest','build',{wood:7,rope:1},'靠近码头可把库存装到已停妥的船。'],
   ['outpost','build',{wood:2},'立起后可命名，显示在海图上。'],
   ['cistern','build',{clay:4,resin:1},'储存 18 口淡水。近泉水时可灌满，也能收雨。','furnace'],
   ['dryPlot','build',{dryRoot:1},'耐旱种植，收完记得留一份重种。'],
@@ -958,7 +964,7 @@ recipes.push(
   ['duckOmelet','food',{duckEgg:1,root:1},'恢复 43 饱腹与 9 生命。','fire'],
   ['arrow','tools',{feather:1,wood:1,stone:1},'制作 10 支箭。'],
   ['reinforcedBow','tools',{iron:2,resin:1,wood:3},'船首改装。触礁、旋涡和大型海怪的撞击伤害降低 65%。','forge'],
-  ['cargoHold','tools',{wood:6,rope:2,iron:1},'帆船舱位从 10 格增加到 18 格。','forge'],
+  ['cargoHold','tools',{wood:6,rope:2,iron:1},'可为支持改装的船增加货舱格数。','forge'],
   ['deckRack','tools',{wood:3,silk:2,rope:1},'装在帆船上，在航行中风干鱼，无需生火。','forge'],
   ['deckLamp','tools',{lantern:1,copper:1},'装在帆船上，夜间照明。','forge'],
   ['mistArmor','tools',{mistCore:1,carapace:2,wool:1},'减伤 45%，在雾中稳定心神，移动速度降低 5%。','forge']
@@ -1371,7 +1377,7 @@ function newState(){
     relics:[],builds:[],depleted:{},mounted:null,dock:{...HOME},camp:{...HOME},won:false,downs:0,nextId:1};
 }
 function loadGame(){
-  const keys=[SAVE,'wildcraft.archipelago.v201','wildcraft.archipelago.v20','wildcraft.archipelago.v199d','wildcraft.archipelago.v199c','wildcraft.archipelago.v199b','wildcraft.archipelago.v199','wildcraft.archipelago.v198','wildcraft.archipelago.v197b','wildcraft.archipelago.v197','wildcraft.archipelago.v196b','wildcraft.archipelago.v196','wildcraft.archipelago.v195d','wildcraft.archipelago.v195c','wildcraft.archipelago.v195b','wildcraft.archipelago.v195','wildcraft.archipelago.v194c','wildcraft.archipelago.v194b','wildcraft.archipelago.v194','wildcraft.archipelago.v193','wildcraft.archipelago.v192','wildcraft.archipelago.v191d','wildcraft.archipelago.v191c','wildcraft.archipelago.v191b','wildcraft.archipelago.v191a','wildcraft.archipelago.v190','wildcraft.archipelago.v189','wildcraft.archipelago.v188c','wildcraft.archipelago.v188b','wildcraft.archipelago.v188a','wildcraft.archipelago.v188','wildcraft.archipelago.v187b','wildcraft.archipelago.v187a','wildcraft.archipelago.v186','wildcraft.archipelago.v185','wildcraft.archipelago.v184','wildcraft.archipelago.v183','wildcraft.archipelago.v182','wildcraft.archipelago.v181','wildcraft.archipelago.v181b','wildcraft.archipelago.v181a','wildcraft.archipelago.v18','wildcraft.archipelago.v18c','wildcraft.archipelago.v18b','wildcraft.archipelago.v18a','wildcraft.archipelago.v173'];
+  const keys=[SAVE,'wildcraft.archipelago.v201a','wildcraft.archipelago.v201','wildcraft.archipelago.v20','wildcraft.archipelago.v199d','wildcraft.archipelago.v199c','wildcraft.archipelago.v199b','wildcraft.archipelago.v199','wildcraft.archipelago.v198','wildcraft.archipelago.v197b','wildcraft.archipelago.v197','wildcraft.archipelago.v196b','wildcraft.archipelago.v196','wildcraft.archipelago.v195d','wildcraft.archipelago.v195c','wildcraft.archipelago.v195b','wildcraft.archipelago.v195','wildcraft.archipelago.v194c','wildcraft.archipelago.v194b','wildcraft.archipelago.v194','wildcraft.archipelago.v193','wildcraft.archipelago.v192','wildcraft.archipelago.v191d','wildcraft.archipelago.v191c','wildcraft.archipelago.v191b','wildcraft.archipelago.v191a','wildcraft.archipelago.v190','wildcraft.archipelago.v189','wildcraft.archipelago.v188c','wildcraft.archipelago.v188b','wildcraft.archipelago.v188a','wildcraft.archipelago.v188','wildcraft.archipelago.v187b','wildcraft.archipelago.v187a','wildcraft.archipelago.v186','wildcraft.archipelago.v185','wildcraft.archipelago.v184','wildcraft.archipelago.v183','wildcraft.archipelago.v182','wildcraft.archipelago.v181','wildcraft.archipelago.v181b','wildcraft.archipelago.v181a','wildcraft.archipelago.v18','wildcraft.archipelago.v18c','wildcraft.archipelago.v18b','wildcraft.archipelago.v18a','wildcraft.archipelago.v173'];
   for(const key of keys){
     try{
       const raw=localStorage.getItem(key);
@@ -1427,7 +1433,7 @@ function prepareSave(s){
     if(b.type==='supplyStation'){b.level??=1;b.mat??=0;b.work??=0;}
     if(b.type==='autoDepot'){b.fuel??=0;b.work??=0;b.enabled??=true;b.lastNote??='待机中';}
   }
-  s.contentRevision=33;
+  s.contentRevision=34;
   prepareRoutesSave(s);
   initJourney(s);s.prosper=prosperityRecord(s);s.estate=initEstateState(s);
   migrateDungeonRecords(s);
@@ -1691,15 +1697,15 @@ function nearStation(type,r=96){
 }
 const burning=b=>polyFire.includes(b.type)&&(b.fuel??0)>0;
 const coverTypes=['roof','rainRoof','shade','largeShade'];
-const roofed=b=>state.builds.some(o=>coverTypes.includes(o.type)&&dist(b,o)<=(o.type==='largeShade'?108:o.type==='rainRoof'?74:46));
+const roofed=(b,ignored=null)=>state.builds.some(o=>o!==ignored&&coverTypes.includes(o.type)&&dist(b,o)<=(o.type==='largeShade'?108:o.type==='rainRoof'?74:46));
 const isDock=b=>!!b&&['dock','raisedDock','dryDock'].includes(b.type);
 const isStock=b=>isBoat(b)||campStorage(b);
 const equipped=(key)=>Object.values(state.gear).some(g=>g?.key===key&&forgeFunctional(g));
-function isRoom(q){
+function isRoom(q,ignored=null){
   const tileId=cellAt(q.x,q.y);
-  if(!roofed(q)||!state.builds.some(b=>b.type==='floor'&&cellAt(b.x,b.y)===tileId))return false;
-  const closed=new Set(state.builds.filter(b=>fences.includes(b.type)&&!b.open&&dist(b,q)<420).map(b=>cellAt(b.x,b.y)));
-  const floor=new Set(state.builds.filter(b=>b.type==='floor'&&dist(b,q)<420).map(b=>cellAt(b.x,b.y)));
+  if(!roofed(q,ignored)||!state.builds.some(b=>b!==ignored&&b.type==='floor'&&cellAt(b.x,b.y)===tileId))return false;
+  const closed=new Set(state.builds.filter(b=>b!==ignored&&fences.includes(b.type)&&!b.open&&dist(b,q)<420).map(b=>cellAt(b.x,b.y)));
+  const floor=new Set(state.builds.filter(b=>b!==ignored&&b.type==='floor'&&dist(b,q)<420).map(b=>cellAt(b.x,b.y)));
   const seen=new Set([tileId]),todo=[tileId];
   for(let i=0;i<todo.length;i++){
     const id=todo[i];if(todo.length>72)return false;
@@ -2324,7 +2330,13 @@ function interact(){
     else yieldItem('copper',1,target);
     state.builds=state.builds.filter(b=>b!==target);renderHotbar();save();toast('取下了挂灯。');
   }
-  if(['bench','woodbench','furnace','forge','alchemy'].includes(target.type))openPanel('craft',target.type==='woodbench'?'bench':target.type);
+  if(['bench','woodbench','furnace','forge','alchemy'].includes(target.type)){
+    openPanel('craft',target.type==='woodbench'?'bench':target.type);return;
+  }
+  if(mapMode==='play'&&playerFacility(target)&&target.type!=='gate'&&!planted.includes(target.type)&&
+     ![...fishTraps,'crabTrap','rabbitTrap','beehive','oysterBasket','homeChair','simpleStool','homeWallLamp','oilLamp','diningTable'].includes(target.type)){
+    openPanel('manage',target.id);
+  }
 }
 
 function moveObject(e,dx,dy,pass){
@@ -2679,7 +2691,10 @@ function fitUpgrade(k){
 function removeUpgrade(k){
   const ship=shipAtDock();
   if(!ship?.mods?.[k])return;
-  if(k==='cargoHold'&&stockSlots(ship)>(ship.type==='flagship'?24:10)||k==='deckRack'&&ship.dryJob){toast('先腾出超额货舱，或收取正在风干的鱼。');return;}
+  if(k==='cargoHold'&&stockSlots(ship)>storageBaseSlots({type:ship.type})){
+    toast('卸下后仅有 '+storageBaseSlots({type:ship.type})+' 格货舱，请先取出超额货物。');return;
+  }
+  if(k==='deckRack'&&ship.dryJob){toast('请先收取风干架上的鱼。');return;}
   if(!roomFor(k)){toast('先腾出一格背包。');return;}
   delete ship.mods[k];addItem(k);renderHotbar();save();renderShipyard();
 }
@@ -2995,14 +3010,14 @@ function advance(dt){
   const run=dash?0:sprintCost(dt,mag);
   sceneMoving=mag>.06;
   if(sceneMoving&&(!ship||!validMooring(ship))){
-    let speed=ship?cruiseSpeed(ship)*(ship.fullSpeed&&!validMooring(ship)?1.25:1)*hullSpeedRatio(ship)*shipSpeedModifier(ship,p)*(weather()&&!seaShelter(p)?.78:1)*(1+(skillLevel('sail')-1)*.015)*(hasBuff('seaFeast')?1.18:1):dash?305:p.water<21?86:118;
+    let speed=ship?cruiseSpeed(ship)*(ship.fullSpeed&&!validMooring(ship)?1.25:1)*hullSpeedRatio(ship)*shipSpeedModifier(ship,p)*(weather()&&!seaShelter(p)?.78:1)*(1+(skillLevel('sail')-1)*.015)*(hasBuff('seaFeast')?BUFF_FACTORS.seaFeast:1):dash?305:p.water<21?86:118;
     if(!ship&&!dash&&!state.cave&&!state.boarding&&!inDungeon){
       const surface=habitatTiles[cellAt(p.x,p.y)];
       if(surface===2)speed*=equipped('rainCape')?.95:.84;
       if(weather()&&surface===4)speed*=equipped('snowBoots')?.96:.90;
     }
     if(inDungeon&&!dash)speed*=dungeonSpeedFactor(p);
-    if(!ship&&!dash&&hasBuff('swiftTonic'))speed*=1.26;
+    if(!ship&&!dash&&hasBuff('swiftTonic'))speed*=BUFF_FACTORS.swiftTonic;
     if(!ship&&!dash&&!inDungeon&&seasonAt()===0&&weather()&&(rivers.has(cellAt(p.x,p.y))||tidal(p.x,p.y)))speed*=.67;
     if(!ship&&!dash)speed*= (slowSnow?.76:1)*armorStats().speed*(nearWeb(p)?.60:1)*(state.playerStatus?.paralyzeUntil>state.elapsed?.45:1);
     if(ship&&state.playerStatus?.paralyzeUntil>state.elapsed)speed*=.55;
@@ -3122,7 +3137,7 @@ function openPanel(kind,reason=''){
   else if(kind==='mistSite')renderMistSite();
   else if(kind==='title'){
     const exists=!!loadGame();
-    w.innerHTML=`<div class="inside"><div class="eyebrow">2.0.1a · 群岛优化补丁</div><h1>荒野微光</h1><p>在群岛求生、建造、远航。群岛百科保存每一次新发现。</p><div class="row">${exists?'<button class="press primary" data-act="continue" data-start="true">继续航行</button><button class="press" data-act="restart">新游戏</button>':'<button class="press primary" data-act="new" data-start="true">开始生存</button>'}<button class="press" data-act="saveTransfer">导入／导出存档</button></div><p class="controls">${controlGuide}</p></div>`;
+    w.innerHTML=`<div class="inside"><div class="eyebrow">2.0.1b · 物件与交互修复</div><h1>荒野微光</h1><p>在群岛求生、建造、远航。群岛百科保存每一次新发现。</p><div class="row">${exists?'<button class="press primary" data-act="continue" data-start="true">继续航行</button><button class="press" data-act="restart">新游戏</button>':'<button class="press primary" data-act="new" data-start="true">开始生存</button>'}<button class="press" data-act="saveTransfer">导入／导出存档</button></div><p class="controls">${controlGuide}</p></div>`;
   }else if(kind==='pause'){
     w.innerHTML=`<div class="inside"><h2>游戏暂停</h2><p>${frameFaultPaused?'游戏遇到异常并已暂停。点击「脱离卡点」重试。':saveFailed?'当前浏览器无法保留进度。':'进度自动保存在这台设备的浏览器里。'}</p><div class="row">${frameFaultPaused?'':'<button class="press primary" data-act="close">继续探索</button>'}<button class="press ${frameFaultPaused?'primary':''}" data-act="movementRecovery">脱离卡点</button><button class="press" data-act="saveTransfer">JSON 存档</button><button class="press primary" data-act="openSettings">完整游戏设置</button><button class="press" data-act="v20Atlas">群岛百科</button><button class="press" data-act="saveNow">立即手动保存</button><button class="press" data-act="restart">重新开始</button></div><p class="controls">${controlGuide}</p></div>`;
   }else if(kind==='restart'){
@@ -3162,7 +3177,7 @@ function openPanel(kind,reason=''){
   else if(kind==='bag')renderBag();
   else if(kind==='chest')renderChest();
   else if(kind==='bed')renderBed();
-  else if(kind==='manage')renderManage();
+  else if(kind==='manage'){facilityFocusId=reason||null;renderManage();}
   else if(kind==='saltRack')renderRack();
   else if(kind==='smoker')renderRack();
   else if(kind==='fire')renderFire();
@@ -3252,21 +3267,22 @@ function renderManage(){renderFacilityManagement();}
 function canSalvage(b){return !facilityBlock(b,'dismantle');}
 function liftSapling(id){
   const b=movableBuilds().find(o=>o.id===id&&['sapling','fruitSapling','silverSapling'].includes(o.type));
-  if(!b||held()!=='shovel')return;
+  if(!b||held()!=='shovel'||facilityUnsafe()){toast('请在安全状态下走近树苗并手持铲子。');return;}
   if(!roomFor(b.type)){toast('先留一格给树苗。');return;}
   state.builds=state.builds.filter(o=>o!==b);wear('shovel');addItem(b.type);renderHotbar();save();renderManage();
 }
 function salvageBuild(id){
-  const b=manageableFacilities().find(v=>v.id===id);
-  const reason=b&&facilityBlock(b,'dismantle');
-  if(reason==='请先清空库存。'){v201Guide('B07');toast(reason);}
-  if(!b||reason)return;
-  dismantlePending=b.id;renderManage();
+  const b=facilityById(id),reason=facilityBlock(b,'dismantle');
+  if(reason){
+    if(reason==='请先清空库存。')v201Guide('B07');
+    toast(reason);return;
+  }
+  facilityFocusId=b.id;dismantlePending=b.id;renderManage();
 }
 function currentBuild(){return state.builds.find(b=>b.id===chestId);}
 function activeChest(){const b=currentBuild();return isStock(b)?b:null;}
 const stockSlots=b=>usedSlots(Object.fromEntries(Object.entries(b.stock).map(([k,v])=>[k,v.count])));
-const stockLimit=b=>(estateSlots(b)??(({flagship:b.mods?.cargoHold?32:24,chest:CHEST_SLOTS,fridge:16,cargoChest:24,homeShelf:18,woodenCabinet:20,raft:4,sail:b.mods?.cargoHold?18:10,advancedSail:b.mods?.cargoHold?23:15})[b.type]+(b.upgradeLv&&['chest','woodenCabinet'].includes(b.type)?(b.upgradeLv-1)*4:0)))+(!isBoat(b)&&state?.v195b?.homeUpgrades?.storage?(state.v195b.homeUpgrades.storage*4):0);
+const stockLimit=b=>storageBaseSlots(b)+(b.upgradeLv&&['chest','woodenCabinet'].includes(b.type)?(b.upgradeLv-1)*4:0)+(!isBoat(b)&&state?.v195b?.homeUpgrades?.storage?state.v195b.homeUpgrades.storage*4:0);
 function storageInRange(b){return b===boat()||dist(b,state.player)<=REACH||!!(estateSlots(b)&&estateAtPoint(b))||isBoat(b)&&dist(b,cargoBerth())<145&&dist(state.player,cargoBerth())<120||state.builds.some(d=>isDock(d)&&dist(d,state.player)<120&&dist(d,b)<105)||!!(isBoat(b)&&validMooring(b)&&dist(state.player,validMooring(b).bank)<80);}
 function chestBlock(chest,k,fromBox=withdrawing){
   if(fromBox){if(!v20Durable(k)&&items[k][4]&&ownsTool(k))return '身上已有同类工具';return roomFor(k)?'':'背包已满，无法取出';}
@@ -3434,7 +3450,7 @@ function renderBed(){
   const actions=mat?sleepButton(b,'nap','小睡',blocked('nap')):
     sleepButton(b,'morning','睡到清晨',!covered?'需要屋顶':blocked('morning'))+sleepButton(b,'tide','等到退潮',blocked('tide'));
   const camp=!mat&&covered&&!restBlocked(b)?'<div class="inventory-actions"><button class="press" data-act="campBed">登记复苏前哨</button></div>':'';
-  $('window').innerHTML=panelFrame(items[b.type][0]+' · Lv.'+(b.upgradeLv||1),`<div class="inside">${renderComfortBar(b)}${renderUpgradeCard(b)}<p class="cards-help">${environment}。</p><p class="cards-help">休息会消耗食物与饮水，潮汐、作物及生产仍会推进。${!mat&&!covered?'给木床加个屋顶后可睡到清晨。':''}</p><div class="grid sleep-options">${actions}</div>${camp}</div>`);
+  $('window').innerHTML=panelFrame(items[b.type][0]+' · Lv.'+(b.upgradeLv||1),`<div class="inside"><div class="inventory-actions">${facilityManageButton(b)}</div>${renderComfortBar(b)}${renderUpgradeCard(b)}<p class="cards-help">${environment}。</p><p class="cards-help">休息会消耗食物与饮水，潮汐、作物及生产仍会推进。${!mat&&!covered?'给木床加个屋顶后可睡到清晨。':''}</p><div class="grid sleep-options">${actions}</div>${camp}</div>`);
 }
 function setCamp(rest){
   const b=currentBuild();if(mapMode!=='bed'||!b||!['bed','strawMat','tent'].includes(b.type)||
@@ -3477,7 +3493,7 @@ function rackAction(takeJob){
 }
 function renderFire(){
   const b=currentBuild();if(!polyFire.includes(b?.type))return;
-  $('window').innerHTML=panelFrame(items[b.type][0],`<div class="inside"><p class="cards-help">${burning(b)?`还有 ${Math.ceil(b.fuel)} 秒燃料`:'火已熄灭，添柴可重新点燃'} · ${isRoom(b)?'封闭室内':roofed(b)?'屋棚遮雨':'露天'}。</p><div class="inventory-actions"><button class="press" data-act="fuel" data-val="wood" ${amount('wood')?'':'disabled'}>添 1 木头</button><button class="press" data-act="fuelBatch" data-val="wood" ${amount('wood')?'':'disabled'}>添 4 木头</button><button class="press" data-act="fuel" data-val="charcoal" ${amount('charcoal')?'':'disabled'}>添木炭</button>${amount('tallow')?'<button class="press" data-act="fuel" data-val="tallow">添兽脂</button>':''}${amount('peat')?'<button class="press" data-act="fuel" data-val="peat">添泥炭</button>':''}<button class="press primary" data-act="rackRecipes" ${burning(b)?'':'disabled'}>烹饪</button><button class="press" data-act="registerFire">登记营地</button>${burning(b)&&playerFacility(b)?uiBtn('quenchFacility',b.id,'熄灭'):''}${uiBtn('manageBuild','','管理设施')}${b.ash?`<button class="press" data-act="fireAsh">取灰烬 ×${b.ash}</button>`:''}</div></div>`);
+  $('window').innerHTML=panelFrame(items[b.type][0],`<div class="inside"><div class="inventory-actions">${facilityManageButton(b)}</div><p class="cards-help">${burning(b)?`还有 ${Math.ceil(b.fuel)} 秒燃料`:'火已熄灭，添柴可重新点燃'} · ${isRoom(b)?'封闭室内':roofed(b)?'屋棚遮雨':'露天'}。</p><div class="inventory-actions"><button class="press" data-act="fuel" data-val="wood" ${amount('wood')?'':'disabled'}>添 1 木头</button><button class="press" data-act="fuelBatch" data-val="wood" ${amount('wood')?'':'disabled'}>添 4 木头</button><button class="press" data-act="fuel" data-val="charcoal" ${amount('charcoal')?'':'disabled'}>添木炭</button>${amount('tallow')?'<button class="press" data-act="fuel" data-val="tallow">添兽脂</button>':''}${amount('peat')?'<button class="press" data-act="fuel" data-val="peat">添泥炭</button>':''}<button class="press primary" data-act="rackRecipes" ${burning(b)?'':'disabled'}>烹饪</button><button class="press" data-act="registerFire">登记营地</button>${burning(b)&&playerFacility(b)?uiBtn('quenchFacility',b.id,'熄灭'):''}${uiBtn('manageBuild','','管理设施')}${b.ash?`<button class="press" data-act="fireAsh">取灰烬 ×${b.ash}</button>`:''}</div></div>`);
 }
 function renderWater(){
   const source=currentBuild()||entities.find(e=>e.id===chestId);if(!source)return;
@@ -3494,7 +3510,7 @@ function fillCistern(){
 function renderHerd(){
   const b=currentBuild();if(b?.type!=='trough')return;
   const cap=enclosure(b);
-  $('window').innerHTML=panelFrame('围栏食槽 · Lv.'+(b.upgradeLv||1),`<div class="inside">${renderUpgradeCard(b)}<p class="cards-help">${cap?`围栏封闭 · 牲畜 ${livestockTotal(b)}/${cap}`:'在平地用墙和门围住食槽，里面至少留两格空间，关门后才开始饲养。'}<br>鸡 ${b.flock.chicken} · 山羊 ${b.flock.goat} · 长毛羊 ${b.flock.sheep||0} · 鸭 ${b.flock.duck||0} · 牛 ${b.flock.cow||0} · 饲料约 ${Math.ceil(b.feed)} 秒。用浆果引鸡鸭、块根引羊和牛。牛圈每个食槽最多接纳一头牛。鸭圈要靠近水。引来的动物可随你登船。</p><div class="inventory-actions"><button class="press" data-act="herd" data-val="berry" ${amount('berry')?'':'disabled'}>添浆果</button><button class="press" data-act="herd" data-val="root" ${amount('root')?'':'disabled'}>添块根</button>${amount('dryRoot')?'<button class="press" data-act="herd" data-val="dryRoot">添耐旱块根</button>':''}<button class="press primary" data-act="herd" data-val="egg" ${b.produce.egg?'':'disabled'}>收蛋 ×${b.produce.egg}</button><button class="press primary" data-act="herd" data-val="milk" ${b.produce.milk?'':'disabled'}>收奶 ×${b.produce.milk}</button>${[['duckEgg','鸭蛋'],['feather','羽毛']].map(([k,name])=>b.produce[k]?`<button class="press" data-act="herd" data-val="${k}">收${name} ×${b.produce[k]}</button>`:'').join('')}${b.flock.sheep?`<button class="press" data-act="shearHerd" ${amount('shears')?'':'disabled'}>剪羊毛</button>`:''}</div></div>`);
+  $('window').innerHTML=panelFrame('围栏食槽 · Lv.'+(b.upgradeLv||1),`<div class="inside"><div class="inventory-actions">${facilityManageButton(b)}</div>${renderUpgradeCard(b)}<p class="cards-help">${cap?`围栏封闭 · 牲畜 ${livestockTotal(b)}/${cap}`:'在平地用墙和门围住食槽，里面至少留两格空间，关门后才开始饲养。'}<br>鸡 ${b.flock.chicken} · 山羊 ${b.flock.goat} · 长毛羊 ${b.flock.sheep||0} · 鸭 ${b.flock.duck||0} · 牛 ${b.flock.cow||0} · 饲料约 ${Math.ceil(b.feed)} 秒。用浆果引鸡鸭、块根引羊和牛。牛圈每个食槽最多接纳一头牛。鸭圈要靠近水。引来的动物可随你登船。</p><div class="inventory-actions"><button class="press" data-act="herd" data-val="berry" ${amount('berry')?'':'disabled'}>添浆果</button><button class="press" data-act="herd" data-val="root" ${amount('root')?'':'disabled'}>添块根</button>${amount('dryRoot')?'<button class="press" data-act="herd" data-val="dryRoot">添耐旱块根</button>':''}<button class="press primary" data-act="herd" data-val="egg" ${b.produce.egg?'':'disabled'}>收蛋 ×${b.produce.egg}</button><button class="press primary" data-act="herd" data-val="milk" ${b.produce.milk?'':'disabled'}>收奶 ×${b.produce.milk}</button>${[['duckEgg','鸭蛋'],['feather','羽毛']].map(([k,name])=>b.produce[k]?`<button class="press" data-act="herd" data-val="${k}">收${name} ×${b.produce[k]}</button>`:'').join('')}${b.flock.sheep?`<button class="press" data-act="shearHerd" ${amount('shears')?'':'disabled'}>剪羊毛</button>`:''}</div></div>`);
 }
 const escapeHtml=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
 function renderOutpost(){
@@ -3514,7 +3530,7 @@ function renderGear(){
 function renderCompost(){
   const b=currentBuild();if(b?.type!=='compost')return;
   const left=b.job?Math.max(0,Math.ceil(b.job.ready-state.elapsed)):0;
-  $('window').innerHTML=panelFrame('堆肥箱',`<div class="inside"><p class="cards-help">${b.job?left?`还需 ${left} 秒。`:'肥料可收取。':'两份厨余、灰烬或蝠粪做一份肥料。选中后对着未成熟作物交互。'}</p><div class="inventory-actions">${b.job?`<button class="press primary" data-act="compost" ${left?'disabled':''}>取肥料</button>`:`<button class="press" data-act="compost" data-val="rot" ${amount('rot')>=2?'':'disabled'}>加入 2 厨余</button><button class="press" data-act="compost" data-val="ash" ${amount('ash')>=2?'':'disabled'} >加入 2 灰烬</button>${amount('guano')>=2?'<button class="press" data-act="compost" data-val="guano">加入 2 蝠粪</button>':''}`}</div></div>`);
+  $('window').innerHTML=panelFrame('堆肥箱',`<div class="inside"><div class="inventory-actions">${facilityManageButton(b)}</div><p class="cards-help">${b.job?left?`还需 ${left} 秒。`:'肥料可收取。':'两份厨余、灰烬或蝠粪做一份肥料。选中后对着未成熟作物交互。'}</p><div class="inventory-actions">${b.job?`<button class="press primary" data-act="compost" ${left?'disabled':''}>取肥料</button>`:`<button class="press" data-act="compost" data-val="rot" ${amount('rot')>=2?'':'disabled'}>加入 2 厨余</button><button class="press" data-act="compost" data-val="ash" ${amount('ash')>=2?'':'disabled'} >加入 2 灰烬</button>${amount('guano')>=2?'<button class="press" data-act="compost" data-val="guano">加入 2 蝠粪</button>':''}`}</div></div>`);
 }
 const activeItems=['coat','flask','bandage','silkBandage','antidote','anchor','fertilizer','nightSight','swiftTonic','rageSalve'];
 function renderBag(){bagGrid();}
@@ -3681,7 +3697,7 @@ function renderRecipes(keepScroll=false){
     <div class="row"><select id="stationSelect" class="field" aria-label="制作工作台">${['hand','bench','forge','fire','furnace','saltRack','smoker','alchemy','jamPress','all'].map(k=>`<option value="${k}" ${k===craftStation?'selected':''}>${stationNames[k]}${k!=='all'&&!available.includes(k)?' · 附近没有':''}</option>`).join('')}</select>
     <select id="categorySelect" class="field" aria-label="配方品类">${craftCategories.map(([k,name])=>`<option value="${k}" ${k===tab?'selected':''}>${name}</option>`).join('')}</select><label class="check"><input type="checkbox" id="readyOnly" ${readyOnly?'checked':''}>只看可制作</label></div>
     <span id="recipeCount" class="clock" aria-live="polite"></span><button class="press" data-act="v201CraftReset">清除筛选</button><span id="materialHint" class="hint-box" aria-live="polite">${originMaterial?items[originMaterial][0]+' · '+sourceFor(originMaterial):''}</span>
-  </div><div class="inside">${nearStation('bench')?renderUpgradeCard(nearStation('bench')):''}${movableBuilds().length?'<p class="cards-help"><button class="press" data-act="manageBuild">调整附近设施</button> · 工作台、锻造台与熔炉优先使用背包，再取附近可达的仓储（144 范围）。</p>':''}${renderWorkshopJobs()}${uiBtn('forgeGuide','','图纸与工匠指南')}<div class="grid" id="recipeList"></div></div></div><div class="craft-footer"><label class="check">批量 <select id="craftBatches" class="field" aria-label="制作批量">${[1,5,10,'max',2,3,4,6,8,12].map(n=>'<option value="'+n+'" '+(n===craftBatchSize?'selected':'')+'>'+(n==='max'?'最大可制作':n+' 次')+'</option>').join('')}</select></label><div id="craftOrder"></div></div>`);
+  </div><div class="inside">${nearStation('bench')?renderUpgradeCard(nearStation('bench')):''}${movableBuilds().length?'<p class="cards-help">'+uiBtn('manageBuild',activeWork(craftStation)?.id||'','管理设施')+' · 工作台、锻造台与熔炉优先使用背包，再取附近可达的仓储（144 范围）。</p>':''}${renderWorkshopJobs()}${uiBtn('forgeGuide','','图纸与工匠指南')}<div class="grid" id="recipeList"></div></div></div><div class="craft-footer"><label class="check">批量 <select id="craftBatches" class="field" aria-label="制作批量">${[1,5,10,'max',2,3,4,6,8,12].map(n=>'<option value="'+n+'" '+(n===craftBatchSize?'selected':'')+'>'+(n==='max'?'最大可制作':n+' 次')+'</option>').join('')}</select></label><div id="craftOrder"></div></div>`);
   $('craftSearch').addEventListener('input',e=>{searchCraft=e.target.value;renderRecipeRows();w.querySelector('.craft-content').scrollTop=0;});
   $('stationSelect').addEventListener('change',e=>{craftStation=e.target.value;if(searchCraft){searchCraft='';$('craftSearch').value='';}renderRecipeRows();w.querySelector('.craft-content').scrollTop=0;});
   $('categorySelect').addEventListener('change',e=>{tab=e.target.value;if(searchCraft){searchCraft='';$('craftSearch').value='';}renderRecipeRows();w.querySelector('.craft-content').scrollTop=0;});
@@ -3850,7 +3866,9 @@ $('window').addEventListener('click',e=>{
     case 'stockBulk':storageBulk(true);break;
     case 'homeWork':case 'homeWorkCancel':case 'homeWorkCollect':changeHomeWork(b.dataset.act,k);break;
     case 'chestMove':moveChestItem(k,b.dataset.stack==='true');break;
-    case 'moveBox':{const box=activeChest();if(box&&!isBoat(box)){closePanel();startPlacement(box.type,box);}break;}
+    case 'moveBox':{const box=activeChest();
+      if(box&&playerFacility(box)&&!isBoat(box)&&storageInRange(box)&&!facilityUnsafe()){closePanel();startPlacement(box.type,box);}
+      else toast('请走近私人储物设施，并在安全状态下搬动。');break;}
     case 'refreeze':refreeze();break;
     case 'portTransfer':portTransfer();break;
     case 'wearGear':changeGear(k);break;
@@ -3863,8 +3881,9 @@ $('window').addEventListener('click',e=>{
     }
     case 'frontierGuide':openPanel('frontierGuide');break;
     case 'nameOutpost':{const sign=currentBuild();if(['outpost','sign'].includes(sign?.type)){const name=$('outpostName').value.trim().slice(0,18);if(name){sign.name=name;renderOutpost();save();}}break;}
-    case 'manageBuild':openPanel('manage');break;
-    case 'relocate':{const b=mapMode==='manage'&&movableBuilds().find(o=>o.id===k);if(b){closePanel();startPlacement(b.type,b);}break;}
+    case 'manageBuild':openPanel('manage',k);break;
+    case 'relocate':{const b=mapMode==='manage'&&movableBuilds().find(o=>o.id===k);
+      if(b&&!facilityUnsafe()){closePanel();startPlacement(b.type,b);}else toast(b?'当前无法安全搬动设施。':'请走近可以搬动的私人设施。');break;}
     case 'salvage':if(mapMode==='manage')salvageBuild(k);break;
     case 'liftSapling':liftSapling(k);break;
     case 'openCargo':v201OpenCargo();break;
@@ -4058,6 +4077,7 @@ $('dodge').addEventListener('click',e=>{
 });
 $('fullSpeedBtn').onclick=toggleFullSpeed;$('deck').onclick=fireDeck;$('deckMode').onclick=switchDeck;
 $('cycleTarget').onclick=cycleInteractTarget;
+$('v201bManageTarget').onclick=e=>{if(mapMode==='play')openPanel('manage',e.currentTarget.dataset.facility);};
 $('toggleHotbar').onclick=()=>{const hb=$('hotbar'),c=hb.classList.toggle('collapsed');$('toggleHotbar').textContent=c?'▴':'▾';};
 const ATTACK_HOLD_MS=380;
 let attackTimer=0;
@@ -5637,6 +5657,7 @@ const recipeAlchemy=[
   ['harpoonBolt','tools',{wood:2,iron:1,rope:1},'制成 6 支捕鲸叉，命中能中断冲锋。','bench'],
   ['stakeTrap','build',{wood:3,stone:2,rope:1},'放在营地入口，血月时能伤害经过的敌人。','bench']
 ];
+const BUFF_FACTORS={swiftTonic:1.26,rageSalve:1.29,seaFeast:1.18};
 const buffsFor={
   nightSight:['夜视',DAY],swiftTonic:['疾行',DAY],rageSalve:['狂暴',DAY],
   seaFeast:['远航料理',DAY*2],honeyRoast:['采集料理',DAY*2],silverTea:['雾中清醒',DAY]
@@ -6365,7 +6386,7 @@ function tickEntityRespawns(){
 function buildSaveExportText(fromTitle=false){
   if(!fromTitle){saveProsperPeople();captureIncidentActors();captureAnimalStates();captureBoarding();captureNightActors();captureDuelEncounters();refreshJourneyProgress();syncDungeonPersist();syncSchoolSave();state.rural.audio=ruralAudioDefaults();state.displayPrefs=displayPreferences();}
   const data=fromTitle?(loadGame()||state):state;
-  return JSON.stringify({app:'wildcraft',format:SAVE_FORMAT,version:'2.0.1a',exportedAt:new Date().toISOString(),data},null,2);
+  return JSON.stringify({app:'wildcraft',format:SAVE_FORMAT,version:'2.0.1b',exportedAt:new Date().toISOString(),data},null,2);
 }
 function validateSavePayload(text){
   const bad=error=>({ok:false,error});
@@ -6376,7 +6397,7 @@ function validateSavePayload(text){
   const coords=q=>record(q)&&Number.isFinite(q.x)&&Number.isFinite(q.y);
   const integer=(n,max)=>Number.isSafeInteger(n)&&n>=0&&n<=max;
   if(!checkSaveTree(parsed))return bad('存档数据过深或包含异常字符。');
-  if(parsed?.data&&(parsed.app!=='wildcraft'||!['1.87b','1.88','1.88a','1.88b','1.88c','1.89','1.90','1.91a','1.91b','1.91c','1.91d','1.92','1.93','1.94','1.94b','1.94c','1.95','1.95b','1.95c','1.95d','1.96','1.96b','1.97','1.97 Dev','1.97b','1.98','1.98 Dev','1.99','1.99b','1.99c','1.99d','2.0','2.0.1','2.0.1a'].includes(parsed.version)||
+  if(parsed?.data&&(parsed.app!=='wildcraft'||!['1.87b','1.88','1.88a','1.88b','1.88c','1.89','1.90','1.91a','1.91b','1.91c','1.91d','1.92','1.93','1.94','1.94b','1.94c','1.95','1.95b','1.95c','1.95d','1.96','1.96b','1.97','1.97 Dev','1.97b','1.98','1.98 Dev','1.99','1.99b','1.99c','1.99d','2.0','2.0.1','2.0.1a','2.0.1b'].includes(parsed.version)||
     parsed.version!=='1.87b'&&parsed.format!==SAVE_FORMAT))return bad('此游戏版本无法导入。');
   const s=parsed?.data??parsed;
   if(!record(s)||s.v!==1)return bad('不支持的存档格式。');
@@ -9898,6 +9919,11 @@ function updateSmartInteractBtn(){
   btn.classList.toggle('dim',!info.active);
   btn.classList.toggle('alert',!!info.alert);
   if(cyc)cyc.hidden=list.length<2;
+  const manage=$('v201bManageTarget'),b=manageSelectedFacility(target);
+  manage.hidden=!b;
+  manage.dataset.facility=b?.id||'';
+  manage.title=b?'管理 '+items[b.type][0]:'管理附近设施';
+  manage.setAttribute('aria-label',manage.title);
 }
 
 function cycleInteractTarget(){
@@ -11660,7 +11686,7 @@ function renderSettingsPanel(tabName){
     </div>`;
   }
 
-  $('window').innerHTML=panelFrame('游戏设置（V2.0.1a）',`<div class="set-tabs" role="tablist">${tabHtml}</div><div class="inside">${body}</div>`);
+  $('window').innerHTML=panelFrame('游戏设置（V2.0.1b）',`<div class="set-tabs" role="tablist">${tabHtml}</div><div class="inside">${body}</div>`);
   // 绑定滑块事件
   const bindRange=(id,valId,key)=>{
     const el=$(id);if(!el)return;
@@ -16634,7 +16660,7 @@ function enemyImpact(e,p,weapon,move,counter,flat=false,weaponKey=null){
   if(k==='runeHalberd'&&(counter||move?.isParryCounter))bonus*=1.25;
   const unifiedBase=PLAYER_BASE_ATTACK+(weapon.bonusDamage??Math.max(0,(weapon.damage||PLAYER_BASE_ATTACK)-PLAYER_BASE_ATTACK));
   const base=unifiedBase*(move?.damage||1)*bonus;
-  const skill=weapon.ranged?1:Math.min(1.5,1+(skillLevel('combat')-1)*.035)*(hasBuff('rageSalve')?1.29:1);
+  const skill=weapon.ranged?1:Math.min(1.5,1+(skillLevel('combat')-1)*.035)*(hasBuff('rageSalve')?BUFF_FACTORS.rageSalve:1);
   const timing=flat?weak:Math.min(2.25,weak+(counter?.33:0)+(recovery&&weak===1?.1:0));
   const toughness=e.eliteTraits?.includes('tough')?.85:1;
   const factor=guarded?1-traits.armor*(1-pierce):1;
@@ -18170,7 +18196,7 @@ $('toggleMapBtn')?.addEventListener('click',e=>{
 
 // Deterministic test & diagnostics hook for verification scripts
 window.__WILDCRAFT_V188A__={
-  version:'2.0.1a',
+  version:'2.0.1b',
   SceneManager,
   generateDungeonLayout,
   validateDungeonLayout,
@@ -18528,7 +18554,7 @@ function homeFurnitureAction(b){
         toast(`在餐桌享用${items[meal][0]} · 饱腹 +${items[meal][2]} · 心神 +4`,2.6);renderHotbar();save();return;
       }
     }
-    openPanel('manage');
+    openPanel('manage',b.id);
   }
 }
 
@@ -22131,9 +22157,9 @@ const ESTATE_SALES={
 };
 const ESTATE_PLOTS={
   cottage:{name:'北坡住宅地',kind:'住宅',theme:'乔迁聚会',price:210,size:[8,7],preferred:[[46,115],[48,115],[50,115],[46,116],[43,117]],plans:['house','annex'],who:[],perks:'含有门墙的正式住宅、可休息铺位和专用储物架。完工可安装门牌及庆祝。可选扩建增加屋外工坊和照明。'},
-  orchard:{name:'东路农场地',kind:'农业地产',theme:'农场开园',price:398,size:[9,7],preferred:[[56,122],[55,120],[57,120],[56,124],[55,123]],plans:['field','mill'],who:['farm'],perks:'集中作物、现有滴灌与水罐、32 格仓库。可雇农工，用地块仓库直接办理托运。'},
-  pasture:{name:'南埠牧场地',kind:'牧业地产',theme:'牧场开业',price:586,size:[9,7],preferred:[[34,132],[35,132],[33,133],[37,133],[36,134]],plans:['barn','mill'],who:['herd'],perks:'带门畜栏、原有食槽和 32 格饲料库。可雇牧工投喂、收集畜产，并从仓库托运。'},
-  manor:{name:'南湾庄园地',kind:'综合庄园',theme:'庄园落成庆典',price:1590,size:[12,9],preferred:[[51,133],[51,132],[52,132],[50,132],[50,131]],plans:['manor','mill'],who:['farm','herd','steward'],perks:'住宅、果园田、滴灌、畜栏、果酱机、42 格仓库。可雇农工、牧工与总管，授权按日从仓库托运。'}
+  orchard:{name:'东路农场地',kind:'农业地产',theme:'农场开园',price:398,size:[9,7],preferred:[[56,122],[55,120],[57,120],[56,124],[55,123]],plans:['field','mill'],who:['farm'],perks:'集中作物、现有滴灌与水罐、'+estateStorageSlots('orchard')+' 格仓库。可雇农工，用地块仓库直接办理托运。'},
+  pasture:{name:'南埠牧场地',kind:'牧业地产',theme:'牧场开业',price:586,size:[9,7],preferred:[[34,132],[35,132],[33,133],[37,133],[36,134]],plans:['barn','mill'],who:['herd'],perks:'带门畜栏、原有食槽和 '+estateStorageSlots('pasture')+' 格饲料库。可雇牧工投喂、收集畜产，并从仓库托运。'},
+  manor:{name:'南湾庄园地',kind:'综合庄园',theme:'庄园落成庆典',price:1590,size:[12,9],preferred:[[51,133],[51,132],[52,132],[50,132],[50,131]],plans:['manor','mill'],who:['farm','herd','steward'],perks:'住宅、果园田、滴灌、畜栏、果酱机、'+estateStorageSlots('manor')+' 格仓库。可雇农工、牧工与总管，授权按日从仓库托运。'}
 };
 const ESTATE_PLANS={
   house:{name:'正式住宅',gold:92,needs:{wood:18,plank:9,stone:7,fiber:4},hours:9},
@@ -22640,7 +22666,7 @@ function estateFixedBuild(b){return typeof b?.id==='string'&&/^estate-build:[a-z
 function estateBuilds(id){return state.builds.filter(b=>estateFixedBuild(b)&&b.estateLot===id);}
 function estateBuildRole(id,role){return state.builds.find(b=>b.estateRole===role&&b.estateLot===id&&estateFixedBuild(b));}
 function estateWarehouse(id){const b=estateBuildRole(id,'warehouse');return b?.type==='cargoChest'?b:null;}
-function estateSlots(b){return b?.estateRole==='warehouse'&&estateFixedBuild(b)?b.estateLot==='manor'?42:32:null;}
+function estateSlots(b){return b?.estateRole==='warehouse'&&estateFixedBuild(b)?estateStorageSlots(b.estateLot):null;}
 function estatePlaceBlocked(k,q){
   // Only individual pieces of prepaid contracts and existing service entrances reserve space.
   if(Object.values(estateServices).some(e=>dist(q,e)<26||fences.includes(k)&&dist(q,e.front)<25))return true;
@@ -24219,7 +24245,7 @@ function invCell(id,k,count,options={}){
   const name=options.name||items[k][0];
   const durability=Number.isFinite(options.wear)&&forgeMax(k)?`<i class="inv-dur" style="width:${clamp(options.wear/forgeMax(k),0,1)*82}%"></i>`:'';
   return `<button type="button" class="inv-cell ${options.style||''}" data-act="invPick" data-val="${escapeHtml(id)}"${options.carried?' data-inventory-carried="'+k+'"':''}
-    title="${escapeHtml(name)}" aria-label="${escapeHtml(name+(count!=null?' ×'+count:''))}" aria-pressed="${inventorySelection===id}">${itemIcon(k)}<em class="inv-name">${escapeHtml(invShortName(name))}</em>${count!=null?`<b class="inv-count">${count}</b>`:''}${options.badge?`<span class="inv-badge">${escapeHtml(options.badge)}</span>`:''}${durability}</button>`;
+    title="${escapeHtml([name,storageDescription(k)||foodCatalogEffect(k)].filter(Boolean).join(' · '))}" aria-label="${escapeHtml(name+(count!=null?' ×'+count:''))}" aria-pressed="${inventorySelection===id}">${itemIcon(k)}<em class="inv-name">${escapeHtml(invShortName(name))}</em>${count!=null?`<b class="inv-count">${count}</b>`:''}${options.badge?`<span class="inv-badge">${escapeHtml(options.badge)}</span>`:''}${durability}</button>`;
 }
 function invEmpty(){
   return '<button type="button" class="inv-cell inv-empty" data-act="invBlank" aria-label="空物品格"></button>';
@@ -24261,18 +24287,18 @@ function invClass(k){
   return activeItems.includes(k)?'消耗品':'材料';
 }
 function invItemInfo(k,count,condition,lots,owner){
-  const recipe=recipes.find(r=>r[0]===k),status=foodFreshness(k,lots,owner);
+  const status=foodFreshness(k,lots,owner);
   const wear=Number.isFinite(condition)&&forgeMax(k)?
     ((k==='flask'||k==='wateringCan')?'水量 ':'耐久 ')+(FORGE_ARMOR[k]?condition.toFixed(1):Math.ceil(condition))+'/'+forgeMax(k):'';
+  const summary=FORGE_ARMOR[k]||FORGE_SHIELDS[k]?forgeGearLabel(k,condition??forgeMax(k)):itemStats(k);
   const extraDmg=weaponExtraDamage(k);
   const wStat=Object.hasOwn(PLAYER_WEAPONS,k)?PLAYER_WEAPONS[k]:null;
   const timings=wStat?('<p>攻击周期 '+wStat.rate+' 秒 · 距离 '+wStat.reach+' · 普通攻击体力 '+(wStat.stamina*STAMINA.attackFactor*armorStats().effort).toFixed(1)+'</p>'):'';
   const dmgLine=extraDmg>0?`<p class="inv-meta" style="color:#ffd891">攻击伤害 +${extraDmg}（基础 ${PLAYER_BASE_ATTACK+extraDmg}${wStat?.ranged?' · 远程':''}${wStat?.pierce?' · 破甲 '+Math.round(wStat.pierce*100)+'%':''}）</p>`:'';
   return `<p class="inv-meta">${invClass(k)} · 持有 ${count}${wear?' · '+wear:''}${freshMarkup(status)}</p>
     ${dmgLine}${timings}
-    ${items[k][2]?`<p>饱腹 +${items[k][2]}${items[k][3]?' · 生命 '+(items[k][3]>0?'+':'')+items[k][3]:''}</p>`:''}
-     ${FORGE_ARMOR[k]||FORGE_SHIELDS[k]?'<p>'+forgeGearLabel(k,condition??forgeMax(k))+'</p>':itemStats(k)?'<p>'+itemStats(k)+'</p>':''}
-    <p>${recipe&&!FORGE_ARMOR[k]&&!FORGE_SHIELDS[k]?escapeHtml(recipe[3]):escapeHtml(sourceFor(k))}</p>${forgeRepairHint(k)}`;
+    ${summary?'<p>'+escapeHtml(summary)+'</p>':''}
+    <p>${escapeHtml(sourceFor(k))}</p>${forgeRepairHint(k)}`;
 }
 function renderInvWindow(title,content,keep=true){
   const w=$('window');
@@ -24350,13 +24376,13 @@ function storageGrid(keepScroll){
   const tools=isBoat(chest)?(shipAtDock()===chest?uiBtn('shipyard','','改装'):'')+
     (chest.mods?.deckRack?uiBtn('dryOnShip','',dry?dry>state.elapsed?'正在风干':'取两份风干鱼':'风干鲜鱼 · 1 海盐',
       dry?dry>state.elapsed:!amount('fish')||!amount('salt')):''):
-    uiBtn('moveBox','','搬动',!playerFacility(chest))+
+    facilityManageButton(chest)+uiBtn('moveBox','','搬动',!playerFacility(chest))+
     (chest.type==='fridge'?uiBtn('refreeze','','添冰晶',!amount('ice')||chest.ice>=DAY*4):chest.type==='cargoChest'?uiBtn('portTransfer','','装船'):'');
   const note=chest.type==='fridge'?fridgeStatus(chest):isBoat(chest)?'沉船会带走货舱物品。':'';
   const toolbar=`${renderUpgradeCard(chest)}<div class="inv-toolbar inventory-actions">${tools}${uiBtn('tidyInventory','','按类整理')}
     ${uiBtn('chestDeposit','','选择存入模式',false,!withdrawing)}${uiBtn('chestWithdraw','','选择取出模式',false,withdrawing)}
     ${uiBtn('stockBulk','all','快速'+(withdrawing?'取出':'存入'))}</div>
-    <p class="cards-help">背包 ${usedSlots(state.bag)}/${packSize()} 格。${note}</p>`;
+    <p class="cards-help">背包 ${usedSlots(state.bag)}/${packSize()} 格。${escapeHtml(storageDescription(chest.type,chest))}${note}</p>`;
   const bag=invPackGroup('随身背包',state.bag,packSize(),'transfer',k=>({wear:state.wear[k],style:freshClass(k,state.lots[k])||''}));
   const width=stockLimit(chest);
   const storage=invPackGroup('容器库存',chest.stock,width,'cargo',k=>{
@@ -25476,29 +25502,33 @@ function inspectOwnedHouse(id){
   const houseShape=shape.filter(residential),xs=houseShape.map(b=>b.c),ys=houseShape.map(b=>b.r);
   const top=estateLocal(l.origin,Math.min(...xs),Math.min(...ys)),end=estateLocal(l.origin,Math.max(...xs),Math.max(...ys));
   const within=q=>q.x>=top.x-11&&q.x<=end.x+11&&q.y>=top.y-11&&q.y<=end.y+11;
-  const occupied=parts.some(b=>b.job||Object.values(b.stock||{}).some(v=>v.count>0))||
-    state.builds.some(b=>!parts.includes(b)&&within(b))||
-    state.piles.some(b=>!b.dungeonId&&!b.boardingId&&within(b))||
-    entities.some(e=>['storeHost','estateNpc','trader','leisureNpc','livingWatch','castaway','estatePet'].includes(e.type)&&within(e));
+  const reason=parts.some(b=>b.job)?'住宅内仍有生产任务，请等待并收取产物。':
+    parts.some(b=>Object.values(b.stock||{}).some(v=>v.count>0))?'请先清空住宅内的储物设施。':
+    state.builds.some(b=>!parts.includes(b)&&within(b))?'请先搬出住宅内另行摆放的设施或家具。':
+    state.piles.some(b=>!b.dungeonId&&!b.boardingId&&within(b))?'请先拾取住宅内散落的物品。':
+    entities.some(e=>['storeHost','estateNpc','trader','leisureNpc','livingWatch','castaway','estatePet'].includes(e.type)&&within(e))?'请等住宅内的访客或同伴离开。':
+    within(state.player)?'请先走出住宅。':l.job?'地块还有未完成的地产工程。':
+    state.estate.party?.plot===id&&!state.estate.party.closed?'请等该地块的庆祝活动结束。':'';
   const share=houseShape.length/shape.length;
   const materials=Object.fromEntries(Object.entries(ESTATE_PLANS[plan].needs).map(([k,n])=>[k,Math.floor(Math.floor(n*share)*.5)]).filter(([,n])=>n));
-  return {l,parts,plan,materials,blocked:occupied||within(state.player)||!!l.job||
-    !!(state.estate.party?.plot===id&&!state.estate.party.closed)};
+  return {l,parts,plan,materials,blocked:!!reason,reason};
 }
 function estateHouseControls(id,v){
   const house=inspectOwnedHouse(id);
   if(!house||!estatePlotAccess(id))return '';
   if(v.confirm==='demolishHouse')return '<article class="entry"><strong>拆除住宅</strong><p>住宅分摊材料回收 50% · '+escapeHtml(estateItemList(house.materials))+
-    '</p><p>地契仍然有效。请先搬出屋内物品和家具，等屋内人员离开，再走出住宅。</p><div class="inventory-actions">'+
+    '</p><p>地契仍然有效。请先搬出屋内物品和家具，等屋内人员离开，再走出住宅。</p>'+(house.reason?'<p class="low">'+escapeHtml(house.reason)+'</p>':'')+'<div class="inventory-actions">'+
     uiBtn('estateHouseConfirm',id,'确认拆除',house.blocked,true)+uiBtn('estateHouseCancel',id,'取消')+'</div></article>';
   return uiBtn('estateHouseAsk',id,'拆除住宅…',false);
 }
 function estateHouseAction(act,id){
   if(!['estateHouseAsk','estateHouseCancel','estateHouseConfirm'].includes(act))return false;
-  if(mapMode!=='estate'||estateView?.page!=='lot'||estateView.id!==id||!estatePlotAccess(id)||facilityUnsafe())return true;
+  if(mapMode!=='estate'||estateView?.page!=='lot'||estateView.id!==id)return true;
+  if(!estatePlotAccess(id)||facilityUnsafe()){toast('请在安全状态下走近地块再管理住宅。');return true;}
   const house=inspectOwnedHouse(id);
   if(act==='estateHouseAsk'&&house)estateView.confirm='demolishHouse';
   if(act==='estateHouseCancel')estateView.confirm=false;
+  if(act==='estateHouseConfirm'&&estateView.confirm==='demolishHouse'&&house?.blocked)toast(house.reason);
   if(act==='estateHouseConfirm'&&estateView.confirm==='demolishHouse'&&house&&!house.blocked){
     state.builds=state.builds.filter(b=>!house.parts.includes(b));
     for(const b of house.parts)rebindAfterRemoval(b);
@@ -25515,7 +25545,7 @@ function estateHouseAction(act,id){
 }
 function packedItemInfo(k,index){
   const b=state.routes.packed[k]?.[index];
-  return portableType(k)?'<p class="inv-meta">'+(b?'已收起 · 耐久 '+Math.round(100*b.hp/b.maxHp)+'%':'可部署的设施组件')+'</p>':buildKinds.includes(k)?'<p class="inv-meta">建造组件 · 到合适的地点施工</p>':'';
+  return portableType(k)?'<p class="inv-meta">'+(b?'已收起 · 耐久 '+Math.round(100*b.hp/b.maxHp)+'%'+(isStock(b)?' · '+storageDescription(k,b):''):'可部署的设施组件')+'</p>':buildKinds.includes(k)?'<p class="inv-meta">建造组件 · 到合适的地点施工</p>':'';
 }
 function inventoryFacilityBadge(k,index,source,dict,options){
   const packed=source==='pack'||source==='transfer'?state.routes.packed[k]:dict[k]?.packedUnits;
@@ -25526,10 +25556,10 @@ function playerFacility(b){
     !estateFixedBuild(b)&&!b.publicWorks&&b.owner!=='npc'&&b.owner!=='public'&&b.owned!==false;
 }
 function manageableFacilities(){
-  return state.builds.filter(b=>playerFacility(b)&&dist(b,state.player)<=95);
+  return state.builds.filter(b=>playerFacility(b)&&facilityDistance(b)<=95);
 }
 function facilityUnsafe(){
-  return !!(boat()||insideStore()||state.boarding||state.dungeons?.active||state.routes.passenger||
+  return !!(boat()||insideStore()||state.boarding||state.dungeons?.active||state.routes.passenger||isFerryPassenger()||
     combatInput.engagedUntil>state.elapsed||(state.lastHit>=0&&state.elapsed-state.lastHit<3));
 }
 function raftBank(q,deployment=false){
@@ -25549,29 +25579,7 @@ function raftBank(q,deployment=false){
   }
   return banks.sort((a,b)=>dist(q,a)-dist(q,b))[0]||null;
 }
-function facilityBlock(b,operation){
-  if(!playerFacility(b)||!state.builds.includes(b)||dist(b,state.player)>95)return '仅可管理附近的私人设施。';
-  if(facilityUnsafe())return '请先下船或解除危险。';
-  if(b.job||state.residents.some(u=>u.production?.station===b.id||u.home===b.id))return '设施正被使用。请先收取成品或调整居民安排。';
-  if(Object.values(b.stock||{}).some(v=>v?.count>0))return '请先清空库存。';
-  if(burning(b))return '请先熄灭火源。';
-  if(operation==='pack'){
-    if(!portableType(b.type))return '固定设施。';
-    if(!roomFor(b.type))return '背包没有空格。';
-    if(b.type==='raft'&&(!surfaceSafe(state.player)||!raftBank(b)||navalJob?.id===b.id||b.livestock?.length||
-       state.castaways.some(u=>u.aboard&&u.boatId===b.id)))return '需要空载停在安全岸边的木筏。';
-  }else{
-    if(isBoat(b)||isDock(b))return maritimeDemolishBlock(b);
-    if(planted.includes(b.type))return '请从种植菜单处理作物。';
-    if(b.type==='trough'&&(livestockTotal(b)||Object.values(b.produce||{}).some(Boolean)))return '请先安置牲畜并收取产物。';
-    if(isDock(b)&&(state.builds.some(v=>isBoat(v)&&v.moored===b.id)||state.v194?.ferry&&(state.v194.ferry.fromId===b.id||state.v194.ferry.toId===b.id)))return '请先驶离停泊的船只或结束当前客运。';
-    if((coverTypes.includes(b.type)||fences.includes(b.type)||b.type==='floor')&&state.builds.some(v=>v!==b&&
-      !coverTypes.includes(v.type)&&!fences.includes(v.type)&&!['floor','bridge'].includes(v.type)&&dist(v,b)<42))return '请先搬出屋内设施和家具。';
-    if(b.type==='homeMailbox')return '请用「收回邮箱」保留邮箱。';
-    if(!recoverMaterialPlan(b))return '没有可确认的建造配方。';
-  }
-  return '';
-}
+function facilityBlock(b,operation){return facilityRemovalMessage(b,operation);}
 function recoverMaterialPlan(b){
   const value=FRACTION_BY_TYPE[b.type]??.7;
   const candidates=recipes.filter(r=>r[0]===b.type);
@@ -25606,39 +25614,58 @@ function packFacility(b){
   addItem(b.type);
   itemRecord(state.routes.packed[b.type]??=[],index,[snapshot]);
   state.builds=state.builds.filter(v=>v!==b);
-  rebindAfterRemoval(b);preferredTargetId=null;
+  facilityRemoved(b);
   renderHotbar();save();toast('已收起'+items[b.type][0]+'。');
   return true;
 }
 function renderFacilityManagement(){
-  const nearby=manageableFacilities();
-  const b=nearby.find(v=>v.id===dismantlePending),isMaritime=b&&(isBoat(b)||isDock(b)),plan=b&&(isMaritime?{value:0,materials:{}}:recoverMaterialPlan(b));
+  const nearby=manageableFacilities().sort((a,b)=>
+    Number(b.id===facilityFocusId)-Number(a.id===facilityFocusId)||facilityDistance(a)-facilityDistance(b));
+  const pending=dismantlePending&&facilityById(dismantlePending);
+  const maritime=pending&&(isBoat(pending)||isDock(pending));
+  const plan=pending&&(maritime?{value:0,materials:{}}:recoverMaterialPlan(pending));
   if(plan){
-    const blocked=facilityBlock(b,'dismantle');
-    $('window').innerHTML=panelFrame('确认拆除',`<div class="inside"><article class="entry">
-      <strong>${itemIcon(b.type)}${items[b.type][0]}</strong><p>${isMaritime?'拆除返还 0% 材料，且无法撤销。':'回收 '+Math.round(100*plan.value)+'% · '+escapeHtml(estateItemList(plan.materials))}</p>
-      <p>设施将拆除。背包放不下的原料会掉在脚边。若这里是绑定的复苏点，将切换到其他有效地点。</p>
-      ${blocked?'<p class="low">'+escapeHtml(blocked)+'</p>':''}<div class="inventory-actions">
-      ${uiBtn('confirmDemolition',b.id,'确认拆除',!!blocked,true)}${uiBtn('cancelDemolition','','取消')}</div></article></div>`);
+    const blocked=facilityBlock(pending,'dismantle');
+    const recovery=Object.keys(plan.materials).length?'回收 '+Math.round(100*plan.value)+'% · '+estateItemList(plan.materials):'本次拆除无可回收材料。';
+    $('window').innerHTML=panelFrame('确认拆除',`<div class="inside v201b-facilities"><article class="entry">
+      <strong>${itemIcon(pending.type)}${items[pending.type][0]}</strong>
+      <p>${escapeHtml(recovery)}</p><p>拆除后无法撤销。背包放不下的材料会掉在脚边。绑定的复苏点将切换到其他有效地点。</p>
+      ${blocked?'<p class="v201b-block">'+escapeHtml(blocked)+'</p>':''}<div class="inventory-actions">
+      ${uiBtn('confirmDemolition',pending.id,'确认拆除',!!blocked,true)}${uiBtn('cancelDemolition','','取消')}</div></article></div>`);
     return;
   }
+  dismantlePending=null;
+  const selected=facilityFocusId&&facilityById(facilityFocusId);
+  const fixed=selected&&estateFixedBuild(selected);
+  const fixedCard=fixed?`<article class="entry v201b-focused"><strong>${itemIcon(selected.type)}${items[selected.type][0]}</strong>
+    <p class="v201b-block">${escapeHtml(facilityBlock(selected,'dismantle'))}</p>
+    ${estatePlotAccess(selected.estateLot)?uiBtn('estateFocusLot',selected.estateLot,'管理地块'):''}</article>`:'';
   const cards=nearby.map(b=>{
     const pack=portableType(b.type),packError=pack?facilityBlock(b,'pack'):'',remove=facilityBlock(b,'dismantle');
     const transplant=held()==='shovel'&&['sapling','fruitSapling','silverSapling'].includes(b.type);
-    const fire=burning(b);
-    return `<article class="entry"><strong>${itemIcon(b.type)}${items[b.type][0]} · ${pack?'类别 '+PORTABLE_FACILITIES[b.type]:'固定建筑'}</strong>
-      <p>${Math.ceil(dist(b,state.player)/T)} 格外${packError?' · '+escapeHtml(packError):''}</p><div class="inventory-actions">
-      ${!isBoat(b)?uiBtn('relocate',b.id,'移动／转向'):''}
+    const running=burning(b),name=items[b.type][0],active=b.id===facilityFocusId;
+    const lock=packError&&packError!==remove?'<p class="v201b-block">收起限制 · '+escapeHtml(packError)+'</p>':'';
+    return `<article class="entry ${active?'v201b-focused':''}" data-facility="${escapeHtml(b.id)}">
+      <strong>${itemIcon(b.type)}${name}${b.upgradeLv>1?' · Lv.'+b.upgradeLv:''}${active?' · 当前目标':''}</strong>
+      <p>${focusDistanceText(b)}${isStock(b)?' · 已用 '+stockSlots(b)+' / '+stockLimit(b)+' 格':''}</p>
+      ${remove?'<p class="v201b-block">拆除限制 · '+escapeHtml(remove)+'</p>':''}${lock}
+      <div class="inventory-actions">
+      ${!isBoat(b)?uiBtn('relocate',b.id,'移动／转向',facilityUnsafe()||state.residents.some(u=>u.production?.station===b.id)):''}
       ${pack?uiBtn('packFacility',b.id,'收起',!!packError,true):''}
-      ${fire?uiBtn('quenchFacility',b.id,'熄灭',facilityUnsafe()||!!b.job):''}
-      ${!remove||remove==='请先清空库存。'?uiBtn('salvage',b.id,'拆除…'):''}
-      ${transplant?uiBtn('liftSapling',b.id,'铲起树苗'):''}
-      ${b.type==='homeMailbox'?uiBtn('estPackMailbox',b.id,'收回邮箱'):''}</div></article>`;
+      ${running?uiBtn('quenchFacility',b.id,'熄灭',facilityUnsafe()||!!b.job):''}
+      ${b.type!=='homeMailbox'?uiBtn('salvage',b.id,remove?'查看限制':'拆除…'):''}
+      ${transplant?uiBtn('liftSapling',b.id,'铲起树苗',facilityUnsafe()):''}
+      ${b.type==='homeMailbox'?uiBtn('estPackMailbox',b.id,'收回邮箱',facilityUnsafe()):''}</div></article>`;
   });
-  $('window').innerHTML=panelFrame('管理附近设施',`<div class="inside"><p>家园舒适度 ${comfortAt(state.player)}/10</p>
-    <div class="grid">${cards.join('')||'<p>附近没有可管理的私人设施。</p>'}</div></div>`);
+  $('window').innerHTML=panelFrame('管理附近设施',`<div class="inside v201b-facilities"><p>家园舒适度 ${comfortAt(state.player)}/10</p>
+    <div class="grid">${fixedCard}${cards.join('')||(!fixedCard?'<p>附近没有可管理的私人设施。</p>':'')}</div></div>`);
 }
 function facilityAction(act,value){
+  if(act==='estateFocusLot'){
+    if(mapMode==='manage'&&estatePlotAccess(value))openEstate('lot',value);
+    else toast('请走近该地块的告示牌。');
+    return true;
+  }
   if(act==='deployFacility'){
     if(mapMode==='bag'){
       const [k,slot]=value.split('|'),n=Number(slot);
@@ -25655,20 +25682,10 @@ function facilityAction(act,value){
   }
   if(mapMode!=='manage')return true;
   if(act==='cancelDemolition'){dismantlePending=null;renderManage();return true;}
-  if(!b)return true;
-  if(act==='packFacility')packFacility(b);
-  if(act==='confirmDemolition'&&dismantlePending===b.id&&!facilityBlock(b,'dismantle')){
-    if(isBoat(b)||isDock(b)){
-      executeMaritimeDemolish(b.id);
-      dismantlePending=null;
-      renderManage();return true;
-    }
-    const {materials}=recoverMaterialPlan(b);
-    state.builds=state.builds.filter(v=>v!==b);
-    if(b.type==='bridge')invalidateOceanMap();
-    rebindAfterRemoval(b);preferredTargetId=null;dismantlePending=null;
-    for(const [k,n] of Object.entries(materials))yieldItem(k,n,state.player);
-    renderHotbar();save();toast('已拆除，回收 '+estateItemList(materials)+'。');
+  if(act==='confirmDemolition'){facilityConfirm(value);return true;}
+  if(act==='packFacility'){
+    if(!b){toast(facilityBlock(facilityById(value),'pack'));renderManage();return true;}
+    packFacility(b);
   }
   renderManage();return true;
 }
@@ -26979,13 +26996,13 @@ const BUILDING_UPGRADES={
   ],
   chest:[
     null,
-    {name:'加固营地箱',cost:{plank:4,iron:2},effect:'储物容量 +4 格（14 格）· 提升家园舒适度'},
-    {name:'铁箍大木箱',cost:{sealedPlank:4,steel:1,metalFitting:2},effect:'储物容量 +8 格（18 格）'}
+    {name:'加固营地箱',cost:{plank:4,iron:2},effect:'提升储物容量和家园舒适度'},
+    {name:'铁箍大木箱',cost:{sealedPlank:4,steel:1,metalFitting:2},effect:'提升储物容量'}
   ],
   woodenCabinet:[
     null,
-    {name:'双门储物柜',cost:{plank:4,iron:2,rope:1},effect:'储物容量 +4 格（18 格）· 提升家园舒适度'},
-    {name:'匠艺大衣橱柜',cost:{sealedPlank:4,steel:1,copper:2},effect:'储物容量 +8 格（22 格）'}
+    {name:'双门储物柜',cost:{plank:4,iron:2,rope:1},effect:'提升储物容量和家园舒适度'},
+    {name:'匠艺大衣橱柜',cost:{sealedPlank:4,steel:1,copper:2},effect:'提升储物容量'}
   ],
   trough:[
     null,
@@ -27078,7 +27095,7 @@ function renderUpgradeCard(b){
   if(!next)return `<div class="v193-bar"><strong>${items[b.type]?.[0]||b.type} · 已达最高级 (Lv.${lv})</strong></div>`;
   const ok=hasIngredients(next.cost);
   const req=Object.entries(next.cost).map(([k,n])=>`${items[k]?.[0]||k} ${amount(k)}/${n}`).join(' · ');
-  return `<article class="entry" style="margin-bottom:8px"><strong>建筑升级 → Lv.${lv+1} ${next.name}</strong><p>${next.effect}</p><p class="req">材料：${req}</p><button class="press primary" data-act="v193UpgradeBuild" data-val="${b.id}" ${ok?'':'disabled'}>${ok?'立即升级':'材料不足'}</button></article>`;
+  return `<article class="entry" style="margin-bottom:8px"><strong>建筑升级 → Lv.${lv+1} ${next.name}</strong><p>${escapeHtml(upgradeEffect(b,lv,next.effect))}</p><p class="req">材料：${req}</p><button class="press primary" data-act="v193UpgradeBuild" data-val="${b.id}" ${ok?'':'disabled'}>${ok?'立即升级':'材料不足'}</button></article>`;
 }
 
 // --- NPC 个性与个人事件系统 ---
@@ -36578,7 +36595,7 @@ function renderForgePanel(){
   estateHtml('工匠打造与维修',body);
 }
 function renderForgeField(){
-  estateHtml('应急修理工具箱','<p>每次消耗工具箱 6 点耐久以及对应材料，最多恢复目标 18%。需要离开战斗并站在地面。</p>'+
+  estateHtml('应急修理工具箱','<p>每次消耗工具箱 6 点耐久及对应材料，将目标恢复至满耐久，并消耗该装备唯一一次维修机会。需要离开战斗并站在地面。</p>'+
     '<p id="materialHint" class="hint-box"></p><div class="grid">'+forgeRepairRows(true)+'</div>');
 }
 function forgeSameIsland(a,b){
@@ -36658,7 +36675,7 @@ function installInventoryForge(){
     lifeTalisman:'最大生命 +5，穿戴时不补充生命。',precisionPick:'铁矿、铜矿、晶石和精矿采掘伤害更高。普通石头采掘与铁镐相同。',
     fieldAxe:'伐木伤害 3（铁斧 4）。用 3 木头和 2 点耐久随身削制 1 木板。',
     explorerSpade:'可用于现有挖掘，也可在指定松土中挖出一次性埋藏物。',
-    repairKit:'在野外消耗材料与工具箱耐久，恢复装备或工具最多 18% 耐久。'
+    repairKit:'应急维修，消耗工具箱耐久和相应材料。'
   }))itemDetails[key]=text;
   for(const k of Object.keys({...FORGE_ARMOR,...FORGE_SHIELDS}))itemDetails[k]=forgeGearLabel(k);
   const first=WORKSHOP_RECIPES.get('wovenBag'),mid=WORKSHOP_RECIPES.get('hideBag'),top=WORKSHOP_RECIPES.get('largeTravelBag');
@@ -37614,7 +37631,7 @@ function v20AtlasRender(data=v20AtlasData()){
       '<div class="v20-list">'+rows.slice(v20AtlasPage*length,(v20AtlasPage+1)*length).map(r=>'<button class="press v20-card" data-act="v20Detail" data-val="'+escapeHtml(r.id)+'" '+(!canRead(r)?'disabled':r===focus?'aria-pressed="true"':'')+'>'+
         (r.done&&item?itemIcon(r.id,'sm'):'')+'<span>'+renderName(r)+(tab==='quests'?'<small>'+(r.repeatable?'循环委托':r.done?'已完成':'已发现')+'</small>':'')+(r.done&&r.total?'<small>区域 '+r.area+' / '+r.total+'</small>':'')+'</span></button>').join('')+'</div>'+
       (focus?'<article class="entry v20-detail">'+(tab==='animals'?'<canvas id="v20Portrait" width="76" height="76" aria-hidden="true"></canvas>':item?itemIcon(focus.id):'')+
-        '<div><strong>'+escapeHtml(focus.name)+'</strong><p>'+escapeHtml(item?(itemStats(focus.id)||v20ItemCategory(focus.id))+' · '+(focus.id==='flagship'?'灯塔湾船坞的远洋龙骨工程':sourceFor(focus.id)):tab==='animals'?v20AnimalDetail(focus.id):focus.detail||'已记录。')+'</p></div></article>':'')+
+        '<div><strong>'+escapeHtml(focus.name)+'</strong><p>'+escapeHtml(item?(itemStats(focus.id)||v20ItemCategory(focus.id))+' · '+(focus.id==='flagship'?'灯塔湾船坞的远洋龙骨工程':sourceFor(focus.id))+v201bRecipeMaterials(focus.id):tab==='animals'?v20AnimalDetail(focus.id):focus.detail||'已记录。')+'</p></div></article>':'')+
       (rows.length?'<div class="v20-pages">'+uiBtn('v20Page','prev','上一页',v20AtlasPage===0)+'<span>'+(v20AtlasPage+1)+' / '+pages+'</span>'+uiBtn('v20Page','next','下一页',v20AtlasPage>=pages-1)+'</div>':'');
   }
   $('window').innerHTML=panelFrame('群岛百科','<div class="inside v20-atlas"><nav aria-label="百科栏目" class="v20-nav">'+nav+'</nav>'+body+
@@ -37652,7 +37669,7 @@ const V201_GUIDES={
   S03:['航海',4,true,'⚠ 船停在暴露的近岸水面，风暴过后可能漂移。可先靠码头系泊，或放下已安装的小锚再离船。'],
   S04:['航海',5,true,'⚠ 船体耐久已低于 30%。找安全岸边或码头，打开船况进行维修。'],
   S05:['航海',9,true,'⚠ 船体耐久低于 10%，继续航行可能沉船。尽快停在安全水域检查维修材料。'],
-  S06:['航海',0,false,'正在乘木筏远航。木筏只有 4 格货舱，船体也较脆弱。带好返程物资，遇到风浪先避开。'],
+  S06:['航海',0,false,'正在乘木筏远航。木筏只有 '+storageBaseSlots({type:'raft'})+' 格货舱，船体也较脆弱。带好返程物资，遇到风浪先避开。'],
   S07:['航海',0,false,'附近有可用码头。通过交互可查看泊位服务。能否乘客船取决于这里的泊位和航线。'],
   S08:['航海',0,true,'已登上客船。船长沿已选水路航行，航程中可查看进度与可用的跳过操作。'],
   S09:['航海',0,true,'自有船只仍停在出发港附近。要取回它，可乘客船返回或安排其他航船。'],
@@ -37665,7 +37682,7 @@ const V201_GUIDES={
   V06:['生存',0,false,'已积累一批采集资源。可先留出维修和建造材料，再处理多余的库存。'],
   V07:['生存',4,true,'⚠ 当前风暴会影响海面或露天活动。留意状态提示，必要时先靠岸或到遮蔽处等候。'],
   V08:['生存',0,false,'天黑后仍离营地较远。备好照明、食物和淡水，记下返程路线。'],
-  B01:['建造',0,true,'普通木箱有 18 格基础容量。靠近后交互可存取物品。'],
+  B01:['建造',0,true,'普通木箱有 '+CHEST_SLOTS+' 格基础容量。靠近后交互可存取物品。'],
   B02:['建造',0,false,'冰箱有冷量时可延缓食物变质。在库存界面可添加冰晶补充冷量。'],
   B03:['建造',0,true,'可点选单件或整组存取。按类整理会集中显示相同物品；快速存入会跳过装备和快捷栏物品。'],
   B04:['建造',0,true,'仓储的格子已占满。同类堆叠如有余量仍可存入。也可整理、清出空间或使用其他仓储。'],
@@ -38114,8 +38131,197 @@ function installOuterEstatePlots(){
   refreshEstateClearance();
 }
 
+
+function storageBaseSlots(b){
+  return estateSlots(b)??({flagship:b.mods?.cargoHold?32:24,chest:CHEST_SLOTS,fridge:16,cargoChest:24,
+    homeShelf:18,woodenCabinet:20,raft:4,sail:b.mods?.cargoHold?18:10,advancedSail:b.mods?.cargoHold?23:15})[b.type];
+}
+function estateStorageSlots(id){return id==='manor'?42:32;}
+function storageDescription(k,b=null){
+  const base=storageBaseSlots(b?{...b,mods:null}:{type:k});
+  if(base===undefined)return '';
+  if(b)return '基础 '+base+' 格 · 当前 '+stockLimit(b)+' 格 · 同类物品可依堆叠规则合用一格。';
+  if(isBoat({type:k})){
+    const expanded=storageBaseSlots({type:k,mods:{cargoHold:true}});
+    return '基础货舱 '+base+' 格'+(expanded>base?' · 安装扩容件后 '+expanded+' 格':'')+'。';
+  }
+  const upgrade=['chest','woodenCabinet'].includes(k)?' · 可在现有建筑升级中扩容':'';
+  return '基础容量 '+base+' 格'+upgrade+'。可堆叠物品按组占格。';
+}
+function gameTimeLabel(t){
+  const mins=Math.ceil(t/DAY*1440),days=Math.floor(mins/1440),hours=Math.floor(mins%1440/60),minutes=mins%60;
+  return [days?days+' 天':'',hours?hours+' 小时':'',minutes?minutes+' 分钟':''].filter(Boolean).join(' ');
+}
+function foodCatalogEffect(k){
+  const i=items[k],buff=buffsFor[k];
+  if(!i[2]&&!shelfLife[k])return '';
+  const parts=[i[2]?'饱腹 +'+i[2]:'',i[3]?'生命 '+(i[3]>0?'+':'')+i[3]:''];
+  if(buff)parts.push(buff[0]+' '+gameTimeLabel(buff[1])+'（游戏内）');
+  if(shelfLife[k])parts.push('基础保质期 '+gameTimeLabel(shelfLife[k])+'（游戏内，受储存环境等影响）');
+  return parts.filter(Boolean).join(' · ')+'。';
+}
+function catalogEffect(k){
+  if(FORGE_ARMOR[k]||FORGE_SHIELDS[k])return forgeGearLabel(k);
+  return itemStats(k);
+}
+function upgradeEffect(b,lv,next){
+  if(!['chest','woodenCabinet'].includes(b.type))return next;
+  const from=stockLimit(b),to=stockLimit({...b,upgradeLv:lv+1});
+  return '仓储 '+from+' → '+to+' 格 (+'+(to-from)+' 格)'+(lv===1?' · 提升家园舒适度':'');
+}
+function installItemDescriptions(){
+  const storageUse={
+    chest:'在陆地摆放。昏倒时箱内物资留在原处。',fridge:'有冷量时延缓食物变质，可添加冰晶。',cargoChest:'靠近码头且船已停妥时可装船。'
+  };
+  const furnitureUse={
+    homeTable:'交互可管理附近设施。搭配邻近座椅可提高家园舒适度。',
+    homeChair:'交互歇脚，消耗 1 饱腹，恢复 2 心神及最多 12 体力。每张椅子有休息冷却。',
+    simpleStool:'交互歇脚，消耗 1 饱腹，恢复 3 心神及最多 12 体力。每张座椅有休息冷却。',
+    diningTable:'可从背包取用一份足够饱腹的餐食。未进餐时可管理附近设施。',
+    homeShelf:'用于存放物资。',woodenCabinet:'用于存放物资。',homeBookcase:'交互打开生存档案。',
+    coatRack:'交互打开衣装界面。',homeWallLamp:'交互点亮或熄灭，亮灯时提供照明。',
+    oilLamp:'交互点亮或熄灭，亮灯时提供照明。'
+  };
+  const descriptions={
+    ...furnitureUse,...storageUse,
+    axe:'斧头伐木，单次基础采集伤害 2。',ironAxe:'伐木单次基础采集伤害 4。',
+    pick:'石镐开采普通矿石，单次基础采集伤害 3。',ironPick:'铁镐开采普通矿石，单次基础采集伤害 6，可开采晶石及深层矿。',
+    obsidianPick:'深层铁矿、晶石与黑曜石矿可用黑曜石镐开采，深层铁矿和晶石单次基础采集伤害 12。',
+    warHammer:'重型武器，有较高破甲与击退。',bow:'优先消耗毒箭，其次消耗石箭。',sling:'远程攻击消耗石头。',
+    telescope:'可在船上、码头附近或合适的高地使用，观察远景 12 秒。',
+    lantern:'可手持或挂起以照明，使用时消耗耐久。',mineLamp:'照明并显露部分暗处的藏宝点。可手持或挂起。',
+    swiftTonic:'步行速度提高 '+forgePct(BUFF_FACTORS.swiftTonic-1)+'%，持续 '+gameTimeLabel(buffsFor.swiftTonic[1])+'（游戏内）。',
+    rageSalve:'近战伤害提高 '+forgePct(BUFF_FACTORS.rageSalve-1)+'%，持续 '+gameTimeLabel(buffsFor.rageSalve[1])+'（游戏内）。',
+    seaFeast:'航行时提高航速 '+forgePct(BUFF_FACTORS.seaFeast-1)+'%。',
+    repairKit:'在野外消耗材料和 6 点工具箱耐久，把一件尚可维修的装备恢复至满耐久。每件耐久装备只可维修一次。',
+    hunterBanner:'猎人公会的营地装饰。可搬动，不能拆成制作材料。',
+    antlerRack:'猎人公会的营地纪念架。可搬动，不能拆成制作材料。'
+  };
+  for(const k of [...CAMP_STORAGE,...boats]){
+    descriptions[k]=[storageDescription(k),descriptions[k]||itemStats(k)].filter(Boolean).join(' ');
+  }
+  descriptions.cargoHold=boats.filter(k=>storageBaseSlots({type:k,mods:{cargoHold:true}})>storageBaseSlots({type:k}))
+    .map(k=>items[k][0]+' '+storageBaseSlots({type:k})+' → '+storageBaseSlots({type:k,mods:{cargoHold:true}})+' 格').join(' · ')+'。';
+  for(const k of Object.keys(PLAYER_WEAPONS)){
+    if(!items[k])continue;
+    const w=PLAYER_WEAPONS[k];
+    descriptions[k]='普攻基础伤害 '+w.damage+' · 距离 '+w.reach+(w.pierce?' · 破甲 '+Math.round(100*w.pierce)+'%':'')+'。'+(descriptions[k]||itemStats(k));
+  }
+  for(const k of Object.keys(items)){
+    const food=foodCatalogEffect(k);
+    if(food)descriptions[k]=food+(descriptions[k]?' '+descriptions[k]:'');
+  }
+  Object.assign(itemDetails,descriptions);
+  for(const r of recipes){
+    const k=r[0];
+    if(Object.hasOwn(descriptions,k)||FORGE_ARMOR[k]||FORGE_SHIELDS[k]){
+      const text=catalogEffect(k);
+      const old=r[3];
+      // Retain acquisition and production guidance on variants without old numeric stat claims.
+      const keep=foodCatalogEffect(k)&&!/恢复\s*\d|减伤|提高航速/.test(old)&&!old.includes('生命。');
+      r[3]=[text,keep&&old!==text?old:''].filter(Boolean).join(' ');
+    }
+    CRAFT_SEARCH.set(r,recipeSearchText(r));
+  }
+}
+function v201bRecipeMaterials(k){
+  if(FORGE_CONTRACTS[k]){
+    const [,cost,gold]=FORGE_CONTRACTS[k];
+    return ' · 定制 '+estateItemList(cost)+'，工费 '+gold+' 金。';
+  }
+  const rows=recipes.filter(r=>r[0]===k);
+  return rows.length?' · 配方 '+rows.map(r=>estateItemList(r[2])+' → '+recipeYield(r)+' 件').join('／'):'';
+}
+
+let facilityFocusId=null;
+function facilityDistance(b){
+  const p=state.player;
+  return isDock(b)&&b.bank?Math.min(dist(b,p),dist(b.bank,p)):dist(b,p);
+}
+function facilityById(id){return state.builds.find(b=>b.id===id);}
+function facilityManageButton(b){
+  if(!b||!state.builds.includes(b)||!playerFacility(b)&&!estateFixedBuild(b))return '';
+  return uiBtn('manageBuild',b.id,'管理设施');
+}
+function manageSelectedFacility(target){
+  const visible=!boat()&&!insideStore()&&!state.boarding&&!state.dungeons?.active&&!isFerryPassenger()&&!state.routes.passenger&&!placing;
+  const eligible=b=>b&&facilityDistance(b)<=95&&(playerFacility(b)||estateFixedBuild(b));
+  if(!visible)return null;
+  if(eligible(target))return target;
+  return manageableFacilities().sort((a,b)=>facilityDistance(a)-facilityDistance(b))[0]||null;
+}
+function facilityBoundsBlock(b){
+  if(!coverTypes.includes(b.type)&&!fences.includes(b.type)&&b.type!=='floor')return '';
+  const nearby=state.builds.filter(v=>v!==b&&!coverTypes.includes(v.type)&&!fences.includes(v.type)&&
+    !['floor','bridge'].includes(v.type)&&dist(v,b)<42);
+  const affected=nearby.find(v=>{
+    if(b.type==='floor'&&cellAt(b.x,b.y)===cellAt(v.x,v.y))return true;
+    if(coverTypes.includes(b.type)&&roofed(v)&&!roofed(v,b))return true;
+    if(fences.includes(b.type)&&v.type==='trough'&&(livestockTotal(v)||Object.values(v.produce||{}).some(Boolean)))return true;
+    return isRoom(v)&&!isRoom(v,b);
+  });
+  return affected?'请先搬出或妥善安置依附此处的'+(items[affected.type]?.[0]||'附近设施')+'。':'';
+}
+function facilityRemovalMessage(b,operation){
+  if(!b||!state.builds.includes(b))return '该设施已移动或不存在，请重新选择。';
+  if(estateFixedBuild(b))return '这是地产工程的固定部件。住宅可到地块管理处按整栋规则处理。';
+  if(!playerFacility(b))return '公共设施、NPC 资产和受保护物件不可拆除。';
+  if(facilityDistance(b)>95)return '距离过远，请先走近设施。';
+  if(facilityUnsafe())return '请先下船、离开室内或脱离战斗再管理设施。';
+  if(b.job)return b.job.ready<=state.elapsed?'有成品待收取，请先收取。':'设施正在生产，请等待完成并收取产物。';
+  if(state.residents.some(u=>u.production?.station===b.id||u.home===b.id))return '设施已分配给居民，请先调整住宿或生产安排。';
+  if(Object.values(b.stock||{}).some(v=>v?.count>0))return '请先清空库存。';
+  if(burning(b))return '请先熄灭火源。';
+  if(operation==='pack'){
+    if(!portableType(b.type))return '这种设施无法收起。';
+    if(!roomFor(b.type))return '背包没有空格。';
+    if(b.type==='raft'&&(!surfaceSafe(state.player)||!raftBank(b)||navalJob?.id===b.id||b.livestock?.length||
+       state.castaways.some(u=>u.aboard&&u.boatId===b.id)))return '需要空载停在安全岸边的木筏。';
+    return '';
+  }
+  if(isBoat(b)||isDock(b))return maritimeDemolishBlock(b);
+  if(planted.includes(b.type))return '作物使用采收或原有铲起操作，无法拆成材料。';
+  if(b.type==='trough'&&(livestockTotal(b)||Object.values(b.produce||{}).some(Boolean)))return '请先安置牲畜并收取产物。';
+  if(b.type==='homeMailbox')return '请用「收回邮箱」保留邮箱。';
+  const structural=facilityBoundsBlock(b);
+  if(structural)return structural;
+  if(!recoverMaterialPlan(b))return '可移动的纪念品或植株，暂无可确认的拆料配方。';
+  return '';
+}
+function focusDistanceText(b){
+  const d=facilityDistance(b),pos=isDock(b)&&b.bank&&d<dist(b,state.player)?b.bank:b;
+  const dx=pos.x-state.player.x,dy=pos.y-state.player.y;
+  const direction=d<=12?'脚边':Math.abs(dx)>=Math.abs(dy)?(dx>0?'东侧':'西侧'):(dy>0?'南侧':'北侧');
+  return direction+' · 约 '+Math.max(1,Math.ceil(d/T))+' 格';
+}
+function facilityRemoved(b){
+  if(b.type==='bridge')invalidateOceanMap();
+  rebindAfterRemoval(b);
+  preferredTargetId=null;
+  if(chestId===b.id)chestId=null;
+  if(facilityFocusId===b.id)facilityFocusId=null;
+}
+function facilityConfirm(id){
+  if(dismantlePending!==id){toast('请先选择要拆除的设施。');return;}
+  const b=facilityById(id),reason=facilityBlock(b,'dismantle');
+  if(reason){toast(reason);renderManage();return;}
+  dismantlePending=null;
+  if(isBoat(b)||isDock(b)){
+    if(executeMaritimeDemolish(b.id)){if(facilityFocusId===b.id)facilityFocusId=null;}
+    renderManage();return;
+  }
+  const {materials}=recoverMaterialPlan(b);
+  state.builds=state.builds.filter(v=>v!==b);
+  facilityRemoved(b);
+  for(const [k,n] of Object.entries(materials))yieldItem(k,n,state.player);
+  renderHotbar();
+  v201SaveFeedback(Object.keys(materials).length?'已拆除，回收 '+estateItemList(materials)+'。':'已拆除，无可回收材料。');
+  renderManage();
+}
+
 installInventoryForge();
 installDuelContent();
+installItemDescriptions();
 
 makeTerrain();state=prepareSave(newState());populate();initSchools();resetRuralRuntime();bindAngling();resize();
 window.addEventListener('resize',queueViewportResize);
