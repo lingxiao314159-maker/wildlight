@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-iyclUFCcK5erVCRKUAK4lULA5ir71uz79uyJ8wAjSaM='; style-src 'unsafe-inline'; img-src data: blob:; base-uri 'none'; object-src 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-DeWecH5xalqmT0VvLkHxZclb6WYhRwN77OMq7ZETcP0='; style-src 'unsafe-inline'; img-src data: blob:; base-uri 'none'; object-src 'none'; form-action 'none'">
 <meta name="theme-color" content="#0d2224">
-<title>荒野微光 V2.0.1c · 节庆与商贸</title>
-<meta name="description" content="《荒野微光》V2.0.1c《节庆与商贸》。四季节庆优惠、商贸日和群岛行历公告。">
-<meta property="og:title" content="荒野微光 V2.0.1c · 节庆与商贸">
-<meta property="og:description" content="《荒野微光》V2.0.1c《节庆与商贸》。四季节庆优惠、商贸日和群岛行历公告。">
+<title>荒野微光 V2.0.1d 补丁版 · 触控滚动与生态修复</title>
+<meta name="description" content="《荒野微光》V2.0.1d 补丁版。P0 弹窗单层流畅滚动与触控隔离修复、双击快捷存取仓储、特色生态岛屿樱花树与樱花树苗、修复陆地漂流瓶、小幅加强夜间与血月野兽。">
+<meta property="og:title" content="荒野微光 V2.0.1d 补丁版 · 触控滚动与生态修复">
+<meta property="og:description" content="《荒野微光》V2.0.1d 补丁版。P0 弹窗滚动修复、双击存取、生态樱花树、修复陆地漂流瓶、夜间与血月野兽加强。">
 <style>
 #placementStatus{align-self:center;padding:2px 6px;color:#dfedcf;font-size:11px}.route-tabs{position:sticky;top:0;z-index:1;padding:4px 0;background:#112629}.route-voyage{text-align:center}.ferry-art{display:block;width:min(100%,360px);margin:0 auto 8px;border-radius:8px;border:1px solid #496661;overflow:hidden}.ferry-boat{animation:ferryBob 1.1s ease-in-out infinite alternate;transform-origin:160px 100px}.ferry-wave.a{animation:ferryDrift 2.4s linear infinite}.ferry-wave.b{animation:ferryDrift 1.6s linear infinite reverse}.ferry-progress{width:min(100%,360px);height:6px;margin:8px auto 0;border-radius:3px;background:#102426;overflow:hidden}.ferry-progress i{display:block;height:100%;width:0;background:#b6e5ad;animation:ferryFill var(--dur,3.6s) linear forwards}@keyframes ferryBob{from{transform:translateY(-2px) rotate(-1.2deg)}to{transform:translateY(3px) rotate(1.2deg)}}@keyframes ferryDrift{from{transform:translateX(0)}to{transform:translateX(-40px)}}@keyframes ferryFill{to{width:100%}}@media(prefers-reduced-motion:reduce){.ferry-boat,.ferry-wave{animation:none}}.route-voyage span{display:inline-block;font-size:44px;animation:routeSwell .8s ease-in-out infinite alternate}.estate-panel progress{width:100%;accent-color:#b6e5ad}@keyframes routeSwell{from{transform:translate(-5px,1px) rotate(-5deg)}to{transform:translate(5px,-2px) rotate(5deg)}}@media(prefers-reduced-motion:reduce){.route-voyage span{animation:none}}
 :root{color-scheme:dark;--ink:#eff3e9;--dim:#a5b9ad;--edge:#486762;--panel:#102326;--mint:#b6e5ad;--gold:#f4c47b;--pad:clamp(9px,2vw,22px);font-family:system-ui,'Microsoft YaHei',sans-serif}
@@ -627,6 +627,81 @@ body{position:fixed;inset:auto;left:var(--game-view-x,0px);top:var(--game-view-y
   .v201b-facilities .press,#hud .tools #v201bManageTarget{min-height:44px}
 }
 .commerce-bulletin{display:grid;gap:7px}.commerce-bulletin .grid{grid-template-columns:repeat(auto-fit,minmax(min(215px,100%),1fr))}.commerce-bulletin h3{margin:0}
+
+.guide-journal{display:grid;gap:8px}
+.guide-task>summary,.task-control details>summary{cursor:pointer;padding:6px 0;color:#ffe5b1;font-weight:700}
+.guide-materials{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:5px 10px;padding:0;list-style:none}
+.guide-materials li{display:flex;justify-content:space-between;gap:6px;color:#f4c38f}
+.guide-materials .guide-ready{color:#c3e7a5}
+#buildControls #farmPlantRow[hidden]{display:none}
+@media(max-height:520px) and (orientation:landscape){
+ .guide-journal .inventory-actions{flex-wrap:wrap}
+ .guide-task>summary{padding:7px 0}
+}
+
+/* === V2.0.1d P0 弹窗统一单层滚动、竖屏高度与局部触控隔离修复 === */
+/* 1) 打开任何弹窗时（非自定义布局编辑模式），彻底阻止底层 HUD 摇杆与 Canvas 抢占触摸 */
+body:not([data-state="playing"]) #world,
+body:not([data-state="playing"]) #hud:not(.editing-layout),
+body:not([data-state="playing"]) #hud:not(.editing-layout) *{pointer-events:none!important}
+.veil{
+  --window-room:calc(var(--game-view-h,100dvh) - max(12px,env(safe-area-inset-top)) - max(12px,env(safe-area-inset-bottom)));
+  touch-action:none;
+  overscroll-behavior:none;
+}
+/* 2) 修正竖屏与小屏弹窗总高度计算，防止底部内容超出可滚动区域 */
+.window{
+  display:flex;
+  flex-direction:column;
+  max-height:min(var(--window-room),780px)!important;
+  overflow:hidden;
+  touch-action:pan-y;
+}
+.window>header,.window>.tabs,.window>.set-tabs,.craft-footer,.character-footer{flex:none}
+.window>.inside,.craft-content{
+  flex:1 1 auto;
+  min-height:0;
+  overflow-y:auto;
+  overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
+  touch-action:pan-y;
+  padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));
+}
+.window[data-panel="craft"]{min-height:0!important}
+.craft-content .inside{flex:none;overflow:visible!important;max-height:none!important;padding-bottom:14px}
+/* 3) 消除所有不必要的嵌套滚动容器（背包、储物箱、商店、港口、交易、换装、合成） */
+.inv-groups,.inv-details,.wardrobe-items,
+.window:has(#recipeList) .inv-groups,.window:has(#recipeList) .inv-details,
+.inv-shell.with-detail .inv-groups{
+  max-height:none!important;
+  overflow:visible!important;
+  overscroll-behavior:auto;
+  touch-action:pan-y;
+}
+/* 宽屏两栏时详情卡吸顶随动，不制造第二条滚动条 */
+@media (min-width:531px){
+  .inv-shell.with-detail .inv-details{position:sticky;top:0}
+}
+/* 4) 局部触控策略：弹窗内普通按钮与物品格允许纵向滑动，仅交互画布与滑块保持专用手势 */
+.window .inside button,.window .craft-content button,.window .inv-cell,
+.window .inside .entry,.window .inside .set-item,.window .inside .v195b-sec,
+.window .inside details,.window .inside summary{touch-action:pan-y}
+.window input[type=range]{touch-action:pan-x}
+.window .chart,.window .gomoku-canvas,.window .xq-canvas,.window .mirror-canvas{touch-action:none!important}
+@media (max-width:560px) and (orientation:portrait){
+  .veil{padding:max(6px,env(safe-area-inset-top)) max(6px,env(safe-area-inset-right)) max(6px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left))}
+  .window{width:100%}
+  .window>.inside{padding:11px 12px calc(18px + env(safe-area-inset-bottom,0px))}
+  .inv-shell.with-detail{grid-template-columns:minmax(0,1fr)}
+  .inv-shell.with-detail .inv-details{position:static;grid-row:2}
+  .wardrobe-columns{grid-template-columns:minmax(0,1fr)}
+  .wardrobe-view{order:-1}
+}
+@media (max-height:460px) and (pointer:coarse){
+  .veil{--window-room:calc(var(--game-view-h,100dvh) - max(8px,env(safe-area-inset-top)) - max(8px,env(safe-area-inset-bottom)))}
+  .window{max-height:var(--window-room)!important}
+}
 </style>
 </head>
 <body>
@@ -668,7 +743,7 @@ body{position:fixed;inset:auto;left:var(--game-view-x,0px);top:var(--game-view-y
     <div id="toast" class="message toast" role="status"></div>
     <div id="context" class="message"></div>
     <div id="ferryActionBar" class="panel" hidden></div>
-    <div id="buildControls" class="panel" hidden><button class="press" id="rotateBuild">旋转</button><span id="placementStatus" aria-live="polite"></span><button class="press primary" id="confirmBuild">确认摆放</button><button class="press" id="cancelBuild">取消</button></div>
+    <div id="buildControls" class="panel" hidden><button class="press" id="rotateBuild">旋转</button><span id="placementStatus" aria-live="polite"></span><button class="press primary" id="confirmBuild">确认摆放</button><button class="press" id="farmPlantRow" hidden>连种至多 3 格</button><button class="press" id="cancelBuild">取消</button></div>
     <div class="touch">
       <div id="stick" class="pad" aria-label="移动摇杆"><div id="nub" class="nub"></div></div>
       <div class="right-controls">
@@ -694,7 +769,7 @@ body{position:fixed;inset:auto;left:var(--game-view-x,0px);top:var(--game-view-y
 <div id="editLayoutBar" hidden><span>拖动右侧按钮。摇杆在操作布局设置中调整。</span><button class="press primary" id="doneEditLayout">保存布局</button><button class="press" id="backEditLayout">返回游戏</button><button class="press" id="resetEditLayout">重置</button></div>
 <div id="worldCatchup" class="world-catchup" role="status" hidden></div><div class="veil" id="veil"><section class="window title-window" id="window" role="dialog" aria-modal="true">
       <div class="inside">
-        <div class="eyebrow">2.0.1c · 节庆与商贸</div>
+        <div class="eyebrow">2.0.1d 补丁版 · 田园与冒险</div>
         <h1>荒野微光</h1>
         <p role="status">正在启动游戏…</p>
         <p class="controls">如果一直停在这里，请下载 HTML 文件并用系统浏览器打开。</p>
@@ -710,7 +785,7 @@ const canvas=$('world');let ctx=canvas.getContext('2d');
 const W = 446, H = 292, T = 32, REACH = 60, DAY = 240;
 const SURFACE_W_182=416,SURFACE_H_182=272;
 const OLD_W=120,OLD_H=100,CHUNK=16;
-const SAVE = 'wildcraft.archipelago.v201c';
+const SAVE = 'wildcraft.archipelago.v201d';
 const TAILOR_ID='prosper:tailor';
 const TWO_PI = Math.PI * 2;
 const clamp = (n, low, high) => Math.max(low, Math.min(high, n));
@@ -824,14 +899,14 @@ Object.assign(items,{
   sign:['路牌','⚑'],harborLight:['航标灯','✦'],doubleTrap:['双层鱼笼','▦'],collector:['自动集水器','◕'],beehive:['蜂箱','⬡'],oysterBasket:['牡蛎养殖篮','▦'],
   oyster:['牡蛎','●',13,0],duckEgg:['鸭蛋','●',12,1],oysterRoast:['烤牡蛎','♨',35,9],duckOmelet:['鸭蛋煎饼','♨',43,9],
   reinforcedBow:['加固船首','▰'],cargoHold:['货舱扩容件','▣'],deckRack:['船载风干架','▦'],deckLamp:['船载挂灯','✦'],
-  mistCharm:['抗雾护符','◈'],mistCore:['雾潮晶核','◆'],mistArmor:['雾潮甲','▧',0,0,128],silverSapling:['银叶树苗','🌱'],silverFruit:['银叶果','●',24,3]
+  mistCharm:['抗雾护符','◈'],mistCore:['雾潮晶核','◆'],mistArmor:['雾潮甲','▧',0,0,128],silverSapling:['银叶树苗','🌱'],silverFruit:['银叶果','●',24,3],cherrySapling:['樱花树苗','🌸']
 });
 items.bench[0]='工作台';items.bed[0]='木床';
 const garmentSlot={woolCape:'body',snowBoots:'feet',sunHat:'head',lightShirt:'body',rainCape:'body',hideArmor:'body',shellArmor:'body',heatGreaves:'feet',mistArmor:'body',mistCharm:'charm'};
 const buildKinds = ['raft','sail','fire','bench','furnace','chest','wall','gate','roof','bed','dock','fishTrap','crabTrap','rabbitTrap','saltRack','sapling','seed'];
 buildKinds.push('barrel','smoker','rootPlot','compost','trough');
 buildKinds.push('fridge','floor','stoneWall','rainRoof','shade','bridge','raisedDock','cargoChest','outpost','cistern','fruitSapling','dryPlot');
-buildKinds.push('strawMat','forge','bedLamp','brazier','sign','harborLight','doubleTrap','collector','beehive','oysterBasket','silverSapling');
+buildKinds.push('strawMat','forge','bedLamp','brazier','sign','harborLight','doubleTrap','collector','beehive','oysterBasket','silverSapling','cherrySapling');
 const CHEST_SLOTS = 18;
 const PACK_CAPACITIES = [21,28,35,42];
 const recipes = [
@@ -942,7 +1017,7 @@ recipes.push(
   ['musselSoup','food',{mussel:2},'需要陶锅和一口壶水，热食也能补水。','fire'],
   ['bandage','tools',{medVine:1,fiber:2},'用药用藤补充普通绷带。']
 );
-const recipeId=(r)=>r[4]==='jamPress'?r[2].berry?'pressedBerryJam':'pressedOrchardJam':r[0]==='smokedFish'&&r[2].riverPerch?'smokedPerch':r[0]==='dock'&&r[2].stone?'simpleDock':r[0]==='arrow'&&r[2].feather?'feltArrows':r[0]==='bandage'&&r[2].medVine?'vineBandage':r[0]==='iron'&&r[2].scrap?'scrapIron':r[0]==='cookedFish'&&r[2].bigFish?'grillBig':r[0]==='cookedMeat'&&r[2].chickenMeat?'grillChicken':r[0]==='torch'&&r[2].charcoal?'coalTorch':r[0]==='venomArrow'&&r[2].venomSac?'venomSacArrows':r[0]==='antidote'&&r[2].medVine?'herbAntidote':r[0];
+const recipeId=(r)=>r[4]==='jamPress'?r[2].berry?'pressedBerryJam':'pressedOrchardJam':r[0]==='smokedFish'&&r[2].riverPerch?'smokedPerch':r[0]==='dock'&&r[2].stone?'simpleDock':r[0]==='arrow'&&r[2].feather?'feltArrows':r[0]==='bandage'&&r[2].medVine?'vineBandage':r[0]==='iron'&&r[2].scrap?'scrapIron':r[0]==='cookedFish'&&r[2].bigFish?'grillBig':r[2].pork?'grillPork':r[2].turkeyMeat?'grillTurkey':r[2].gooseEgg?'grillGooseEgg':r[0]==='cookedMeat'&&r[2].chickenMeat?'grillChicken':r[0]==='torch'&&r[2].charcoal?'coalTorch':r[0]==='venomArrow'&&r[2].venomSac?'venomSacArrows':r[0]==='antidote'&&r[2].medVine?'herbAntidote':r[0];
 recipes.push(
   ['strawMat','build',{fiber:4},'短睡一会儿，临时恢复心神。'],
   ['forge','build',{stone:8,iron:2,wood:5},'制作高阶工具、护甲和船只改装件。','bench'],
@@ -980,7 +1055,7 @@ Object.assign(shelfLife,{root:540,bakedRoot:270,egg:330,milk:130,chickenMeat:115
 Object.assign(shelfLife,{cactusFruit:360,dryRoot:590,honey:1250,orchardFruit:350,mussel:115,jam:1440,honeyRoot:810,musselSoup:170});
 Object.assign(shelfLife,{oyster:160,duckEgg:360,oysterRoast:245,duckOmelet:280,silverFruit:560});
 const entityNames = {tree:'树木',pine:'霜松',palm:'椰树',rock:'石堆',bush:'浆果丛',vein:'铁矿脉',cache:'遗迹',beacon:'信号塔',wolf:'野狼',boar:'野猪',wisp:'夜影'};
-const objectHp = {tree:4,pine:4,palm:4,rock:4,bush:1,vein:6,cache:1,beacon:1,wolf:9,boar:7,wisp:5};
+const objectHp = {tree:4,pine:4,palm:4,wildCherry:4,rock:4,bush:1,vein:6,cache:1,beacon:1,wolf:9,boar:7,wisp:5};
 Object.assign(entityNames,{copperOre:'铜矿脉',clay:'黏土',salt:'盐池',wreck:'沉船船舱',locker:'上锁货柜',rubble:'硬岩侧路',reserve:'灰烬密室',rabbit:'野兔',crab:'礁蟹',pile:'地上物品'});
 Object.assign(objectHp,{copperOre:5,clay:2,salt:1,rabbit:2,crab:2});
 Object.assign(entityNames,{spring:'淡水泉',herbPatch:'草药',roots:'野生块根',chicken:'野鸡',goat:'野山羊',golem:'灰烬石怪',shellCrab:'铁壳礁蟹',mineEntry:'废矿道入口',mineRidge:'北侧旧井',caveExit:'出口',caveSeam:'开裂岩壁',caveSeal:'落石封口',treasure:'藏宝点',driftBox:'漂流货箱',crystals:'晶石矿',mineChest:'矿厅藏宝箱',lanternStand:'挂灯台座'});
@@ -1016,7 +1091,7 @@ let vw=0,vh=0,dpr=1,zoom=1,nowClock=0,previous=0,hudAt=0,saveAt=0,saveFailed=fal
 let muted=false,sound=null,cooldown=0,swing=0,ouch=0,nextFish=0,nextWisp=0,hungerNotice=false;
 let navNotice='',sceneMoving=false;
 let dashUntil=0,dashReady=0,dashAngle=0,guardUntil=0,counterFxUntil=0,parryCounterBusy=false;
-const planted=['sapling','seed','rootPlot','dryPlot','fruitSapling','silverSapling'];
+const planted=['sapling','seed','rootPlot','dryPlot','fruitSapling','silverSapling','cherrySapling'];
 const cropTypes=['seed','rootPlot','dryPlot','fruitSapling','silverSapling'];
 const fishTraps=['fishTrap','doubleTrap'];
 const waterStorage=['barrel','cistern','collector'];
@@ -1261,6 +1336,8 @@ function populate(){
   expansionSites=entities.filter(e=>e.type==='wildSite');
   for(const e of entities) if(state.depleted[e.id])e.respawn=state.depleted[e.id];
   for(const e of entities)if(e.type==='crab'){e.cove=point(Math.floor(e.x/T),Math.floor(e.y/T)-1);e.angle=0;}
+  fieldAnimalSites();
+  for(const e of entities)if(FIELD_HERD[e.type]&&state.depleted[e.id])e.respawn=state.depleted[e.id];
   restoreAnimalStates();
   rangedEnemies=entities.filter(e=>combatProfile[e.type]?.ranged);
 }
@@ -1378,7 +1455,7 @@ function newState(){
     relics:[],builds:[],depleted:{},mounted:null,dock:{...HOME},camp:{...HOME},won:false,downs:0,nextId:1};
 }
 function loadGame(){
-  const keys=[SAVE,'wildcraft.archipelago.v201b','wildcraft.archipelago.v201a','wildcraft.archipelago.v201','wildcraft.archipelago.v20','wildcraft.archipelago.v199d','wildcraft.archipelago.v199c','wildcraft.archipelago.v199b','wildcraft.archipelago.v199','wildcraft.archipelago.v198','wildcraft.archipelago.v197b','wildcraft.archipelago.v197','wildcraft.archipelago.v196b','wildcraft.archipelago.v196','wildcraft.archipelago.v195d','wildcraft.archipelago.v195c','wildcraft.archipelago.v195b','wildcraft.archipelago.v195','wildcraft.archipelago.v194c','wildcraft.archipelago.v194b','wildcraft.archipelago.v194','wildcraft.archipelago.v193','wildcraft.archipelago.v192','wildcraft.archipelago.v191d','wildcraft.archipelago.v191c','wildcraft.archipelago.v191b','wildcraft.archipelago.v191a','wildcraft.archipelago.v190','wildcraft.archipelago.v189','wildcraft.archipelago.v188c','wildcraft.archipelago.v188b','wildcraft.archipelago.v188a','wildcraft.archipelago.v188','wildcraft.archipelago.v187b','wildcraft.archipelago.v187a','wildcraft.archipelago.v186','wildcraft.archipelago.v185','wildcraft.archipelago.v184','wildcraft.archipelago.v183','wildcraft.archipelago.v182','wildcraft.archipelago.v181','wildcraft.archipelago.v181b','wildcraft.archipelago.v181a','wildcraft.archipelago.v18','wildcraft.archipelago.v18c','wildcraft.archipelago.v18b','wildcraft.archipelago.v18a','wildcraft.archipelago.v173'];
+  const keys=[SAVE,'wildcraft.archipelago.v201c','wildcraft.archipelago.v201b','wildcraft.archipelago.v201a','wildcraft.archipelago.v201','wildcraft.archipelago.v20','wildcraft.archipelago.v199d','wildcraft.archipelago.v199c','wildcraft.archipelago.v199b','wildcraft.archipelago.v199','wildcraft.archipelago.v198','wildcraft.archipelago.v197b','wildcraft.archipelago.v197','wildcraft.archipelago.v196b','wildcraft.archipelago.v196','wildcraft.archipelago.v195d','wildcraft.archipelago.v195c','wildcraft.archipelago.v195b','wildcraft.archipelago.v195','wildcraft.archipelago.v194c','wildcraft.archipelago.v194b','wildcraft.archipelago.v194','wildcraft.archipelago.v193','wildcraft.archipelago.v192','wildcraft.archipelago.v191d','wildcraft.archipelago.v191c','wildcraft.archipelago.v191b','wildcraft.archipelago.v191a','wildcraft.archipelago.v190','wildcraft.archipelago.v189','wildcraft.archipelago.v188c','wildcraft.archipelago.v188b','wildcraft.archipelago.v188a','wildcraft.archipelago.v188','wildcraft.archipelago.v187b','wildcraft.archipelago.v187a','wildcraft.archipelago.v186','wildcraft.archipelago.v185','wildcraft.archipelago.v184','wildcraft.archipelago.v183','wildcraft.archipelago.v182','wildcraft.archipelago.v181','wildcraft.archipelago.v181b','wildcraft.archipelago.v181a','wildcraft.archipelago.v18','wildcraft.archipelago.v18c','wildcraft.archipelago.v18b','wildcraft.archipelago.v18a','wildcraft.archipelago.v173'];
   for(const key of keys){
     try{
       const raw=localStorage.getItem(key);
@@ -1393,6 +1470,7 @@ function loadGame(){
 function prepareSave(s){
   recoverCombatStats(s);
   prepareCommerceNotices(s);
+  if(typeof s.adventureFocus!=='string'||!/^[\w:-]{0,96}$/.test(s.adventureFocus))s.adventureFocus='';
   s.packTier??=0;s.lots??={};s.piles??=[];s.markers??=[];s.flags??={};s.warmUntil??=0;s.coat??=false;
   s.player.water??=100;s.lastHit??=-20;s.bandagedUntil??=0;s.cave??=false;
   s.maps??=[];if(s.flags.blueprint&&!s.maps.includes(1))s.maps.push(1);
@@ -1430,7 +1508,7 @@ function prepareSave(s){
     if(b.type==='fridge')b.ice=fridgeRemaining(b);
     if(polyFire.includes(b.type)){b.fuel??=0;b.ash??=0;}
     if(isBoat(b))b.mods??={};
-    if(b.type==='trough'){b.flock.duck??=0;b.birth.duck??=0;b.produce.duckEgg??=0;b.produce.feather??=0;}
+    if(b.type==='trough'){b.flock.duck??=0;b.birth.duck??=0;b.produce.duckEgg??=0;b.produce.feather??=0;hydrateFieldHerd(b);}
     if(b.type==='bed'&&(s.contentRevision||0)<16)b.legacyBed=true;
     if(b.type==='supplyStation'){b.level??=1;b.mat??=0;b.work??=0;}
     if(b.type==='autoDepot'){b.fuel??=0;b.work??=0;b.enabled??=true;b.lastNote??='待机中';}
@@ -1478,6 +1556,7 @@ function installGameState(next,showWelcome,loadAudio=false){
   restoreExpandedCoast();migrateLighthouseWater();recoverLegacyMistShips();
   ecoTickAt=state.elapsed;jellySpawnAt=state.elapsed;
   populate();ensureVillageSpawn();for(const a of state.movedAnimals){const e=obj(a.type,a.x,a.y,a.id);e.respawn=state.depleted[a.id]||0;entities.push(e);}
+  restoreAnimalStates();
   restoreActiveDungeon();restoreBoarding();resetJourneyRuntime();resetRuralRuntime();
   dismantlePending=null;portTradeTab="market";
   restoreStore();passengerUntil=0;passengerChoice=null;prosperousMarket=null;openedProsperProject=null;movementRecovery();recoveryNoticeAt=0;positionCheckAt=state.elapsed;
@@ -1905,6 +1984,7 @@ function startPlacement(k,moving=null,itemIndex=0){
   if(insideStore()){toast('请到店外摆放设施。');return;}
   $('hud').classList.add('building');
   placing=k;movingBuild=moving;placementItemIndex=itemIndex;buildCursor=null;$('buildControls').hidden=false;
+  $('farmPlantRow').hidden=!farmPlacement(k);
   if(moving)buildCursor={x:moving.x,y:moving.y,angle:HOME_FURNITURE[k]?v20FurnitureAngle(moving.angle):moving.angle};
   updateHud();
 }
@@ -1965,7 +2045,8 @@ function placementPoint(k){
   if(q&&([...fences,'floor','bridge'].includes(k)||GROUND_DECOR.has(k)))q=point(Math.floor(q.x/T),Math.floor(q.y/T));
   return q?{x:q.x,y:q.y,angle}:null;
 }
-function place(k){
+function place(k,farmPoint=null){
+  if(farmPoint&&(mapMode!=='play'||!farmPlacement(k)||placing!==k||!clearSight(state.player,farmPoint)))return false;
   if(!movingBuild&&(placementItemIndex<0||placementItemIndex>=amount(k)))return;
   if(!buildKinds.includes(k)&&!['lantern','mineLamp','glowLantern'].includes(k))return;
   const p=state.player;
@@ -1973,13 +2054,13 @@ function place(k){
   if(boat()&&![...fishTraps,'crabTrap','oysterBasket'].includes(k)){toast('请先下船。');return;}
   if(nowClock<(window._v194PlaceLock||0))return;
   const defBoat=isBoat({type:k});
-  let q=placementPoint(k);
+  let q=farmPoint||placementPoint(k);
   if(oceanBuilds.includes(k)&&(!q||!validPlacement(k,q))){
     const snapped=launchSpot(k,q||state.player);
     if(snapped)q={...snapped,angle:q?.angle??state.player.angle};
   }
   if(!validPlacement(k,q)){toast(explainPlacementFailure(k,q));return;}
-  window._v194PlaceLock=nowClock+.28;
+  if(!farmPoint)window._v194PlaceLock=nowClock+.28;
   const hp=NAVAL_HULL[k]?.hp||100;
   const packed=!movingBuild&&state.routes.packed[k]?.[placementItemIndex];
   const b=movingBuild||packed||{id:`build:${state.nextId++}`,type:k,hp,maxHp:hp};
@@ -1990,8 +2071,8 @@ function place(k){
   if(isDock(b)){b.bank=adjacentLand(q,k==='dock'?64:112);registerPlayerDockMeta(b);}
   if(!movingBuild&&!packed){
     if(isStock(b))b.stock={};
-    if(FARM_CROPS[k]){farmPlant(b);ruralCue('plant');}
-    else if(planted.includes(k))b.readyAt=state.elapsed+DAY;
+    if(FARM_CROPS[k]){farmPlant(b);if(!farmPoint)ruralCue('plant');}
+    else if(planted.includes(k)){b.readyAt=state.elapsed+DAY;if(k==='cherrySapling')b.hp=4;}
     if([...fishTraps,'crabTrap','oysterBasket'].includes(k))b.readyAt=state.elapsed+(['crabTrap','oysterBasket'].includes(k)?tidePeriod-phaseAt(state.time)+16:62);
     if(k==='lantern'||k==='mineLamp'||k==='glowLantern')b.wear=state.wear[k];
     if(polyFire.includes(k)){b.fuel=k==='fire'?120:90;b.ash=0;}
@@ -1999,6 +2080,7 @@ function place(k){
     if(k==='fridge')b.ice=DAY*2;
     if(k==='outpost')b.name=`前哨 ${state.builds.filter(o=>o.type==='outpost').length+1}`;
     if(k==='trough'){b.feed=0;b.flock={chicken:0,goat:0,sheep:0,duck:0,cow:0};b.produce={egg:0,milk:0,duckEgg:0,feather:0};b.work=0;b.birth={chicken:0,goat:0,sheep:0,duck:0};b.shearAt=0;}
+    if(k==='trough')hydrateFieldHerd(b);
     if(k==='sign')b.name='路牌';
     if(k==='doubleTrap'||k==='beehive')b.buffer=0;
     if(defBoat)b.mods={};
@@ -2012,31 +2094,49 @@ function place(k){
     if(!packed){v20RecordBuild(k);if(k==='chest')v201Guide('B01');if(isDock(b))v201Guide('B08');}
     if(k==='bridge')invalidateOceanMap();
   }
+  if(farmPoint)return true;
   cancelPlacement();
   if(k==='fire'&&!state.cave&&!state.living.respawn&&state.builds.filter(v=>v.type==='fire').length===1){state.camp={x:b.x,y:b.y};registerRespawn('fire',b.id);}
   if(!FARM_CROPS[k])ruralCue('build');toast(defBoat?`${items[k][0]}已下水。交互可登船。`:`已建好${items[k][0]}。`);renderHotbar();updateHud();save();
 }
-const isHarvest = e => !!e&&(['tree','rock','bush','pine','palm','vein','copperOre','clay','salt','roots','herbPatch','crystals','deepOreNode'].includes(e.type)||Object.hasOwn(frontierNodes,e.type));
-const isAnimal = e => !!e&&(['towerGuard','wolf','boar','wisp','rabbit','crab','chicken','goat','golem','shellCrab','pirateCrew','pirateCaptain','pirateArcher','pirateElite','pirateBoss','strongholdBossMelee','strongholdBossRanged','brownBear','swampCroc','moonStag','desertScorpion','glowJelly','abyssBeetle','caveLurker','drownedSailor','clockworkSentinel','abyssalWarden'].includes(e.type)||Object.hasOwn(frontierLoot,e.type));
+const isHarvest = e => !!e&&(['tree','rock','bush','pine','palm','wildCherry','vein','copperOre','clay','salt','roots','herbPatch','crystals','deepOreNode'].includes(e.type)||(e.type==='cherrySapling'&&e.readyAt<=state.elapsed)||Object.hasOwn(frontierNodes,e.type));
+const isAnimal = e => !!e&&(['towerGuard','wolf','boar','wisp','rabbit','crab','chicken','goat','golem','shellCrab','pirateCrew','pirateCaptain','pirateArcher','pirateElite','pirateBoss','strongholdBossMelee','strongholdBossRanged','brownBear','swampCroc','moonStag','desertScorpion','glowJelly','abyssBeetle','caveLurker','drownedSailor','clockworkSentinel','abyssalWarden'].includes(e.type)||Object.hasOwn(frontierLoot,e.type)||Object.hasOwn(FIELD_HERD,e.type));
 function harvest(e){
-  if(!e||e.respawn||e.hp<=0)return;
+  if(!e||e.respawn)return;
+  if(e.type==='cherrySapling'){
+    if(!state.builds.includes(e)||e.readyAt>state.elapsed)return;
+    const k=held(),axe=['axe','ironAxe','fieldAxe'].includes(k),dmg=(axe?(k==='ironAxe'?4:k==='fieldAxe'?3:2):1)+(hasBuff('honeyRoast')&&axe?2:0);
+    if(!(e.hp>0)||e.hp>12)e.hp=4;
+    cooldown=(k&&dmg>1?.28:.37)*gatherCadence();swing=.20;e.hp-=dmg;face(e);
+    ruralCue('chop');makeParticles(e.x,e.y,'#f6b7c8',8);
+    if(axe)wear(k);
+    if(e.hp>0)return;
+    state.builds=state.builds.filter(b=>b!==e);
+    const drops={wood:seasonalHarvest('wood',3),fiber:1,cherrySapling:1};
+    if(seasonAt()===1)drops.orchardFruit=seasonalHarvest('orchardFruit',1);
+    awardSkill('gather',2);discover('plants','wildCherry');
+    let overflow=false;for(const [id,n] of Object.entries(drops))overflow=yieldItem(id,n,e)||overflow;
+    toastItems('砍伐樱花树',drops,2.5,overflow?'部分资源留在地上':'');renderHotbar();save();return;
+  }
+  if(e.hp<=0)return;
   const k=held();
   if(Object.hasOwn(frontierNodes,e.type)){gatherFrontier(e,k);return;}
   if(e.type==='roots'&&!['shovel','explorerSpade'].includes(k)){toast('选中铲子挖出块根。');return;}
   if((e.type==='crystals'||e.type==='deepOreNode')&&!['ironPick','obsidianPick','breachPick','precisionPick'].includes(k)){toast(e.type==='deepOreNode'?'深层矿脉需要铁镐或破甲矿镐锤开采。':'晶石需要铁镐开采。');return;}
   if(['vein','copperOre'].includes(e.type)&&!pickaxes.includes(k)){toast('选中石镐或铁镐开采矿脉。');return;}
-  const wood=['tree','palm','pine'].includes(e.type),pick=pickaxes.includes(k)&&['vein','rock','copperOre','crystals','deepOreNode'].includes(e.type);
+  const wood=['tree','palm','pine','wildCherry'].includes(e.type),pick=pickaxes.includes(k)&&['vein','rock','copperOre','crystals','deepOreNode'].includes(e.type);
   const dig=['shovel','explorerSpade'].includes(k)&&['clay','roots'].includes(e.type);
   const axe=wood&&['axe','ironAxe','fieldAxe'].includes(k), damage=axe?(k==='ironAxe'?4:k==='fieldAxe'?3:2):pick?(k==='precisionPick'&&e.type!=='rock'?14:((k==='obsidianPick'||k==='breachPick')&&['vein','crystals','deepOreNode'].includes(e.type)?12:k==='pick'?3:6)):dig?2:1;
   if(state.cave&&pick)for(const bat of entities)if(bat.type==='bat'&&dist(bat,e)<154)bat.startled=state.elapsed+15;
   cooldown=(k&&damage>1?.28:.37)*gatherCadence();swing=.20;e.hp-=damage+(hasBuff('honeyRoast')&&(axe||pick)?2:0);face(e);
-  if(wood)ruralCue('chop');else if(pick||e.type==='rock')ruralCue('ore');else beep(170,.085);makeParticles(e.x,e.y,wood?'#d5b783':'#e2debf',6);
+  if(wood)ruralCue('chop');else if(pick||e.type==='rock')ruralCue('ore');else beep(170,.085);makeParticles(e.x,e.y,e.type==='wildCherry'?'#f6b7c8':wood?'#d5b783':'#e2debf',e.type==='wildCherry'?8:6);
   if(axe||pick||dig)wear(k);
   if(e.hp>0)return;
   const drops={...HARVEST_DROPS[e.type]};
   if(drops.wood)journeyMark('harvest','wood');
   if(wood&&e.type!=='palm'&&hash(e.homeX,e.homeY,state.seed+19)<.19)drops.wood=e.type==='pine'?5:4;
-  if(wood&&hash(Math.floor(e.x),Math.floor(state.elapsed),state.seed)<.67)drops.sapling=1;
+  if(e.type==='wildCherry'){drops.cherrySapling=1;if(seasonAt()===1)drops.orchardFruit=1;discover('plants','wildCherry');}
+  else if(wood&&hash(Math.floor(e.x),Math.floor(state.elapsed),state.seed)<.67)drops.sapling=1;
   if(e.type==='bush'&&hash(Math.floor(e.y),Math.floor(state.elapsed),state.seed)<.75)drops.seed=1;
   awardSkill('gather',2);
   let overflow=false;
@@ -2083,7 +2183,7 @@ function finishDefeat(e){
     if(e.type==='towerGuard'){state.flags.weatherMaster=true;e.respawn=Infinity;toast('已击败远古守卫。去操纵气象塔。',5);save();return;}
     if(e.type==='mistGuard')state.flags.mistGuardDefeated=true;
     if(handleV17cDefeat(e))return;
-    if(handleV171aDefeat(e))return;
+    if(handleV171aDefeat(e)||finishFieldAnimal(e))return;
     if(Object.hasOwn(frontierLoot,e.type)){for(const [id,n] of Object.entries(frontierLoot[e.type]))yieldItem(id,n,e);}
     else if(e.type==='rabbit')yieldItem('rabbitMeat',1,e);
     else if(e.type==='boar'){yieldItem('meat',2,e);yieldItem('hide',1,e);if(hash(e.homeX,Math.floor(state.elapsed),state.seed)<.25)yieldItem('sharpFang',1,e);}
@@ -2163,11 +2263,7 @@ function use(){
   if(k==='hoe'){tillField();return;}
   if(k==='wateringCan'){waterPlots();return;}
   if(k==='sickle'){
-    const ready=state.builds.filter(b=>cropTypes.includes(b.type)&&b.readyAt<=state.elapsed&&dist(b,p)<82);
-    if(!ready.length){toast('走近成熟作物再挥镰。');return;}
-    const done=ready.filter(b=>harvestPlanted(b,true)).length;
-    if(!done){toast('露天作物还在霜下。');return;}
-    wear(k);toast('已收割 '+done+' 株成熟作物。');renderHotbar();save();return;
+    harvestFarmNeighbors(null,k);return;
   }
   if(k==='bugNet'){
     if(scoopJelly(k))return;
@@ -2195,7 +2291,7 @@ function use(){
   if(['shovel','explorerSpade'].includes(k)){
     const dig=candidates().find(e=>e.type==='treasure'||e.type==='leisureTreasure'||['clay','roots'].includes(e.type));
     if(dig){if(dig.type==='treasure')digTreasure(dig);else if(dig.type==='leisureTreasure')digLeisureTreasure(dig);else harvest(dig);return;}
-    const stump=entities.find(e=>e.respawn&&['tree','pine','palm','resinTree'].includes(e.type)&&dist(e,p)<48&&!state.stumps?.[e.id]);
+    const stump=entities.find(e=>e.respawn&&['tree','pine','palm','resinTree','wildCherry'].includes(e.type)&&dist(e,p)<48&&!state.stumps?.[e.id]);
     if(stump){
       state.stumps??={};state.stumps[stump.id]=true;
       wear(k);yieldItem('wood',1,stump);cooldown=.32;toast('清理树桩，取得一份木头。');renderHotbar();save();return;
@@ -2264,6 +2360,8 @@ function interact(){
     if(pv){openVesselInteract(pv);return;}
     const floot=nearV194cLoot(p,82);
     if(floot){collectV194cLoot(floot);return;}
+    const sBot=entities.find(e=>e.type==='shoreBottle'&&visibleEntity(e)&&dist(e,p)<=76);
+    if(sBot){openShoreBottle(sBot);return;}
     const sev=nearSeaEvent(p,88);
     if(sev){interactSeaEvent(sev);return;}
     const v96bSea=nearV196bSeaEvent(p,96);
@@ -2294,6 +2392,7 @@ function interact(){
   if(isStock(target))openStorage(target);
   else if(HOME_FURNITURE[target.type])homeFurnitureAction(target);
   if(target.type==='pile')pickPile(target);
+  if(FARM_CROPS[target.type]){farmInteract(target);return;}
   if(planted.includes(target.type))harvestPlanted(target);
   if(target.type==='wreck'||target.type==='locker')openWreck(target);
   if(target.type==='rubble'){
@@ -2526,21 +2625,25 @@ function feedClock(b,dt){
   const cap=enclosure(b);
   if(!cap)return;
   const tLv=b.upgradeLv||1,feedSave=tLv>=3?.68:tLv===2?.82:1,workFast=tLv>=3?1.28:tLv===2?1.15:1;
-  const used=Math.min(b.feed,dt*feedSave);b.feed-=used;b.work+=Math.min(b.feed+used,dt)*workFast*(seasonAt()===0?1.22:1);
+  const used=Math.min(b.feed,dt*feedSave),fedTime=used/feedSave;b.feed-=used;b.work+=fedTime*workFast*(seasonAt()===0?1.22:1);
+  if(b.flock.farmPig)b.pigCondition=clamp((b.pigCondition||0)+fedTime/(DAY*2.1),0,1);
   while(b.work>=DAY*.65){
     b.work-=DAY*.65;
-    for(const [species,product] of [['chicken','egg'],['goat','milk'],['sheep',null],['duck','duckEgg'],['cow','milk']]){
+    for(const [species,product] of [['chicken','egg'],['goat','milk'],['sheep',null],['duck','duckEgg'],['cow','milk'],['farmPig',null],['goose','gooseEgg'],['turkey',null]]){
       const n=b.flock[species];
       if(product)b.produce[product]=Math.min(8,(b.produce[product]||0)+(n||0));
       if(species==='duck'&&n)b.produce.feather=Math.min(8,(b.produce.feather||0)+n);
+      if((species==='goose'||species==='turkey')&&n)b.produce.feather=Math.min(8,(b.produce.feather||0)+Math.ceil(n/2));
       if(species==='cow')continue;
-      if(n>=2)b.birth[species]++;
-      if(b.birth[species]>=4&&livestockTotal(b)<cap){b.flock[species]++;b.birth[species]=0;}
+      const birthAt=FIELD_HERD[species]?.birth||4;
+      if(n>=2)b.birth[species]=Math.min(birthAt,(b.birth[species]||0)+1);
+      if(n>=2&&b.birth[species]>=birthAt&&livestockTotal(b)<cap){b.flock[species]++;b.birth[species]=0;if(species==='farmPig')b.pigCondition*=n/(n+1);}
     }
   }
 }
 function herdAction(action){
-  const b=currentBuild();if(b?.type!=='trough')return;
+  const b=currentBuild();if(b?.type!=='trough'||dist(b,state.player)>REACH)return;
+  if(fieldHerdAction(b,action))return;
   if(action==='berry'||action==='root'||action==='dryRoot'){
     if(!amount(action)||b.feed>=DAY*3)return;
     take(action);b.feed=Math.min(DAY*3,b.feed+DAY*(action==='root'?1.15:.78));
@@ -2551,7 +2654,7 @@ function herdAction(action){
 }
 function lureAnimal(e){
   if(e.type==='sheep'&&held()==='shears'){shear(e);return;}
-  const k=['chicken','duck'].includes(e.type)?'berry':held()==='dryRoot'?'dryRoot':'root';
+  const base=kForAnimal(e.type),k=base==='root'&&held()==='dryRoot'?'dryRoot':base;
   if(e.leadUntil>state.elapsed){toast('它正在跟着你。走到带门的围栏食槽旁。');return;}
   if(held()!==k||!ownsTool(k)){
     if(['chicken','duck'].includes(e.type)&&(!e.lastEgg||state.elapsed>=e.lastEgg)){
@@ -2564,11 +2667,11 @@ function lureAnimal(e){
 function moveLivestock(e,dt){
   const p=state.player,d=dist(e,p),lured=e.leadUntil>state.elapsed;
   if(lured&&!boat()){
-    const trough=state.builds.find(b=>b.type==='trough'&&dist(b,e)<82&&dist(b,p)<57&&livestockTotal(b)<enclosure(b)&&(e.type!=='cow'||!b.flock.cow)&&(e.type!=='duck'||adjacentSea(b,145)||nearRiver(b,140)));
+    const trough=state.builds.find(b=>b.type==='trough'&&dist(b,e)<82&&dist(b,p)<57&&livestockTotal(b)<enclosure(b)&&herdFieldSuitable(b,e.type)&&(!FIELD_HERD[e.type]||clearSight(e,b)));
     if(trough){
       trough.flock[e.type]=(trough.flock[e.type]||0)+1;
-      if(e.type==='cow')state.movedAnimals=state.movedAnimals.filter(a=>a.id!==e.id);
-      e.leadUntil=0;e.respawn=state.elapsed+DAY*4;state.depleted[e.id]=e.respawn;
+      if(e.type==='farmPig')trough.pigCondition=(trough.pigCondition||0)*(trough.flock.farmPig-1)/trough.flock.farmPig;
+      retireLivestock(e,DAY*4);
       toast(`${entityNames[e.type]}已进圈。记得往食槽添饲料。`,3);save();return;
     }
   }
@@ -2576,7 +2679,7 @@ function moveLivestock(e,dt){
   const a=lured&&!boat()&&d<270&&d>33?Math.atan2(p.y-e.y,p.x-e.x):!lured&&d<51&&!lure?Math.atan2(e.y-p.y,e.x-p.x):!lured&&dist(home,e)>32?Math.atan2(home.y-e.y,home.x-e.x):null;
   if(a!==null){e.angle=a;const speed=e.type==='cow'?(lured?78:55):lured?105:67;moveObject(e,Math.cos(a)*speed*dt,Math.sin(a)*speed*dt,canTravel);}
 }
-const kForAnimal=type=>['chicken','duck'].includes(type)?'berry':'root';
+const kForAnimal=type=>FIELD_HERD[type]?.lure||(['chicken','duck'].includes(type)?'berry':'root');
 function shear(e){
   const next=e.type==='trough'?e.shearAt:state.sheared[e.id];
   if(!amount('shears')||state.elapsed<(next||0)){toast('需要剪毛剪，或等羊毛重新长好。');return;}
@@ -2588,10 +2691,9 @@ function shear(e){
 }
 function loadAnimals(ship,p){
   const capacity=ship.type==='flagship'?4:ship.type==='advancedSail'?3:ship.type==='sail'?2:1;ship.livestock??=[];
-  const near=entities.filter(e=>livestock.includes(e.type)&&e.leadUntil>state.elapsed&&visibleEntity(e)&&dist(e,p)<79).slice(0,capacity-ship.livestock.length);
+  const near=entities.filter(e=>livestock.includes(e.type)&&e.leadUntil>state.elapsed&&visibleEntity(e)&&dist(e,p)<79).slice(0,Math.max(0,capacity-ship.livestock.length));
   for(const e of near){
-    ship.livestock.push(e.type);e.leadUntil=0;e.respawn=state.elapsed+DAY*4;state.depleted[e.id]=e.respawn;
-    state.movedAnimals=state.movedAnimals.filter(a=>a.id!==e.id);
+    ship.livestock.push(e.type);retireLivestock(e,DAY*4);
   }
   return near.length;
 }
@@ -2929,7 +3031,7 @@ function enemyAdvance(e,p,ship,dt){
     if(pursuing&&(['wolf','fogWolf','spider','caveLurker','mistValeLurker'].includes(e.type)||elSwift)&&d<92&&d>38){
       moveAng+=(Math.sin(t*2.4+e.homeX)>0?1:-1)*.52;
     }
-    const speed=(pursuing?(e.type==='golem'||e.type==='abyssalWarden'?68:e.type==='wolf'||e.type==='fogWolf'||e.type==='caveLurker'?94:78):38)*spdMul;
+    const speed=(pursuing?(e.type==='golem'||e.type==='abyssalWarden'?68:e.type==='wolf'||e.type==='fogWolf'||e.type==='caveLurker'?94:78)*nightSpeedMultiplier(e):38)*spdMul;
     const ox=e.x,oy=e.y;
     e.angle=moveAng;
     moveObject(e,Math.cos(e.angle)*speed*dt,Math.sin(e.angle)*speed*dt,pass);
@@ -3093,7 +3195,7 @@ function advance(dt){
     if(updateCasePatrol(e,p,dt))continue;
     if(duelTacticsTick(e,p,ship,dt)){if(mapMode!=='play')return;continue;}
     if(!state.cave&&!inDungeon&&patrolRaid(e,dt))continue;
-    if(!inDungeon&&(tickExpansionAnimal(e,p,ship,dt)||tickEcoAnimal(e,p,ship,dt))){if(mapMode!=='play')return;continue;}
+    if(!inDungeon&&(moveNewAnimal(e,p,dt)||tickExpansionAnimal(e,p,ship,dt)||tickEcoAnimal(e,p,ship,dt))){if(mapMode!=='play')return;continue;}
     if(!inDungeon&&(e.type==='rabbit'||e.type==='crab'||smallFrontier.includes(e.type))){moveSmallAnimal(e,p,dt);continue;}
     if(!inDungeon&&livestock.includes(e.type)){moveLivestock(e,dt);continue;}
     if(!mistLocalCombat(e,p,dt))enemyAdvance(e,p,ship,dt);
@@ -3120,6 +3222,7 @@ function panelFrame(title,body){
 }
 function stopInput(){cancelInventoryPress();if(lineCast)endAngling();chargeStart=null;releaseGamePointer(canvas,placeDrag);placeDrag=null;clearAttackPress();attackBufferUntil=0;dodgeBufferUntil=0;keys.clear();resetStick();if(combatInput.scene!==combatScene())resetCombatEncounter();else resetCombatInput();}
 function openPanel(kind,reason=''){
+  if(kind==='map')adventureMapRow=state.adventureFocus?adventureRows().find(r=>r.id===state.adventureFocus):null;
   if(kind!=='chest')v201CaptureUi();
   leaveLayoutEditor();stopInput();
   const fb=$('ferryActionBar');if(fb){fb.hidden=true;lastFerryBarKey='';}
@@ -3139,7 +3242,7 @@ function openPanel(kind,reason=''){
   else if(kind==='mistSite')renderMistSite();
   else if(kind==='title'){
     const exists=!!loadGame();
-    w.innerHTML=`<div class="inside"><div class="eyebrow">2.0.1c · 节庆与商贸</div><h1>荒野微光</h1><p>在群岛求生、建造、远航。群岛百科保存每一次新发现。</p><div class="row">${exists?'<button class="press primary" data-act="continue" data-start="true">继续航行</button><button class="press" data-act="restart">新游戏</button>':'<button class="press primary" data-act="new" data-start="true">开始生存</button>'}<button class="press" data-act="saveTransfer">导入／导出存档</button></div><p class="controls">${controlGuide}</p></div>`;
+    w.innerHTML=`<div class="inside"><div class="eyebrow">2.0.1d 补丁版 · 田园与冒险</div><h1>荒野微光</h1><p>在群岛求生、建造、远航。本次补丁修复弹窗单层滚动与触控隔离、新增双击快捷存取仓储、特色生态岛屿樱花树与樱花树苗、修复陆地漂流瓶并小幅加强夜间与血月野兽。</p><div class="row">${exists?'<button class="press primary" data-act="continue" data-start="true">继续航行</button><button class="press" data-act="restart">新游戏</button>':'<button class="press primary" data-act="new" data-start="true">开始生存</button>'}<button class="press" data-act="saveTransfer">导入／导出存档</button></div><p class="controls">${controlGuide}</p></div>`;
   }else if(kind==='pause'){
     w.innerHTML=`<div class="inside"><h2>游戏暂停</h2><p>${frameFaultPaused?'游戏遇到异常并已暂停。点击「脱离卡点」重试。':saveFailed?'当前浏览器无法保留进度。':'进度自动保存在这台设备的浏览器里。'}</p><div class="row">${frameFaultPaused?'':'<button class="press primary" data-act="close">继续探索</button>'}<button class="press ${frameFaultPaused?'primary':''}" data-act="movementRecovery">脱离卡点</button><button class="press" data-act="saveTransfer">JSON 存档</button><button class="press primary" data-act="openSettings">完整游戏设置</button><button class="press" data-act="v20Atlas">群岛百科</button><button class="press" data-act="saveNow">立即手动保存</button><button class="press" data-act="restart">重新开始</button></div><p class="controls">${controlGuide}</p></div>`;
   }else if(kind==='restart'){
@@ -3167,7 +3270,7 @@ function openPanel(kind,reason=''){
     const inDung=!!state.dungeons?.active;
     const dungStats=inDung?dungeonExploreProgress():null;
     const clues=state.maps.map(n=>`<article class="entry"><strong>藏宝图 ${n} · ${state.flags[`treasure${n}`]?'已找到':'未探索'}</strong><p>${treasureClues[n-1]}</p></article>`).join('')+renderV17cMapClues();
-    w.innerHTML=panelFrame(inDung?escapeHtml(activeDungeon.layout.name)+' · 探索 '+dungStats+'%':state.boarding?'接舷甲板':activeCave()?.name||(state.cave?'矿道手绘图':'群岛海图'),`<div class="inside"><canvas class="chart" id="chart" width="600" height="400" aria-label="${inDung?'地下城平面图':state.boarding?'接舷甲板':state.cave?'洞穴路线':'二十四座岛屿与岛礁'}"></canvas><div class="legend">${inDung?'青色箭头 · 你　白点 · 出口　金方块 · 宝箱/目标　橙菱形 · 机关/锁门　红点 · 陷阱　暗区 · 未探索迷雾':state.boarding?'青色箭头 · 你的位置　金点 · 回船口':state.cave?'青色箭头 · 你的位置　白点 · 入口':'青色箭头 · 你　浅绿菱形 · 探索点　淡紫菱形 · 地下入口　◆ 遗物　◇ 紫色为掉落包　★ 已发现地点　◉ 海上事件　⚓ 补给站　⚑ 前哨　✕ 沉船 · 点击查看详情'}</div><div class="inventory-actions map-help">${inDung?'<button class="press" data-act="dungeonSafety">检查卡位</button>':state.cave||state.boarding?'':'<button class="press" id="chartZoom" data-act="zoomMap">附近海域</button><button class="press" data-act="markMap" aria-pressed="false">标记／移除</button><button class="press" data-act="frontierGuide">岛屿与材料</button><button class="press" data-act="ruralCalendar">行历与天气</button><select id="chartStock" class="field" aria-label="高亮前哨"><option value="all">全部前哨</option><option value="food">存有食物</option><option value="mineral">存有矿材</option><option value="water">存有淡水</option></select>'}<button class="press primary" data-act="locatePlayer">定位玩家</button><button class="press" data-act="v20Atlas" data-val="world">群岛百科</button><span id="mapStatus" class="clock">${inDung?`已探索 ${dungStats}%`:tideText()}</span></div><p class="cards-help" style="margin-top:7px">已发现地点 ${state.discoveredPois.length}/${islandPoiDefs.length} · 海上探索 ${state.seaEventDone||0} 次 · 港口声誉 Lv.${Math.floor((state.portRep||0)/3)+1}</p><div id="chartSnapshot"></div><div class="grid">${clues}</div></div>`);
+    w.innerHTML=panelFrame(inDung?escapeHtml(activeDungeon.layout.name)+' · 探索 '+dungStats+'%':state.boarding?'接舷甲板':activeCave()?.name||(state.cave?'矿道手绘图':'群岛海图'),`<div class="inside"><canvas class="chart" id="chart" width="600" height="400" aria-label="${inDung?'地下城平面图':state.boarding?'接舷甲板':state.cave?'洞穴路线':'二十四座岛屿与岛礁'}"></canvas><div class="legend">${inDung?'青色箭头 · 你　白点 · 出口　金方块 · 宝箱/目标　橙菱形 · 机关/锁门　红点 · 陷阱　暗区 · 未探索迷雾':state.boarding?'青色箭头 · 你的位置　金点 · 回船口':state.cave?'青色箭头 · 你的位置　白点 · 入口':'青色箭头 · 你　浅绿菱形 · 探索点　淡紫菱形 · 地下入口　◆ 遗物　◇ 紫色为掉落包　★ 已发现地点　◉ 海上事件　⚓ 补给站　⚑ 前哨　✕ 沉船　◆ 金色为当前任务 · 点击查看详情'}</div><div class="inventory-actions map-help">${inDung?'<button class="press" data-act="dungeonSafety">检查卡位</button>':state.cave||state.boarding?'':'<button class="press" id="chartZoom" data-act="zoomMap">附近海域</button><button class="press" data-act="markMap" aria-pressed="false">标记／移除</button><button class="press" data-act="frontierGuide">岛屿与材料</button><button class="press" data-act="ruralCalendar">行历与天气</button><select id="chartStock" class="field" aria-label="高亮前哨"><option value="all">全部前哨</option><option value="food">存有食物</option><option value="mineral">存有矿材</option><option value="water">存有淡水</option></select>'}<button class="press primary" data-act="locatePlayer">定位玩家</button><button class="press" data-act="v20Atlas" data-val="world">群岛百科</button><span id="mapStatus" class="clock">${inDung?`已探索 ${dungStats}%`:tideText()}</span></div><p class="cards-help" style="margin-top:7px">已发现地点 ${state.discoveredPois.length}/${islandPoiDefs.length} · 海上探索 ${state.seaEventDone||0} 次 · 港口声誉 Lv.${Math.floor((state.portRep||0)/3)+1}</p><div id="chartSnapshot"></div><div class="grid">${clues}</div></div>`);
     drawMap($('chart'),true);
     if(!state.cave&&!state.boarding&&!inDung){
       attachChart($('chart'));$('chartStock').value=chartStock;
@@ -3256,7 +3359,7 @@ function openPanel(kind,reason=''){
     renderRecipes();
   }
 }
-function closePanel(){if(state.routes.passenger&&mapMode==='passengerVoyage')return;v201CaptureUi();dismantlePending=null;abandonConfirm='';inventorySelection='';inventoryDrop=false;inventorySuppress=null;leaveLayoutEditor();cancelGomokuTimer();mapMode='play';document.body.dataset.state='playing';chestId=null;$('veil').hidden=true;document.activeElement?.blur?.();stopInput();updateHud();}
+function closePanel(){if(state.routes.passenger&&mapMode==='passengerVoyage')return;herdConfirm='';v201CaptureUi();dismantlePending=null;abandonConfirm='';inventorySelection='';inventoryDrop=false;inventorySuppress=null;invLastPick={val:'',at:0};leaveLayoutEditor();cancelGomokuTimer();mapMode='play';document.body.dataset.state='playing';chestId=null;$('veil').hidden=true;document.activeElement?.blur?.();stopInput();updateHud();}
 function openStorage(b){
   if(!b||!state.builds.includes(b)||!isStock(b)||!storageInRange(b)){toast('距离过远，无法操作储物设施。');return;}
   v201RememberStorage(b);v201Guide('B03');
@@ -3268,7 +3371,7 @@ function movableBuilds(){return manageableFacilities();}
 function renderManage(){renderFacilityManagement();}
 function canSalvage(b){return !facilityBlock(b,'dismantle');}
 function liftSapling(id){
-  const b=movableBuilds().find(o=>o.id===id&&['sapling','fruitSapling','silverSapling'].includes(o.type));
+  const b=movableBuilds().find(o=>o.id===id&&['sapling','fruitSapling','silverSapling','cherrySapling'].includes(o.type));
   if(!b||held()!=='shovel'||facilityUnsafe()){toast('请在安全状态下走近树苗并手持铲子。');return;}
   if(!roomFor(b.type)){toast('先留一格给树苗。');return;}
   state.builds=state.builds.filter(o=>o!==b);wear('shovel');addItem(b.type);renderHotbar();save();renderManage();
@@ -3512,13 +3615,13 @@ function fillCistern(){
 function renderHerd(){
   const b=currentBuild();if(b?.type!=='trough')return;
   const cap=enclosure(b);
-  $('window').innerHTML=panelFrame('围栏食槽 · Lv.'+(b.upgradeLv||1),`<div class="inside"><div class="inventory-actions">${facilityManageButton(b)}</div>${renderUpgradeCard(b)}<p class="cards-help">${cap?`围栏封闭 · 牲畜 ${livestockTotal(b)}/${cap}`:'在平地用墙和门围住食槽，里面至少留两格空间，关门后才开始饲养。'}<br>鸡 ${b.flock.chicken} · 山羊 ${b.flock.goat} · 长毛羊 ${b.flock.sheep||0} · 鸭 ${b.flock.duck||0} · 牛 ${b.flock.cow||0} · 饲料约 ${Math.ceil(b.feed)} 秒。用浆果引鸡鸭、块根引羊和牛。牛圈每个食槽最多接纳一头牛。鸭圈要靠近水。引来的动物可随你登船。</p><div class="inventory-actions"><button class="press" data-act="herd" data-val="berry" ${amount('berry')?'':'disabled'}>添浆果</button><button class="press" data-act="herd" data-val="root" ${amount('root')?'':'disabled'}>添块根</button>${amount('dryRoot')?'<button class="press" data-act="herd" data-val="dryRoot">添耐旱块根</button>':''}<button class="press primary" data-act="herd" data-val="egg" ${b.produce.egg?'':'disabled'}>收蛋 ×${b.produce.egg}</button><button class="press primary" data-act="herd" data-val="milk" ${b.produce.milk?'':'disabled'}>收奶 ×${b.produce.milk}</button>${[['duckEgg','鸭蛋'],['feather','羽毛']].map(([k,name])=>b.produce[k]?`<button class="press" data-act="herd" data-val="${k}">收${name} ×${b.produce[k]}</button>`:'').join('')}${b.flock.sheep?`<button class="press" data-act="shearHerd" ${amount('shears')?'':'disabled'}>剪羊毛</button>`:''}</div></div>`);
+  $('window').innerHTML=panelFrame('围栏食槽 · Lv.'+(b.upgradeLv||1),`<div class="inside"><div class="inventory-actions">${facilityManageButton(b)}</div>${renderUpgradeCard(b)}<p class="cards-help">${cap?`围栏封闭 · 牲畜 ${livestockTotal(b)}/${cap}`:'在平地用墙和门围住食槽，里面至少留两格空间，关门后才开始饲养。'}<br>鸡 ${b.flock.chicken} · 山羊 ${b.flock.goat} · 长毛羊 ${b.flock.sheep||0} · 鸭 ${b.flock.duck||0} · 牛 ${b.flock.cow||0} · 饲料约 ${Math.ceil(b.feed)} 秒。用浆果引鸡鸭、块根引羊和牛。牛圈每个食槽最多接纳一头牛。鸭圈要靠近水。引来的动物可随你登船。</p><div class="inventory-actions"><button class="press" data-act="herd" data-val="berry" ${amount('berry')?'':'disabled'}>添浆果</button><button class="press" data-act="herd" data-val="root" ${amount('root')?'':'disabled'}>添块根</button>${amount('dryRoot')?'<button class="press" data-act="herd" data-val="dryRoot">添耐旱块根</button>':''}<button class="press primary" data-act="herd" data-val="egg" ${b.produce.egg?'':'disabled'}>收蛋 ×${b.produce.egg}</button><button class="press primary" data-act="herd" data-val="milk" ${b.produce.milk?'':'disabled'}>收奶 ×${b.produce.milk}</button>${[['duckEgg','鸭蛋'],['feather','羽毛']].map(([k,name])=>b.produce[k]?`<button class="press" data-act="herd" data-val="${k}">收${name} ×${b.produce[k]}</button>`:'').join('')}${b.flock.sheep?`<button class="press" data-act="shearHerd" ${amount('shears')?'':'disabled'}>剪羊毛</button>`:''}</div>${fieldHerdHtml(b,cap)}</div>`);
 }
 const escapeHtml=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
 function renderOutpost(){
   const b=currentBuild();if(!['outpost','sign'].includes(b?.type))return;
   const status=state.builds.filter(o=>dist(o,b)<156),beds=status.some(o=>o.type==='bed'),water=status.some(o=>['barrel','cistern'].includes(o.type))||entities.some(e=>e.type==='spring'&&dist(e,b)<156),dock=status.some(isDock);
-  $('window').innerHTML=panelFrame(items[b.type][0],`<div class="inside">${b.type==='outpost'?renderComfortBar(b)+renderHelperOverview(b):''}<p class="cards-help">${b.type==='outpost'?'海图上可见。':'写下你想留在路口的备注。'}附近${beds?'有床':'无床'} · ${water?'有水源或蓄水':'无蓄水设施'} · ${dock?'有码头':'无码头'}。</p><div class="inventory-actions"><input id="outpostName" maxlength="18" class="press" aria-label="前哨名" value="${escapeHtml(b.name)}"><button class="press primary" data-act="nameOutpost">保存名称</button></div>${b.type==='outpost'?residentMenu(b):''}</div>`);
+  $('window').innerHTML=panelFrame(items[b.type][0],`<div class="inside">${b.type==='outpost'?renderComfortBar(b)+renderHelperOverview(b):''}<p class="cards-help">${b.type==='outpost'?'海图上可见。':'写下你想留在路口的备注。'}附近${beds?'有床':'无床'} · ${water?'有水源或蓄水':'无蓄水设施'} · ${dock?'有码头':'无码头'}。</p><div class="inventory-actions"><input id="outpostName" maxlength="18" class="press" aria-label="前哨名" value="${escapeHtml(b.name)}"><button class="press primary" data-act="nameOutpost">保存名称</button></div>${b.type==='outpost'?'<p class="cards-help">'+outpostStatus(b)+'</p>'+residentMenu(b):''}</div>`);
 }
 const materialClues={cold:'冰晶、羊毛、厚兽皮',fog:'硬壳、领航笔记',volcanic:'黑曜石、浮石、耐热鳞',desert:'仙人掌果、耐旱块根',meadow:'蜂蜜、果树苗、芦苇',rainforest:'树脂、药用藤、芦苇',mangrove:'芦苇、泥炭、泥蟹',cliff:'石灰岩、旧采石场',atoll:'蚌肉、海盐、礁湖渔获',rescue:'淡水、芦苇、遇难幸存者',shelf:'海盐、废铁、暗礁渔获',tower:'四方徽记开启古代气象塔',south:'淡水、海盐、漂流物资',port:'淡水、活蜂、港口换货',salvage:'牡蛎、沉船废铁、藏宝图'};
 function renderFrontierGuide(){
@@ -3644,7 +3747,8 @@ const rawOrigins={
   duckEgg:'翡翠岛、红树林或灯塔湾 · 跟野鸭交互捡蛋，或圈养取蛋',
   oyster:'断帆浅滩西岸 · 退潮从牡蛎礁采集，或建牡蛎篮周期收取',
   mistCore:'暮潮海蚀洞深处 · 击败雾潮守卫',
-  mistCharm:'灯塔湾领航员交易，或暮潮洞击败守卫后的藏匣'
+  mistCharm:'灯塔湾领航员交易，或暮潮洞击败守卫后的藏匣',
+  cherrySapling:'翡翠岛、苍冠岛、棕榈岛、灯塔湾、微光营地等特色生态岛屿 · 砍伐任意樱花树必得樱花树苗'
 };
 function sourceFor(k){
   if(rawOrigins[k])return rawOrigins[k];
@@ -3653,6 +3757,7 @@ function sourceFor(k){
 const itemDetails={
   woolCape:'取消白脊岛受冻伤害与寒冷额外耗粮',snowBoots:'抵消雪地 24% 的移速惩罚',sunHat:'沙漠额外耗水 −37%',lightShirt:'沙漠额外耗水 −56%',
   rainCape:'抵消暴雨湿冷的额外耗粮',hideArmor:'减伤 30%',shellArmor:'减伤 53% · 移速 −12%',heatGreaves:'热岩伤害从 3.2 降至 0.18 / 秒',
+  cherrySapling:'种植于陆地平地，成熟后长成樱花树；可观赏、夏季结林果，随时可砍伐回收木材与樱花树苗。',
   mistCharm:'雾中抑制心神流失 · 守卫的心神打击 −75%',mistArmor:'减伤 45% · 移速 −5% · 抑制雾中心神流失',
   shield:'正面格挡一次 · 连续使用有间隔',shellShield:'正面格挡一次 · 比木盾节省 50% 格挡耐久',
   axe:'砍伐伤害 2',ironAxe:'砍伐伤害 4',pick:'基础开采伤害 3',ironPick:'基础开采伤害 6',obsidianPick:'深层铁矿与晶石开采伤害 12 · 火山矿的单次伤害 ×2',
@@ -3922,22 +4027,7 @@ function renderHotbar(){
     return `<button class="slot ${freshClass(k,state.lots[k])}" data-slot="${i}" aria-label="快捷栏 ${i+1} ${def?def[0]:'空'}" aria-pressed="${i===state.selected&&(!state.gear.hand||!state.handActive)}"><kbd>${i+1}</kbd>${def?`<span class="glyph">${itemIcon(k)}</span><small>${def[0]}</small>${amount(k)>1?`<em>${amount(k)}</em>`:''}${cons?'<span class="use-tag">用</span>':''}${dur?`<i class="dur" style="width:${clamp(state.wear[k]/dur*86,0,86)}%"></i>`:''}`:'<small>空手</small>'}</button>`;
   }).join('');
 }
-function questMessage(){
-  if(state.flags.weatherMaster)return ['第三幕完成','气象塔已解锁，可回仪风岛控制局部天气。'];
-  if(state.hull===3)return ['远洋终局 · '+state.seals.length+'/4 徽记','探索白脊、赤炉、苍冠和暮潮洞穴，乘旗舰登上仪风岛。'];
-  if(state.flags.keel)return ['建造双桅探索船','灯塔湾船坞 · 龙骨施工 '+state.hull+'/3 · 收集精炼钢、冰髓和熔岩核心。'];
-  if(state.flags.mistReward)return ['西南航线打通','去灯塔湾找季川领取远洋龙骨蓝图。'];
-  if(state.flags.swWreck)return ['暮潮航线','带灯和护甲登上暮潮岛，洞口在岛心偏北。'];
-  if(state.won)return ['航标已恢复','沿西南航线前往灯塔湾，或在退潮时打捞断帆沉船。'];
-  if(state.relics.length===3)return ['带回遗物','回微光营地信号塔，交付三件遗物与 5 木头。'];
-  if(state.builds.some(isBoat)){
-    const todo=relicIslands.filter(o=>!state.relics.includes(o.relic)).map(o=>`${o.name}（${o.dir}）`);
-    return [`遗物 ${state.relics.length}/3`, `未探索 · ${todo.join('、')}`];
-  }
-  if(amount('raft')||amount('sail')||amount('advancedSail'))return ['准备出航','带船走到岸边。按交互放船，再交互登船。'];
-  if(amount('wood')<3&&!state.builds.some(b=>b.type==='fire'))return ['点亮第一束火','靠近树木与石堆交互。篝火需要 3 木头、3 石头。'];
-  return ['造一艘木筏',`制作需要 8 木头和 2 纤维。当前 ${amount('wood')} 木 · ${amount('fiber')} 纤维。`];
-}
+function questMessage(){return mainAdventureSummary();}
 function actionHint(){
   if(insideStore())return prosperLabel(interactionTarget())||'走到店主或门口。';
   const ship=boat(),k=held();
@@ -3947,6 +4037,8 @@ function actionHint(){
   if(incoming)return `${incoming.duelCast?.skill[0]||entityNames[incoming.type]+ATTACK_TYPES[incoming.strikeKind||'normal'].label} · ${incoming.strikeKind==='unblockable'?dodgeKey().toUpperCase()+' / 闪避':guardKey().toUpperCase()+' / 格挡'}`;
   const nearby=candidates();
   const b=interactionTarget(nearby),a=nearby.find(isAnimal);
+  if(FARM_CROPS[b?.type])return farmHint(b);
+  if(FIELD_HERD[b?.type])return entityNames[b.type]+' · '+FIELD_HERD[b.type].about;
   const estateHint=estateTargetLabel(b);if(estateHint)return estateHint+' · E / 交互';
   if(b?.type==='trader')return tradeOffers[b.merchant].name+' · E / 交换物资';
   if(b?.type==='salvageWreck')return '断帆沉船 · 乘船进入舱室';
@@ -4070,7 +4162,7 @@ $('livingOpen').onclick=()=>v20AtlasOpen();
 $('interact').onclick=interact;
 let dodgePressAt=-1;
 $('dodge').addEventListener('pointerdown',e=>{
-  if(e.button!==0||editingLayout)return;
+  if(e.button!==0||editingLayout||mapMode!=='play'||!$('veil').hidden)return;
   e.preventDefault();unlockSound();dodgePressAt=e.timeStamp;dodge();
 });
 $('dodge').addEventListener('click',e=>{
@@ -4092,7 +4184,7 @@ function clearAttackPress(){
   releaseGamePointer(button,id);
 }
 $('attack').addEventListener('pointerdown',e=>{
-  if(mapMode!=='play'||attackHold.id!==null||e.button!==0)return;
+  if(mapMode!=='play'||!$('veil').hidden||attackHold.id!==null||e.button!==0)return;
   e.preventDefault();unlockSound();
   attackHold.id=e.pointerId;
   const fireNow=!!boat()||!!placing;
@@ -4146,6 +4238,7 @@ function resetStick(keepRelease=false){
 
 document.addEventListener('contextmenu',e=>{if(e.target.closest('#hud,#world'))e.preventDefault();});
 $('confirmBuild').onclick=()=>{if(mapMode==='play'&&placing)place(placing);};
+$('farmPlantRow').onclick=farmPlantRow;
 $('rotateBuild').onclick=()=>{if(!placing)return;const q=placementPoint(placing);const a=(buildCursor?.angle??state.player.angle)+Math.PI/2;buildCursor={...q,angle:HOME_FURNITURE[placing]?v20FurnitureAngle(a):a};};
 $('cancelBuild').onclick=()=>{cancelPlacement();updateHud();};
 window.addEventListener('keydown',e=>{
@@ -4190,7 +4283,7 @@ window.addEventListener('pagehide',()=>{if(!$('hud').hidden){stopInput();save();
 
 function aimPlacement(e){buildCursor={...canvasWorldPoint(e.clientX,e.clientY),angle:buildCursor?.angle??state.player.angle};}
 canvas.addEventListener('pointerdown',e=>{
-  if(mapMode!=='play')return;
+  if(mapMode!=='play'||!$('veil').hidden)return;
   if(placing&&e.button===0){placeDrag=e.pointerId;captureGamePointer(canvas,e.pointerId);aimPlacement(e);return;}
   if(e.pointerType==='mouse'&&e.button===0){attackHold.id=e.pointerId;attackHold.active=true;performPrimaryAttack();}
 });
@@ -4206,7 +4299,7 @@ function positionStick(e){
   stickMoved();
 }
 $('stick').addEventListener('pointerdown',e=>{
-  if(stick.id!==null||mapMode!=='play'||e.button!==0)return;
+  if(stick.id!==null||mapMode!=='play'||!$('veil').hidden||e.button!==0)return;
   e.preventDefault();unlockSound();stick.id=e.pointerId;
   stickGesture.double=performance.now()-stickGesture.released<=310;
   stickGesture.released=-Infinity;
@@ -4322,6 +4415,7 @@ function drawMap(target,labels){
   const p=state.player,x=p.x/T*sx,y=p.y/T*sy;
   drawExpansionChart(g,sx,sy,labels);
   drawMistMap(g,sx,sy,labels);
+  if(labels)drawAdventureMarker(g,sx,sy);
   drawPlayerHeading(g,x,y,p.angle,labels);
   g.restore();
 }
@@ -4360,6 +4454,19 @@ const animalSprites={
   shellCrab:['.ro.......or.','rvro.....orvr','orvvoooovvrro','..ovVvvVvo...','.orvEeEvvro..','..ovvvvvo....','.rooo.oooro..','..o.....o....']
 };
 const animalPalette={o:'#293835',v:'#747e86',V:'#a4adb0',w:'#705345',W:'#9d785e',r:'#b78a6d',R:'#e0bb98',E:'#412b34',e:'#fff0a4',s:'#ece2b0',S:'#b9a88c'};
+function drawCherryTree(e){
+  const season=seasonAt(),winter=season===3,summer=season===1;
+  ellipse(ctx,4,5,20,8,'#213c2a4d');
+  rect(ctx,-4,-19,8,22,'#6b4b43');rect(ctx,-1,-17,2,18,'#9d7567');
+  line(ctx,-2,-15,-12,-24,'#6b4b43',3);line(ctx,2,-16,12,-24,'#6b4b43',3);
+  const dark=winter?'#a37c8b':'#c76f89',mid=winter?'#dbb8c6':'#f09cb3',light=winter?'#f3e3ea':'#ffd1de';
+  polygon(ctx,[[-21,-22],[-17,-41],[-4,-50],[11,-46],[21,-33],[22,-18],[7,-12],[-11,-13]],dark);
+  ellipse(ctx,-10,-32,12,13,mid);ellipse(ctx,4,-37,13,13,mid);ellipse(ctx,11,-26,10,11,mid);
+  ellipse(ctx,-2,-41,9,7,light);ellipse(ctx,-9,-30,5,4,light);ellipse(ctx,8,-31,5,4,light);
+  const sway=Math.sin(nowClock*2.2+(e.homeX||e.x||0))*2.5;
+  rect(ctx,-14+sway,-14,3,2,light);rect(ctx,9-sway,-11,3,2,mid);
+  if(summer){rect(ctx,-7,-24,4,4,'#cf5b6a');rect(ctx,6,-27,4,4,'#cf5b6a');}
+}
 function drawTree(e){
   const palm=e.type==='palm',pine=e.type==='pine';
   ellipse(ctx,5,5,19,8,'#213c2a52');
@@ -4420,6 +4527,7 @@ function drawBoat(e){
   if(caseQuest('finn').ship===e.id){ellipse(ctx,-15,2,4,3,'#d7b783');rect(ctx,-17,-2,4,3,'#567e77');}
 }
 function drawAnimal(e){
+  if(drawFieldAnimal(e))return;
   if(drawMistCreature(e))return;
   if(drawDungeonAnimal(e))return;
   if(drawDetailedAnimal(e))return;
@@ -4501,7 +4609,9 @@ function drawStructure(e){
     for(let i=-14;i<17;i+=5)rect(ctx,i,-36,2,10,'#ddc696');
     for(let y=-33;y<=-17;y+=5)line(ctx,-17,y,19,y+1,e.type==='rainRoof'?'#466a6280':'#785f4b66');
     line(ctx,-20,-18,0,-10,'#ddbb82',2);line(ctx,0,-10,21,-17,'#5d5146',2);
-  }else if(['sapling','fruitSapling'].includes(e.type)&&e.readyAt<=state.elapsed){drawTree({...e,type:'tree',homeX:e.x,homeY:e.y});if(e.type==='fruitSapling')for(let i=-9;i<=9;i+=6)rect(ctx,i,-23+(i%3),4,4,'#eb9d67');}
+  }else if(e.type==='cherrySapling'&&e.readyAt<=state.elapsed){drawCherryTree(e);}
+  else if(e.type==='cherrySapling'){ellipse(ctx,0,3,10,4,'#2338304a');rect(ctx,-1.5,-11,3,13,'#7a544a');ellipse(ctx,0,-13,6,5,'#f1a1b7');rect(ctx,-3,-16,4,3,'#ffd3e0');}
+  else if(['sapling','fruitSapling'].includes(e.type)&&e.readyAt<=state.elapsed){drawTree({...e,type:'tree',homeX:e.x,homeY:e.y});if(e.type==='fruitSapling')for(let i=-9;i<=9;i+=6)rect(ctx,i,-23+(i%3),4,4,'#eb9d67');}
   else if([...waterStorage,'compost','smoker','trough'].includes(e.type)){
     ellipse(ctx,0,4,19,8,'#21332855');
     if(waterStorage.includes(e.type)){
@@ -4513,7 +4623,7 @@ function drawStructure(e){
     }else{
       rect(ctx,-16,-12,32,18,'#926e4d');rect(ctx,-14,-11,28,7,e.type==='trough'?'#5e5a42':'#544839');rect(ctx,-16,-2,32,4,'#b2875d');
       if(e.type==='trough'&&e.flock){
-        const pets=[...Array(Math.min(4,e.flock.chicken)).fill('chicken'),...Array(Math.min(4,e.flock.goat)).fill('goat'),...Array(Math.min(4,e.flock.sheep||0)).fill('sheep'),...Array(Math.min(4,e.flock.duck||0)).fill('duck'),...Array(Math.min(1,e.flock.cow||0)).fill('cow')];
+        const pets=livestock.flatMap(k=>Array(Math.min(k==='cow'?1:4,Math.max(0,e.flock[k]||0))).fill(k)).slice(0,10);
         pets.forEach((type,i)=>{const a=i*2.4+nowClock*.3;ctx.save();ctx.translate(Math.cos(a)*(24+i*2),Math.sin(a)*(18+i*2));drawAnimal({type,angle:a,homeX:e.x+i});ctx.restore();});
       }
     }
@@ -4534,6 +4644,7 @@ function drawEntity(e){
   if(HOME_FURNITURE[e.type]){drawHomeFurniture(e);ctx.restore();return;}
   if(FARM_CROPS[e.type]){drawFarmCrop(e);ctx.restore();return;}
   if(e.type==='ruralObject'){drawRuralObject(e);ctx.restore();return;}
+  if(drawFieldAnimal(e)){ctx.restore();return;}
   drawLivingWork(e);drawRuralNpcWork(e);drawLifeMark(e);
   combatWarning(e);
   if(e.nightRole&&(e.nightState==='alert'||e.nightRole==='elite')){
@@ -4791,7 +4902,7 @@ function drawScene(){
   if(!inDungeon){
     for(const a of trails)if(visible(a)){rect(ctx,a.x-3,a.y,2,3,'#504c3e91');rect(ctx,a.x+2,a.y-3,2,3,'#504c3e91');}
     drawMoonTrails(visible);
-    for(const e of entities)if(e.respawn&&!estateClearedNodes.has(e.id)&&['tree','pine','palm','resinTree'].includes(e.type)&&!state.stumps?.[e.id]&&visible(e)){
+    for(const e of entities)if(e.respawn&&!estateClearedNodes.has(e.id)&&['tree','pine','palm','resinTree','wildCherry'].includes(e.type)&&!state.stumps?.[e.id]&&visible(e)){
       rect(ctx,e.x-4,e.y-7,9,11,'#775843');rect(ctx,e.x-5,e.y-8,11,4,'#bd9a6f');
     }
     for(const f of schools)if(f.stock&&visible(f)){
@@ -4832,7 +4943,7 @@ function drawScene(){
   for(const a of particles)rect(ctx,a.x,a.y,2,2,a.color);
   drawDuelWarnings(left,top,right,bottom);
   drawDamageTexts();
-  if(!inDungeon)drawIslandFog(left,top,right,bottom);
+  if(!inDungeon){drawIslandFog(left,top,right,bottom);drawSeasonTalk(visible);}
   if(mapMode==='play'&&placing){
     const q=placementPoint(placing);
     const ok=!!q&&validPlacement(placing,q);
@@ -5084,7 +5195,7 @@ function renderHull(){
   const allowed=state.won||state.flags.mistReward;
   const stage=hullPhases[state.hull], afloat=state.builds.some(b=>b.type==='flagship');
   const content=!state.flags.keel?
-    `<p>季川 · 修船匠。完成信号塔主线或打开暮潮藏匣后，即可领取远洋龙骨蓝图。</p><button class="press primary" data-act="keel" ${allowed?'':'disabled'}>领取蓝图</button>`:
+    `<p>铁山 · 修船匠。完成信号塔主线或打开暮潮藏匣后，即可领取远洋龙骨蓝图。</p><button class="press primary" data-act="keel" ${allowed?'':'disabled'}>领取蓝图</button>`:
     stage?`<h3>${state.hull+1}/3 · ${stage[0]}</h3><p>${materialButtons(stage[1])}</p><button class="press primary" data-act="hullStage" ${hasIngredients(stage[1])?'':'disabled'}>交料施工</button>`:
     afloat?'<p>双桅探索船已下水。到湾口登船，按 G 或「舰炮」射击，F 切换鱼叉。</p>':
     '<p>船已完工。选一处湾口的安全水面下水。</p><button class="press primary" data-act="launchFlagship">旗舰下水</button>';
@@ -5447,14 +5558,19 @@ function rescueCastaway(e){
 }
 function placeResident(b){
   if(b.type!=='outpost'||dist(b,state.player)>REACH)return;
-  const u=state.castaways.find(e=>e.following&&!e.aboard&&dist(e,b)<153);
-  if(!u){toast('附近没有跟随你的幸存者。');return;}
-  const {beds,boxes}=homeSupplies(b);
-  if(beds.length<=state.residents.filter(r=>r.home===b.id).length){toast('需要一张空余木床。');return;}
-  const stock=boxes.find(box=>Object.keys(box.stock).some(k=>items[k][2]>0));
-  if(!stock){toast('先往附近箱子里放食物。');return;}
-  const k=Object.keys(stock.stock).find(k=>items[k][2]>0);
-  const ration=stock.stock[k];ration.count--;ration.lots?.shift();if(!ration.count)delete stock.stock[k];
+  const {free,rations,escort:u,ready}=outpostReadiness(b);
+  if(!ready){
+    toast(!free?'需要一张空余木床。':!rations.length?'在附近箱子存一份可食用的食物。':'请把跟随中的旅人带到前哨路牌旁。');
+    return;
+  }
+  const {box,k}=rations[0],slot=box.stock[k];
+  if(slot.lots){
+    const expired=slot.lots.findIndex(t=>t>state.elapsed);
+    if(expired>0){
+      stockDebit(box,k,expired);yieldItem('rot',expired,box);
+    }
+  }
+  stockDebit(box,k,1);
   state.residents.push({id:u.id,name:u.name,home:b.id,job:'idle',work:0,lastNote:'刚入住前哨'});
   journeyMark('social','campRescue');
   state.rescuedCount=(state.rescuedCount||0)+1;state.portRep=(state.portRep||0)+1;
@@ -5602,9 +5718,9 @@ function raidTime(dt){
     const options=state.builds.filter(b=>b.type==='outpost'&&localClimate(b)!=='port');
     const home=options.sort((a,b)=>dist(state.player,a)-dist(state.player,b))[0]||state.camp;
     const wave={day:gameDay(),x:home.x,y:home.y,home:home.id,enemies:[]};
-    for(let i=0;i<6;i++){
-      const q=Array.from({length:7},(_,n)=>point(Math.floor(home.x/T)+Math.round(Math.cos((i+n*.19)*TWO_PI/6)*(5+n%2)),Math.floor(home.y/T)+Math.round(Math.sin((i+n*.19)*TWO_PI/6)*(5+n%2)))).find(p=>canLand(p.x,p.y));
-      if(q){const type=raidTypes[i%3];wave.enemies.push({type,...q,id:'raid:'+wave.day+':'+i,hp:objectHp[type]});}
+    for(let i=0;i<7;i++){
+      const q=Array.from({length:7},(_,n)=>point(Math.floor(home.x/T)+Math.round(Math.cos((i+n*.19)*TWO_PI/7)*(5+n%2)),Math.floor(home.y/T)+Math.round(Math.sin((i+n*.19)*TWO_PI/7)*(5+n%2)))).find(p=>canLand(p.x,p.y));
+      if(q){const type=raidTypes[i%3];wave.enemies.push({type,...q,id:'raid:'+wave.day+':'+i,hp:Math.round(objectHp[type]*1.20)});}
     }
     state.raid=wave;state.lastRaid=gameDay();restoreRaid();toast('血月来袭！夜影与群兽正在接近营地。',5);save();
   }
@@ -5636,10 +5752,10 @@ function patrolRaid(e,dt){
   const a=Math.atan2(home.y-e.y,home.x-e.x);
   if(dist(e,home)>29){
     const x=e.x,y=e.y;
-    moveObject(e,Math.cos(a)*46*dt,Math.sin(a)*46*dt,canTravel);
-    if(Math.hypot(e.x-x,e.y-y)<dt*9){
+    moveObject(e,Math.cos(a)*56*dt,Math.sin(a)*56*dt,canTravel);
+    if(Math.hypot(e.x-x,e.y-y)<dt*11){
       const wall=state.builds.find(b=>fences.includes(b.type)&&!b.open&&dist(b,e)<33);
-      if(wall&&state.elapsed>=e.attackAt){e.attackAt=state.elapsed+2;wall.hp-=(wall.type==='stoneWall'?6:16);if(wall.hp<=0)state.builds=state.builds.filter(b=>b!==wall);}
+      if(wall&&state.elapsed>=e.attackAt){e.attackAt=state.elapsed+1.8;wall.hp-=(wall.type==='stoneWall'?8:22);if(wall.hp<=0)state.builds=state.builds.filter(b=>b!==wall);}
     }
   }
   return true;
@@ -6007,6 +6123,7 @@ function handleSeaEventChoice(choice){
 }
 function drawSeaEvents(left,top,right,bottom){
   if(!state?.seaEvents?.length)return;
+  for(const ev of state.seaEvents)if(tileAt(ev.x,ev.y)>0){const wp=v20NearestSea(ev,10);if(wp){ev.x=wp.x;ev.y=wp.y;}}
   for(const ev of state.seaEvents){
     if(ev.x<left-40||ev.x>right+40||ev.y<top-40||ev.y>bottom+40)continue;
     const bob=Math.sin(nowClock*3.2+ev.x*.05)*2.5;
@@ -6389,7 +6506,7 @@ function tickEntityRespawns(){
 function buildSaveExportText(fromTitle=false){
   if(!fromTitle){saveProsperPeople();captureIncidentActors();captureAnimalStates();captureBoarding();captureNightActors();captureDuelEncounters();refreshJourneyProgress();syncDungeonPersist();syncSchoolSave();state.rural.audio=ruralAudioDefaults();state.displayPrefs=displayPreferences();}
   const data=fromTitle?(loadGame()||state):state;
-  return JSON.stringify({app:'wildcraft',format:SAVE_FORMAT,version:'2.0.1c',exportedAt:new Date().toISOString(),data},null,2);
+  return JSON.stringify({app:'wildcraft',format:SAVE_FORMAT,version:'2.0.1d',exportedAt:new Date().toISOString(),data},null,2);
 }
 function validateSavePayload(text){
   const bad=error=>({ok:false,error});
@@ -6400,7 +6517,7 @@ function validateSavePayload(text){
   const coords=q=>record(q)&&Number.isFinite(q.x)&&Number.isFinite(q.y);
   const integer=(n,max)=>Number.isSafeInteger(n)&&n>=0&&n<=max;
   if(!checkSaveTree(parsed))return bad('存档数据过深或包含异常字符。');
-  if(parsed?.data&&(parsed.app!=='wildcraft'||!['1.87b','1.88','1.88a','1.88b','1.88c','1.89','1.90','1.91a','1.91b','1.91c','1.91d','1.92','1.93','1.94','1.94b','1.94c','1.95','1.95b','1.95c','1.95d','1.96','1.96b','1.97','1.97 Dev','1.97b','1.98','1.98 Dev','1.99','1.99b','1.99c','1.99d','2.0','2.0.1','2.0.1a','2.0.1b','2.0.1c'].includes(parsed.version)||
+  if(parsed?.data&&(parsed.app!=='wildcraft'||!['1.87b','1.88','1.88a','1.88b','1.88c','1.89','1.90','1.91a','1.91b','1.91c','1.91d','1.92','1.93','1.94','1.94b','1.94c','1.95','1.95b','1.95c','1.95d','1.96','1.96b','1.97','1.97 Dev','1.97b','1.98','1.98 Dev','1.99','1.99b','1.99c','1.99d','2.0','2.0.1','2.0.1a','2.0.1b','2.0.1c','2.0.1d'].includes(parsed.version)||
     parsed.version!=='1.87b'&&parsed.format!==SAVE_FORMAT))return bad('此游戏版本无法导入。');
   const s=parsed?.data??parsed;
   if(!record(s)||s.v!==1)return bad('不支持的存档格式。');
@@ -6533,7 +6650,7 @@ function exportSaveFile(){
   try{
     const blob=new Blob([txt],{type:'application/json;charset=utf-8'});
     const url=URL.createObjectURL(blob),a=document.createElement('a');
-    a.href=url;a.download=`wildcraft_v2.0.1c_day${gameDay()+1}.json`;document.body.appendChild(a);a.click();a.remove();
+    a.href=url;a.download=`wildcraft_v2.0.1d_day${gameDay()+1}.json`;document.body.appendChild(a);a.click();a.remove();
     setTimeout(()=>URL.revokeObjectURL(url),30000);
     setText($('saveStatus'),'已触发 JSON 存档下载（若移动端受限，可直接点「复制 JSON」）。');
   }catch{setText($('saveStatus'),'浏览器限制了文件下载，请点击「复制 JSON」手动保存。');}
@@ -7253,6 +7370,7 @@ function captureAnimalStates(){
       aiState:e.aiState||'Idle',
       satiatedUntil:e.satiatedUntil||0,
       feedUntil:e.feedUntil||0,
+      leadUntil:FIELD_HERD[e.type]&&Number.isFinite(e.leadUntil)?e.leadUntil:0,
       burrowed:!!e.burrowed,
       lurking:!!e.lurking
     };
@@ -7272,6 +7390,7 @@ function restoreAnimalStates(){
     e.aiState=s.aiState||'Idle';
     e.satiatedUntil=s.satiatedUntil||0;
     e.feedUntil=s.feedUntil||0;
+    if(FIELD_HERD[e.type]&&Number.isFinite(s.leadUntil)&&s.leadUntil>state.elapsed&&s.leadUntil<=state.elapsed+DAY+230)e.leadUntil=s.leadUntil;
     e.burrowed=!!s.burrowed;
     e.lurking=!!s.lurking;
   }
@@ -7923,7 +8042,7 @@ function tickEcoAnimal(e,p,ship,dt){
       return true;
     }
     const baseSpd=prof.aquatic?(isWaterCell(e.x,e.y)?prof.waterSpeed:prof.landSpeed):(prof.chaseSpeed||88);
-    const nightMul=night&&prof.nocturnalBoost?1.12:1;
+    const nightMul=night?(bloodMoon()&&!state.cave?1.18:(prof.nocturnalBoost?1.16:1.08)):1;
     moveObject(e,Math.cos(e.angle)*baseSpd*nightMul*dt,Math.sin(e.angle)*baseSpd*nightMul*dt,pass);
     return true;
   }
@@ -8226,7 +8345,7 @@ function populateV171b(add,extra){
     if(!tr.dug)entities.push(obj('leisureTreasure',tr.x,tr.y,tr.id,{tData:tr}));
   }
   for(const bt of L.bottles){
-    if(!bt.picked)entities.push(obj('shoreBottle',bt.x,bt.y,bt.id,{bData:bt}));
+    if(!bt.picked&&fixBottleOnWater(bt))entities.push(obj('shoreBottle',bt.x,bt.y,bt.id,{bData:bt}));
   }
   for(const sos of L.sosEvents){
     if(!sos.done)entities.push(obj('sosSite',sos.x,sos.y,sos.id,{sData:sos}));
@@ -9344,6 +9463,30 @@ function recordNauticalLog(title,text){
   }
 }
 
+function coastalWaterSpot(o,avoidList=[]){
+  const spots=[];
+  for(let r=o.r-o.ry-3;r<=o.r+o.ry+3;r++)for(let c=o.c-o.rx-3;c<=o.c+o.rx+3;c++){
+    if(!inside(c,r)||tile(c,r)!==0)continue;
+    const id=index(c,r);
+    if(lagoon.has(id)||reefIndex.has(id))continue;
+    const q=point(c,r);
+    if(!canSail(q.x,q.y,null)||tidal(q.x,q.y))continue;
+    const touchesShore=[[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dy])=>tile(c+dx,r+dy)===o.i+1&&canLand((c+dx+.5)*T,(r+dy+.5)*T)&&!rivers.has(index(c+dx,r+dy))&&!hotCells.has(index(c+dx,r+dy)));
+    const touchesOpenSea=[[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dy])=>inside(c+dx,r+dy)&&tile(c+dx,r+dy)===0&&!tidal((c+dx+.5)*T,(r+dy+.5)*T));
+    if(!touchesShore||!touchesOpenSea)continue;
+    if(entities.some(e=>dist(e,q)<38)||avoidList.some(b=>!b.picked&&dist(b,q)<110))continue;
+    spots.push({c,r,...q});
+  }
+  return spots.length?spots[Math.floor(Math.random()*spots.length)]:null;
+}
+function fixBottleOnWater(bt){
+  if(!bt||bt.picked)return true;
+  if(tileAt(bt.x,bt.y)===0&&!lagoon.has(cellAt(bt.x,bt.y)))return true;
+  const reg=regions[bt.regionIdx]||regions.find(o=>o.name===bt.regionName)||regions[4];
+  const moved=coastalWaterSpot(reg,state.leisure?.bottles||[])||v20NearestSea(bt,10);
+  if(moved&&tileAt(moved.x,moved.y)===0){bt.x=moved.x;bt.y=moved.y;return true;}
+  bt.picked=true;return false;
+}
 function spawnShoreBottles(count=1){
   const L=state.leisure;
   const active=L.bottles.filter(b=>!b.picked);
@@ -9352,16 +9495,8 @@ function spawnShoreBottles(count=1){
   let spawned=0;
   for(const o of pool){
     if(spawned>=count||active.length+spawned>=6)break;
-    const beachSpots=[];
-    for(let r=o.r-o.ry-2;r<=o.r+o.ry+2;r++)for(let c=o.c-o.rx-2;c<=o.c+o.rx+2;c++){
-      if(!inside(c,r)||tile(c,r)!==o.i+1||!isBeach(c,r))continue;
-      const id=index(c,r);
-      if(rivers.has(id)||reefChannels.has(id)||hotCells.has(id))continue;
-      const q=point(c,r);
-      if(!entities.some(e=>dist(e,q)<42)&&!L.bottles.some(b=>!b.picked&&dist(b,q)<120))beachSpots.push({c,r,...q});
-    }
-    if(!beachSpots.length)continue;
-    const pick=beachSpots[Math.floor(Math.random()*beachSpots.length)];
+    const pick=coastalWaterSpot(o,L.bottles);
+    if(!pick)continue;
     const roll=Math.random();
     const kind=roll<.30?'log':roll<.60?'treasure':roll<.82?'sos':'find';
     const bt={id:'sbt:'+state.nextId++,regionIdx:o.i,regionName:o.name,x:pick.x,y:pick.y,kind,picked:false};
@@ -9853,7 +9988,7 @@ function smartContextLabel(t){
   if(['mistValeSite','mistValeResident','caseSite','casePerson','forgeSite'].includes(t?.type))return {text:t.label,active:true,alert:false};
   if(rodInteraction(t))return {text:'🎣 抛竿',active:true,alert:false};
   if(t?.type==='ruralObject')return {text:t.label||'节庆',active:true,alert:true};
-  if(FARM_CROPS[t?.type])return {text:t.readyAt<=state.elapsed?'收获':(['flask','fertilizer','wateringCan'].includes(k)?'照料作物':'查看湿度'),active:true,alert:false};
+  if(FARM_CROPS[t?.type])return {text:t.readyAt<=state.elapsed?'收获成熟作物':k==='wateringCan'?'连续浇水':['flask','fertilizer'].includes(k)?'照料作物':t.field?.water<25?'农田缺水':'查看农田',active:true,alert:false};
   if(!t)return {text:'交互',active:false,alert:false};
   if(t.type==='routeCrew')return {text:t.port?'乘坐客船':'返帆公共建设',active:true,alert:false};
   if(t.type==='routesWork')return {text:t.label,active:true,alert:false};
@@ -10787,7 +10922,7 @@ const DEFAULT_SETTINGS={
   camZoom:1,shake:1,particles:'high',weatherFx:true,fpsCap:0,smoothCam:true,
   difficulty:'standard',meleeAssist:true,puzzleHints:true,dmgNumbers:true,hotbarMode:'always',fontSize:'normal',warnIntensity:'normal',
   masterVol:1,sfxVol:1,ambientVol:.65,musicVol:.55,muted:false,bgmMuted:false,
-  autoSaveSec:180,displayMode:'auto'
+  autoSaveSec:180,displayMode:'auto',ambientChatter:'normal'
 };
 
 let _cachedSettings=null,appliedHotbarMode=null;
@@ -11652,6 +11787,7 @@ function renderSettingsPanel(tabName){
       <div class="pref-row"><label>镜头缩放：<strong id="sZoomV">${Math.round(s.camZoom*100)}%</strong></label><input type="range" id="sZoom" min="80" max="130" value="${Math.round(s.camZoom*100)}"></div>
       <div class="pref-row"><label>屏幕震动强度：<strong id="sShakeV">${Math.round(s.shake*100)}%</strong></label><input type="range" id="sShake" min="0" max="100" value="${Math.round(s.shake*100)}"></div>
       <div class="set-item"><label><span>粒子特效等级</span><small>低画质减少粒子与雨线开销</small></label><div class="inventory-actions">${[['low','低'],['mid','中'],['high','高']].map(([k,n])=>`<button class="press ${s.particles===k?'primary':''}" data-act="setOpt" data-val="particles:${k}">${n}</button>`).join('')}</div></div>
+      ${seasonTalkSettings(s)}
       <div class="set-item"><label><span>天气视觉效果</span><small>暴雨雨线与风暴特效</small></label><button class="press" data-act="toggleBool" data-val="weatherFx">${s.weatherFx?'开启':'关闭'}</button></div>
       <div class="set-item"><label><span>帧率上限</span><small>限制帧率以节省手机电量</small></label><div class="inventory-actions">${[[30,'30 FPS'],[60,'60 FPS'],[0,'自动']].map(([k,n])=>`<button class="press ${s.fpsCap===k?'primary':''}" data-act="setNumOpt" data-val="fpsCap:${k}">${n}</button>`).join('')}</div></div>
       <div class="set-item"><label><span>镜头平滑跟随</span><small>移动时平滑插值视角</small></label><button class="press" data-act="toggleBool" data-val="smoothCam">${s.smoothCam?'开启':'关闭'}</button></div>
@@ -11689,7 +11825,7 @@ function renderSettingsPanel(tabName){
     </div>`;
   }
 
-  $('window').innerHTML=panelFrame('游戏设置（V2.0.1c）',`<div class="set-tabs" role="tablist">${tabHtml}</div><div class="inside">${body}</div>`);
+  $('window').innerHTML=panelFrame('游戏设置（V2.0.1d）',`<div class="set-tabs" role="tablist">${tabHtml}</div><div class="inside">${body}</div>`);
   // 绑定滑块事件
   const bindRange=(id,valId,key)=>{
     const el=$(id);if(!el)return;
@@ -14075,7 +14211,8 @@ const ART_COLORS={
   root:['#a47b62','#e2b581','#614944'], hide:['#a76b4a','#dfae79','#653e39'],
   gold:['#c29966','#f9df9f','#805f42'], cream:['#bab8a0','#f4e7c1','#767f74'],
   steel:['#5d8293','#dcedee','#395064'], ink:['#343c49','#8a8e91','#222936'],
-  brine:['#95a5b0','#eaf2d7','#547488'], creamBlue:['#a8bec3','#f5f8de','#628088']
+  brine:['#95a5b0','#eaf2d7','#547488'], creamBlue:['#a8bec3','#f5f8de','#628088'],
+  sakura:['#e88ca7','#ffd4e1','#914a60']
 };
 const ITEM_ART=new Map();
 const artPath=(d,f)=>'<path d="'+d+'" fill="'+f+'"/>';
@@ -14129,7 +14266,7 @@ beehive/hive/gold oysterBasket/trap/cream/4 oyster/bivalve/cream/1 duckEgg/egg/t
 oysterRoast/bivalve/copper/2 duckOmelet/pan/gold/1 reinforcedBow/prow/steel
 cargoHold/chest/steel/3 deckRack/rack/hide/1 deckLamp/lamp/copper/3
 mistCharm/pendant/teal mistCore/gem/violet/2 mistArmor/shirt/violet/3
-silverSapling/plant/ice/2 silverFruit/cluster/ice/2 flagship/ship/iron/1
+silverSapling/plant/ice/2 cherrySapling/plant/sakura/1 silverFruit/cluster/ice/2 flagship/ship/iron/1
 steel/ingot/steel/2 lavaHeart/gem/red/3 iceHeart/iceCore/ice seaBone/bone/cream pearl/pearl/creamBlue
 deckRound/round/dark harpoonBolt/arrow/iron/1 alchemy/table/violet/1 nightSight/flask/violet/1
 swiftTonic/flask/teal/2 rageSalve/jar/red/3 seaFeast/bowl/copper/3 honeyRoast/steak/sun/2
@@ -14371,11 +14508,11 @@ function economyDifficulty(){
   return DIFFICULTY_ECONOMY[gameSettings().difficulty]||DIFFICULTY_ECONOMY.standard;
 }
 const HARVEST_DROPS={
-  tree:{wood:2,fiber:1},palm:{wood:2,coconut:1,fiber:1},pine:{wood:3,fiber:1},
+  tree:{wood:2,fiber:1},palm:{wood:2,coconut:1,fiber:1},pine:{wood:3,fiber:1},wildCherry:{wood:3,fiber:1},
   rock:{stone:2},bush:{berry:2,fiber:2},vein:{ore:2,stone:1},copperOre:{copperOre:2},
   clay:{clay:3},salt:{salt:3},roots:{root:2},herbPatch:{herb:2},crystals:{crystal:2},deepOreNode:{deepOre:2,ore:1,stone:1}
 };
-const HARVEST_RENEWAL={tree:150,palm:154,pine:168,bush:72,rock:188,vein:DAY*1.25,copperOre:DAY*1.25,crystals:DAY*1.8};
+const HARVEST_RENEWAL={tree:150,palm:154,pine:168,wildCherry:165,bush:72,rock:188,vein:DAY*1.25,copperOre:DAY*1.25,crystals:DAY*1.8};
 const AUTUMN_HARVEST=new Set(['berry','coconut','root','herb','orchardFruit','honey','cactusFruit','dryRoot']);
 function gatherCadence(){const modLv=state?.v195b?.toolMods?.[held()]||0;return Math.max(.55,(1-(skillLevel('gather')-1)*.012)*(1-modLv*.12));}
 function seasonalHarvest(key,n){
@@ -14841,6 +14978,8 @@ function populateExpansion(){
       if(o.i===2&&type==='pumiceNode')type='rock';
       if(o.i===7&&type==='limestoneNode')type='vein';
       if(type==='peatBank'&&o.i!==14)type='reedBed';
+      if(['meadow','rainforest','cliff','atoll','mangrove'].includes(o.biome)&&j===0)type='wildCherry';
+      if(o.i===4&&j===0)type='wildCherry';
       plantAt(type,q,'exp:resource:'+o.i+':'+j);
       pockets.add((q.c>>2)+':'+(q.r>>2));
     }
@@ -16555,7 +16694,7 @@ function bindCombatHold(id,key){
     releaseGamePointer(el,e.pointerId);
   };
   el.addEventListener('pointerdown',e=>{
-    if(!landCombatReady()||combatInput[key]!==null)return;
+    if(!landCombatReady()||!$('veil').hidden||combatInput[key]!==null)return;
     if(key==='guard'&&!beginGuard(e.timeStamp))return;
     unlockSound();e.preventDefault();combatInput[key]=e.pointerId;el.classList.add('active');captureGamePointer(el,e.pointerId);
   });
@@ -18204,7 +18343,7 @@ $('toggleMapBtn')?.addEventListener('click',e=>{
 
 // Deterministic test & diagnostics hook for verification scripts
 window.__WILDCRAFT_V188A__={
-  version:'2.0.1c',
+  version:'2.0.1d',
   SceneManager,
   generateDungeonLayout,
   validateDungeonLayout,
@@ -18739,10 +18878,10 @@ function boardingSaveValid(b,s){
 }
 
 const NIGHT_FORM={
-  hunter:{name:'夜行猎手',see:185,leash:300,seconds:8,speed:95,tell:.62},
-  beast:{name:'狂暴野兽',see:150,leash:260,seconds:7,speed:82,tell:.77},
-  shadow:{name:'暗影潜伏者',see:195,leash:280,seconds:8,speed:91,tell:.81},
-  elite:{name:'夜间精英',see:188,leash:320,seconds:9,speed:97,tell:.78}
+  hunter:{name:'夜行猎手',see:200,leash:320,seconds:9,speed:104,tell:.58},
+  beast:{name:'狂暴野兽',see:166,leash:280,seconds:8,speed:92,tell:.72},
+  shadow:{name:'暗影潜伏者',see:210,leash:300,seconds:9,speed:100,tell:.76},
+  elite:{name:'夜间精英',see:206,leash:340,seconds:10,speed:108,tell:.73}
 };
 const NIGHT_HOSTILES=new Set(['wolf','fogWolf','boar','brownBear','wisp','swampCroc','desertScorpion','spider','bat','shellBack','emberBug','caveLurker','drownedSailor','abyssBeetle','clockworkSentinel','abyssalWarden','mistGuard','golem']);
 const nightHandLights=['torch','tallowTorch','lantern','mineLamp','glowLantern'];
@@ -18772,14 +18911,22 @@ function nightDamageMultiplier(e,p){
   if(!e||!NIGHT_HOSTILES.has(e.type)||!dusk())return 1;
   if(state.boarding||boat())return 1;
   const level=updateNightEnvironment(p).level;
-  return level?1+(level===1?.1:level===2?.15:level===3?.2:.24):1;
+  const bm=bloodMoon()&&!state.cave&&!state.dungeons?.active?.12:0;
+  return (level?1+(level===1?.15:level===2?.22:level===3?.28:.34):1)+bm;
 }
 function nightSightMultiplier(e){
   if(!dusk()||!NIGHT_HOSTILES.has(e.type)||state.boarding)return 1;
-  return sceneMoving?1.33:1.14;
+  const base=sceneMoving?1.42:1.22;
+  return bloodMoon()&&!state.cave&&!state.dungeons?.active?base*1.12:base;
 }
 function nightRecovery(e){
-  return dusk()&&NIGHT_HOSTILES.has(e.type)?(e.dungeonEntity?.84:.70):1;
+  if(!dusk()||!NIGHT_HOSTILES.has(e.type))return 1;
+  if(e.dungeonEntity)return .80;
+  return bloodMoon()&&!state.cave?.58:.64;
+}
+function nightSpeedMultiplier(e){
+  if(!dusk()||!NIGHT_HOSTILES.has(e.type)||state.boarding)return 1;
+  return bloodMoon()&&!state.cave&&!state.dungeons?.active?1.14:1.08;
 }
 function darkShelterDrain(p){
   if(boat()||state.boarding)return 0;
@@ -18863,7 +19010,7 @@ function tickNightWorld(){
   if(['volcanic','desert','mangrove','cliff','atoll'].includes(region.biome)&&role==='hunter'){role='beast';type='boar';}
   const q=points[Math.floor(variant*points.length)];
   const id='night:'+key+':'+night.spent;
-  const rec={id,type,role,x:q.x,y:q.y,hx:q.x,hy:q.y,hp:objectHp[type]};
+  const rec={id,type,role,x:q.x,y:q.y,hx:q.x,hy:q.y,hp:Math.round(objectHp[type]*(role==='elite'?1.22:1.15))};
   night.actors.push(rec);night.spent++;
   const e=nightActor(rec);entities.push(e);
   e.nightLead={x:p.x,y:p.y};e.nightState='search';e.nightUntil=now+11;
@@ -19071,7 +19218,13 @@ function activeJourneyPoint(rec){
 function refreshJourneyObjects(){
   entities=entities.filter(e=>e.type!=='journeyObject');
   for(const rec of Object.values(state.journey.events)){
-    const q=activeJourneyPoint(rec),kind=journeyObjectKey(rec);
+    const kind=journeyObjectKey(rec);
+    if(kind==='bottle'&&rec.pos&&tileAt(rec.pos.x,rec.pos.y)>0){
+      const reg=regions[rec.pos.region]||regionAt(rec.pos.x,rec.pos.y)||regions[0];
+      const wp=coastalWaterSpot(reg,[])||v20NearestSea(rec.pos,8);
+      if(wp&&tileAt(wp.x,wp.y)===0){rec.pos.x=wp.x;rec.pos.y=wp.y;}
+    }
+    const q=activeJourneyPoint(rec);
     if(!q)continue;
     entities.push(obj('journeyObject',q.x,q.y,'journey:'+rec.key,{journeyKey:rec.key,journeyKind:kind,label:JOURNEY_OBJECT_NAMES[kind]}));
   }
@@ -19083,7 +19236,7 @@ function journeySchedule(j,tier,now,serial){
 function createJourneyOffer(key,region,p,variant){
   const d=JOURNEY_EVENTS[key],events=state.journey.events;
   if(events[key])return false;
-  const pos=journeyGround(p,region,{coast:d.coast,min:T*2,max:T*5,variant});
+  const pos=key==='bottle'?coastalWaterSpot(region,[]):journeyGround(p,region,{coast:d.coast,min:T*2,max:T*5,variant});
   if(!pos)return false;
   let target=null;
   if(key==='bottle')target=bottleDestination(region,variant);
@@ -19545,7 +19698,7 @@ function farmPlant(b,regrow=false){
   const a=hydrateFarm(b);
   a.duration=(regrow?def.again:def.days)*DAY;
   b.readyAt=state.elapsed+a.duration;
-  b.fed=false;b.watered=false;a.quality=55;a.soaked=0;
+  b.fed=false;b.watered=false;a.quality=55+(!regrow&&seasonAt()===0&&festivalInfo().now?4:0);a.soaked=0;
 }
 function cropWeather(b,dt,rain){
   const a=b.field||hydrateFarm(b);
@@ -19557,8 +19710,8 @@ function cropWeather(b,dt,rain){
   const remain=b.readyAt-(state.elapsed-dt);
   if(remain<=0)return;
   const moisture=(before+a.water)*.5;
-  const slower=moisture<21?(b.type==='dryPlot'?.83:.58):moisture<36?.82:1;
-  const rate=season===3&&!covered?.10:(season===0?1.12:1)*slower*(b.fed?1.13:1);
+  const slower=moisture<21?(b.type==='dryPlot'?.86:.70):moisture<36?.86:1;
+  const rate=farmSeasonRate(b,season,covered)*slower*(b.fed?1.13:1);
   b.readyAt=state.elapsed+Math.max(0,remain-rate*dt);
   a.quality=clamp(a.quality+dt*(moisture>=42&&moisture<=87?.085:moisture<16?-.09:a.soaked>32?-.21:0),34,92);
 }
@@ -19571,9 +19724,9 @@ function farmWater(b,quiet=false){
 }
 function farmYield(b){
   const def=FARM_CROPS[b.type],q=(b.field||hydrateFarm(b)).quality;
-  const boost=(b.fed?1:0)+(seasonAt()===2&&['seed','fruitSapling','silverSapling'].includes(b.type)?1:0)+((b.upgradeLv||1)>=2&&hash(Math.floor(b.x),Math.floor(state.elapsed),state.seed+31)<.35?1:0);
-  const loss=b.field.soaked>48?1:0;
-  return {k:def.item,n:Math.max(1,def.yield+boost-loss),quality:Math.round(q)};
+  const boost=(b.fed?1:0)+(seasonAt()===2&&['seed','fruitSapling','silverSapling'].includes(b.type)?1:0)+((b.upgradeLv||1)>=2&&hash(Math.floor(b.x),Math.floor(b.readyAt),state.seed+31)<.35?1:0);
+  const care=b.field.soaked>48||q<=41?-1:q>=75?1:0;
+  return {k:def.item,n:Math.max(1,def.yield+boost+care),quality:Math.round(q)};
 }
 function rememberFarmHarvest(k,n,quality){
   if(!n)return;
@@ -19599,7 +19752,6 @@ function harvestPlanted(b,quiet=false){
       if(!quiet){const a=b.field||hydrateFarm(b);toast('作物正在长 · 湿度 '+Math.round(a.water)+'% · 约 '+Math.ceil(b.readyAt-state.elapsed)+' 秒起。',1.65);}
       return false;
     }
-    if(seasonAt()===3&&!roofed(b)){if(!quiet)toast('露天作物还在霜下，给农田搭屋顶或等到回暖。');return false;}
     const {k,n,quality}=farmYield(b),before=amount(k);
     if(yieldItem(k,n,b))state.piles.at(-1).farmQuality=quality;
     rememberFarmHarvest(k,amount(k)-before,quality);
@@ -19612,6 +19764,7 @@ function harvestPlanted(b,quiet=false){
     return true;
   }
   if(b.readyAt>state.elapsed)return false;
+  if(b.type==='cherrySapling'){harvest(b);return true;}
   yieldItem('wood',3,b);yieldItem('sapling',1,b);b.readyAt=state.elapsed+DAY;
   b.watered=false;b.fed=false;awardSkill('farm',2);
   if(!quiet){toast('收获木材和树苗。');renderHotbar();save();}
@@ -19630,14 +19783,15 @@ function tendPlot(b){
   }else return;
   renderHotbar();save();
 }
-function waterPlots(){
+function waterPlots(anchor=null){
+  if(!farmSurface())return 0;
   const water=Math.floor(state.wear.wateringCan||0);
   if(!water){toast('去泉水或储水设施装满浇水壶。');return;}
-  const plots=state.builds.filter(b=>FARM_CROPS[b.type]&&b.readyAt>state.elapsed&&dist(b,state.player)<82&&
-    (b.field||hydrateFarm(b)).water<81&&clearSight(state.player,b)).sort((a,b)=>dist(a,state.player)-dist(b,state.player)).slice(0,water);
+  const plots=state.builds.filter(b=>FARM_CROPS[b.type]&&b.readyAt>state.elapsed&&farmReach(b,anchor?REACH:82)&&
+    (!anchor||dist(b,anchor)<=T*1.55)&&(b.field||hydrateFarm(b)).water<81).sort((a,b)=>dist(a,state.player)-dist(b,state.player)).slice(0,water);
   if(!plots.length){toast('附近没有需要浇水的作物。');return;}
-  const n=plots.filter(farmWater).length;
-  state.wear.wateringCan-=n;toast('浇灌了 '+n+' 株作物。');renderHotbar();save();
+  const n=plots.filter(b=>farmWater(b)).length;
+  state.wear.wateringCan-=n;toast('浇灌了 '+n+' 株作物。');renderHotbar();save();return n;
 }
 function drawFarmCrop(b){
   const d=FARM_CROPS[b.type],a=b.field;
@@ -20485,6 +20639,7 @@ function ruralAudioDefaults(){
 }
 function resetRuralRuntime(){
   endAngling();ruralManualWork=0;seaNoticeAt=0;seaNextLightning=0;seaLightningUntil=0;
+  npcEnvTickAt=state.elapsed;seasonTalk=null;
   lastRuralSignature='';ruralWorldAt=state.elapsed;lifeCheckAt=state.elapsed;
   syncRuralObjects(true);
 }
@@ -21037,7 +21192,7 @@ const PLANTS={
   wildDandelion:{name:'蒲公英',bloom:[0,1,2],flower:'#f8da84',leaf:'#9ab276',drop:'herb',at:[[0,-8,3],[18,8,-6]]},
   wildBluebell:{name:'蓝铃花',start:'bluebellStart',bloom:[0,3],flower:'#83a8e2',leaf:'#779c91',drop:'herb',at:[[8,-10,11],[3,-6,4]]},
   wildMaple:{name:'枫树',bloom:[2],flower:'#e6a05f',leaf:'#779361',wood:true,drop:'wood',at:[[12,7,-6],[1,1,6]]},
-  wildCherry:{name:'樱花树',bloom:[0],flower:'#e5a3ae',leaf:'#8fa267',wood:true,drop:'orchardFruit',at:[[12,5,9],[17,10,-7]]},
+  wildCherry:{name:'樱花树',bloom:[0,1,2],flower:'#f1a7ba',leaf:'#d69aa8',wood:true,drop:'cherrySapling',at:[[0,6,-5],[0,-7,5],[4,4,-4],[4,-5,4],[12,5,9],[12,-6,-5],[12,11,4],[12,-10,2],[13,-7,-6],[13,8,6],[14,3,-4],[15,-4,4],[16,5,-4],[17,10,-7],[17,-9,5]]},
   wildWillow:{name:'柳树',bloom:[0,1],flower:'#b0c981',leaf:'#6e966f',wood:true,drop:'fiber',at:[[12,-8,8],[19,5,-3]]}
 };
 const PLANT_ITEMS={};
@@ -21185,6 +21340,15 @@ entityNames.boarYoung='野猪幼崽';
 function gatherProsperPlant(e){
   const d=PLANTS[e.type],k=held(),season=seasonAt();
   if(!d||e.respawn||dist(e,state.player)>REACH)return false;
+  if(e.type==='wildCherry'){
+    if(k==='gardenTrowel'){
+      if(!roomFor('cherrySapling')){toast('樱花树苗需要一个空背包格。');return true;}
+      wear(k);yieldItem('cherrySapling',1,e);discover('plants','wildCherry');
+      e.respawn=state.elapsed+DAY*1.8;state.depleted[e.id]=e.respawn;
+      toast('已带根取下樱花树苗，可随处种植。');cooldown=.33;renderHotbar();save();return true;
+    }
+    harvest(e);return true;
+  }
   const planting=d.start&&k==='gardenTrowel',inBloom=d.bloom.includes(season);
   if(planting&&!roomFor(d.start)){toast('园艺苗需要一个空背包格。');return true;}
   if(!planting&&d.wood&&e.type!=='wildCherry'&&!['axe','ironAxe'].includes(k)){
@@ -21207,6 +21371,7 @@ function gatherProsperPlant(e){
 function drawProsperFlora(e,d){
   const bloom=d.bloom.includes(seasonAt()),color=bloom?d.flower:d.leaf;
   ellipse(ctx,0,4,d.wood?16:9,4,'#253b3250');
+  if(e.type==='wildCherry'){drawCherryTree(e);return;}
   if(d.wood){
     rect(ctx,-3,-26,6,31,'#80634e');
     if(e.type==='wildWillow'){
@@ -22058,6 +22223,7 @@ function prosperLabel(e){
   if(e?.type==='prosperMerchant')return '行商 · 宋渡';
   if(e?.type==='prosperProject')return PROSPER_PROJECTS[e.projectId].name;
   if(e?.type==='prosperTrace')return '查看 · '+STORY_DEFS[e.storyId].trace;
+  if(e?.type==='wildCherry'||e?.type==='cherrySapling'&&e.readyAt<=state.elapsed)return '砍伐 · 樱花树';
   return PLANTS[e?.type]?.name||PLANT_ITEMS[e?.type]?.name||(['sprinklerKit','jamPress'].includes(e?.type)?items[e.type][0]:'');
 }
 function drawProsperExterior(e){
@@ -22765,7 +22931,7 @@ function estateFinishPlan(id,key,hour){
     if(waterStorage.includes(b.type))b.water=0;
     if(b.type==='trough'){
       b.feed=0;b.flock={chicken:0,goat:0,sheep:0,duck:0,cow:0};b.produce={egg:0,milk:0,duckEgg:0,feather:0};
-      b.work=0;b.birth={chicken:0,goat:0,sheep:0,duck:0};b.shearAt=0;
+      b.work=0;b.birth={chicken:0,goat:0,sheep:0,duck:0};b.shearAt=0;hydrateFieldHerd(b);
     }
     if(FARM_CROPS[b.type]){b.tilled=true;farmPlant(b);}
     state.builds.push(b);
@@ -22834,9 +23000,8 @@ function estateWorkerFor(person,hour){
 }
 function estateFarmTasks(id,box,owner,hour){
   const plots=state.builds.filter(b=>FARM_CROPS[b.type]&&estateContains(id,b));
-  const seasons=seasonAt(hour*LIVING_HOUR);
   for(const field of plots){
-    if(field.readyAt>state.elapsed||seasons===3&&!roofed(field))continue;
+    if(field.readyAt>state.elapsed)continue;
     const crop=farmYield(field);
     if(stockRoom(box,crop.k)<crop.n)continue;
     return {
@@ -22853,12 +23018,12 @@ function estateFarmTasks(id,box,owner,hour){
   if(water?.water>=1&&dry&&surfaceGardenSight(water,dry))return {text:'已用地块蓄水浇灌一株',run(){
     if(farmWater(dry,true)){water.water--;owner.ledger.water++;}
   }};
-  return {reason:plots.some(b=>b.readyAt<=state.elapsed)?'作物受霜或仓库空间不足':dry?'蓄水不足或水路不通':'作物尚未成熟或无需浇水'};
+  return {reason:plots.some(b=>b.readyAt<=state.elapsed)?'仓库空间不足':dry?'蓄水不足或水路不通':'作物尚未成熟或无需浇水'};
 }
 function estateHerdTasks(id,box,owner){
   const b=estateBuildRole(id,'trough');
   if(!b||!enclosure(b))return {reason:'关好畜栏门以便生产'};
-  for(const k of ['egg','duckEgg','milk','feather']){
+  for(const k of ['egg','duckEgg','gooseEgg','milk','feather']){
     const n=Math.min(b.produce[k]||0,stockRoom(box,k),8);
     if(n>0)return {text:'已收取食槽产物入库',run(){if(residentDeposit(box,k,n)){b.produce[k]-=n;estateCounts(owner.ledger.made,k,n);}}};
   }
@@ -24161,7 +24326,7 @@ function renderEscort(){
   const canFollow=escortSurface()&&!boat()&&dist(u,state.player)<=REACH&&escortLand(u.x,u.y)&&escortLine(state.player,u);
   const blocked=u.escortMode==='aboard'?'请先在安全岸边下船。':!canFollow?'走到幸存者附近后可重新集合。':'';
   $('window').innerHTML=panelFrame(escapeHtml(u.name)+' · 遇难幸存者',`<div class="inside">
-    <p>${status}。护送目的地是有空床和食物的前哨。</p>${blocked?'<p class="cards-help">'+blocked+'</p>':''}
+    <p>${status}。</p>${describeRescue(u)}${blocked?'<p class="cards-help">'+blocked+'</p>':''}
     <div class="inventory-actions">
       ${uiBtn('escortResume',u.id,u.escortMode==='idle'?'开始护送':'继续护送',!canFollow,true)}
       ${uiBtn('escortWait',u.id,'原地等待',u.escortMode!=='follow')}
@@ -24193,7 +24358,7 @@ function escortAction(act,id){
   save();renderEscort();
 }
 function renderTaskControl(){
-  const u=escortUnit(),job=state.transportOrder,[title,msg]=questMessage();
+  const u=escortUnit(),job=state.transportOrder;
   const rows=visibleIncidentOrders().filter(o=>o.status==='active').map(o=>
     '<article class="entry"><strong>'+ORDER_NAMES[o.kind]+' · '+LIVING_PORTS[o.port].name+'</strong><p>'+
     escapeHtml(orderObjective(o))+'</p><div class="inventory-actions">'+uiBtn('orderLocate',o.id,'海图位置')+
@@ -24202,7 +24367,9 @@ function renderTaskControl(){
     .map(([key,e])=>'<article class="entry"><strong>'+JOURNEY_EVENTS[key].name+'</strong><p>'+escapeHtml(e.detail||'已记录线索')+'</p>'+
       uiBtn('trailAbandon',key,abandonConfirm===key?'确认放弃':'放弃探索')+'</article>').join('');
   $('window').innerHTML=panelFrame('任务与护送',`<div class="inside task-control">
-    <article class="entry"><strong>主线 · ${title}</strong><p>${msg}</p>${uiBtn('toggleMainTrack','',state.mainTracking?'取消主线追踪':'恢复主线追踪')}</article>
+    ${adventureTasksHtml()}
+    <div class="inventory-actions">${uiBtn('toggleMainTrack','',state.mainTracking?'隐藏主线 HUD':'显示主线 HUD')}</div>
+    <details class="entry"><summary>委托与任务管理</summary>
     ${u?`<article class="entry"><strong>${escapeHtml(u.name)} · 遇难幸存者</strong><p>${ESCORT_IDLE[u.escortMode]}</p>${uiBtn('escortOpen',u.id,'管理护送')}</article>`:''}
     ${job?`<article class="entry"><strong>${escapeHtml(job.name)}</strong><p>目的地 ${escapeHtml(job.targetName)}</p>${uiBtn('taskCancelRun','','取消运输委托')}</article>`:''}
     ${rows||'<p class="cards-help">当前没有进行中的港口事件委托。</p>'}
@@ -24212,7 +24379,7 @@ function renderTaskControl(){
     ${renderV195TaskSummary()}
     ${renderV195bTaskSummary()}
     ${renderV195cTaskSummary()}
-    <div class="v20-menugrid">
+    </details><div class="v20-menugrid">
       ${v20MenuGroup('探索与记录',uiBtn('v20Atlas','overview','群岛百科')+uiBtn('v196bOpenLog','','海岛奇遇')+uiBtn('v195bOpenIntel','','宝箱情报')+uiBtn('journeyGuide','','旅途指南'))}
       ${v20MenuGroup('港口与委托',uiBtn('v196OpenCommerce','','商贸账本')+uiBtn('v195OpenDaily','','每日委托')+uiBtn('livingOpen','','港口事件')+uiBtn('prosperOpen','','生活订单'))}
       ${v20MenuGroup('家园与同伴',uiBtn('v195dOpenBuild','','大型工程')+uiBtn('v195cOpenRoster','','同伴')+uiBtn('v195bOpenGuild','','雇佣')+uiBtn('v195bOpenHomeUp','','家园升级')+uiBtn('v195OpenPets','','宠物'))}
@@ -24248,7 +24415,7 @@ function refreshTaskPanel(){
   else if(mapMode==='taskControl')renderTaskControl();
 }
 
-let inventorySelection='',inventoryDrop=false,inventoryPress=null,inventorySuppress=null;
+let inventorySelection='',inventoryDrop=false,inventoryPress=null,inventorySuppress=null,invLastPick={val:'',at:0};
 function uiBtn(act,value,label,disabled=false,primary=false,extra=''){
   return `<button type="button" class="press${primary?' primary':''}" data-act="${act}" data-val="${escapeHtml(String(value??''))}"${disabled?' disabled':''}${extra?' '+extra:''}>${escapeHtml(label)}</button>`;
 }
@@ -24312,11 +24479,15 @@ function invItemInfo(k,count,condition,lots,owner){
     ${summary?'<p>'+escapeHtml(summary)+'</p>':''}
     <p>${escapeHtml(sourceFor(k))}</p>${forgeRepairHint(k)}`;
 }
+function modalScrollBox(){
+  const w=$('window');
+  return w?.querySelector('.craft-content')||w?.querySelector(':scope > .inside')||w?.querySelector('[data-inv-scroll]')||null;
+}
 function renderInvWindow(title,content,keep=true){
   const w=$('window');
-  const old=w.querySelector('[data-inv-scroll]')?.scrollTop||0;
+  const old=modalScrollBox()?.scrollTop||0;
   w.innerHTML=panelFrame(title,'<div class="inside inv-window">'+content+'</div>');
-  const scroll=w.querySelector('[data-inv-scroll]');
+  const scroll=modalScrollBox();
   if(scroll&&keep)scroll.scrollTop=old;
 }
 function bagGrid(){
@@ -24394,7 +24565,7 @@ function storageGrid(keepScroll){
   const toolbar=`${renderUpgradeCard(chest)}<div class="inv-toolbar inventory-actions">${tools}${uiBtn('tidyInventory','','按类整理')}
     ${uiBtn('chestDeposit','','选择存入模式',false,!withdrawing)}${uiBtn('chestWithdraw','','选择取出模式',false,withdrawing)}
     ${uiBtn('stockBulk','all','快速'+(withdrawing?'取出':'存入'))}</div>
-    <p class="cards-help">背包 ${usedSlots(state.bag)}/${packSize()} 格。${escapeHtml(storageDescription(chest.type,chest))}${note}</p>`;
+    <p class="cards-help">背包 ${usedSlots(state.bag)}/${packSize()} 格 · 单击查看详情，<strong>双击物品格可快速存入／取出</strong>。${escapeHtml(storageDescription(chest.type,chest))}${note}</p>`;
   const bag=invPackGroup('随身背包',state.bag,packSize(),'transfer',k=>({wear:state.wear[k],style:freshClass(k,state.lots[k])||''}));
   const width=stockLimit(chest);
   const storage=invPackGroup('容器库存',chest.stock,width,'cargo',k=>{
@@ -24406,7 +24577,7 @@ function storageGrid(keepScroll){
 }
 function recipeGrid(){
   const list=filteredRecipes(),box=$('recipeList');
-  const top=box.querySelector('[data-inv-scroll]')?.scrollTop||0;
+  const top=modalScrollBox()?.scrollTop||0;
   $('recipeCount').textContent=(searchCraft.trim()?'跨工作台搜索 · ':'')+list.length+' 条 · '+list.filter(o=>!o.block).length+' 条可制作';
   const row=list.find(({r})=>inventorySelection==='recipe|'+recipeId(r));
   if(!row&&inventorySelection.startsWith('recipe|'))inventorySelection='';
@@ -24432,7 +24603,7 @@ function recipeGrid(){
   $('craftOrder').innerHTML=action;
   box.innerHTML=invShell([invGroup('配方',list.map(({r,block,batches})=>
     invCell('recipe|'+recipeId(r),r[0],recipeYield(r)*batches,{style:block?'inv-muted':'',badge:block?'缺条件':''})))],detail);
-  const scroll=box.querySelector('[data-inv-scroll]');if(scroll)scroll.scrollTop=top;
+  const scroll=modalScrollBox();if(scroll)scroll.scrollTop=top;
 }
 function shopGrid(){
   const sel=prosperousMarket;
@@ -24490,9 +24661,20 @@ function rerenderGrids(){
 function inventoryUi(act,value,button){
   if(act==='invPick'){
     const [category,k,key]=value.split('|');
+    if(mapMode==='chest'&&['cargo','transfer'].includes(category)){
+      const now=performance.now();
+      if(invLastPick.val===value&&now-invLastPick.at<=420){
+        invLastPick={val:'',at:0};
+        withdrawing=category==='cargo';
+        inventorySelection=value;inventoryDrop=false;
+        moveChestItem(k,true);
+        return true;
+      }
+      invLastPick={val:value,at:now};
+      withdrawing=category==='cargo';
+    }else invLastPick={val:'',at:0};
     if(category==='shop'&&mapMode==='prosperMarket'&&prosperousMarket)
       Object.assign(prosperousMarket,{mode:k,key,count:1});
-    if(mapMode==='chest'&&['cargo','transfer'].includes(category))withdrawing=category==='cargo';
     inventorySelection=value;inventoryDrop=false;rerenderGrids();
     if(category==='recipe'&&mapMode==='craft'){
       if(usesTouchLayout())$('craftSearch')?.blur();
@@ -24501,7 +24683,7 @@ function inventoryUi(act,value,button){
     return true;
   }
   if(act==='invBlank'){
-    inventorySelection='';inventoryDrop=false;
+    invLastPick={val:'',at:0};inventorySelection='';inventoryDrop=false;
     if(mapMode==='prosperMarket'&&prosperousMarket)prosperousMarket.key='';
     rerenderGrids();return true;
   }
@@ -24531,28 +24713,34 @@ function showInventoryDrop(button){
 }
 let v201Swipe=null;
 function bindInventoryInteraction(){
-  const root=$('window');
+  const root=$('window'),veil=$('veil');
+  for(const evt of ['pointerdown','touchstart'])veil.addEventListener(evt,ev=>{ev.stopPropagation();},{passive:true});
+  root.addEventListener('scroll',()=>{cancelInventoryPress();v201Swipe=null;},true);
   root.addEventListener('pointerdown',ev=>{
     if(ev.button!==0)return;
-    if(ev.pointerType!=='mouse')v201Swipe={id:ev.pointerId,x:ev.clientX,y:ev.clientY};
     inventorySuppress=null;
+    if(ev.pointerType!=='mouse')v201Swipe={id:ev.pointerId,x:ev.clientX,y:ev.clientY,moved:false};
+    else v201Swipe=null;
     const button=ev.target.closest?.('[data-inventory-carried]');
     if(!button||ev.pointerType==='mouse'||inventoryPress||!canDropCarried(button.dataset.inventoryCarried))return;
     const p={id:ev.pointerId,x:ev.clientX,y:ev.clientY};
     p.timer=setTimeout(()=>{
       if(inventoryPress!==p||mapMode!=='bag')return;
-      if(showInventoryDrop(button))inventorySuppress={until:performance.now()+900};
+      if(showInventoryDrop(button))inventorySuppress={until:performance.now()+500};
       cancelInventoryPress();
     },500);
     inventoryPress=p;
   });
   window.addEventListener('pointermove',ev=>{
     const swipe=v201Swipe;
-    if(swipe?.id===ev.pointerId&&Math.hypot(ev.clientX-swipe.x,ev.clientY-swipe.y)>10){inventorySuppress={until:performance.now()+650};v201Swipe=null;}
+    if(swipe?.id===ev.pointerId&&!swipe.moved&&Math.hypot(ev.clientX-swipe.x,ev.clientY-swipe.y)>10){
+      swipe.moved=true;inventorySuppress={until:performance.now()+260};
+    }
     const p=inventoryPress;
     if(p?.id===ev.pointerId&&Math.hypot(ev.clientX-p.x,ev.clientY-p.y)>10)cancelInventoryPress();
-  });
+  },{passive:true});
   for(const type of ['pointerup','pointercancel','lostpointercapture'])window.addEventListener(type,ev=>{
+    if(v201Swipe?.id===ev.pointerId){if(v201Swipe.moved)inventorySuppress={until:performance.now()+220};v201Swipe=null;}
     if(inventoryPress?.id===ev.pointerId)cancelInventoryPress();
   });
   root.addEventListener('contextmenu',ev=>{
@@ -25025,14 +25213,14 @@ function renderWardrobe(){
     if(pick[0]===wardrobeTab&&pick[1]!=='')details=uiBtn('lookWear',wardrobePick,'应用外观',false,true);
   }
   const buttons=Object.entries(LOOK_TABS).map(([id,label])=>uiBtn('lookTab',id,label,false,wardrobeTab===id)).join('');
-  const w=$('window'),scroll=w.querySelector('.wardrobe-items')?.scrollTop||0;
+  const w=$('window'),scroll=modalScrollBox()?.scrollTop||0;
   w.innerHTML=panelFrame(wardrobeShop?'晴日裁缝铺 · 林夏（裁缝）':'换装',`<div class="inside wardrobe">
     <div class="wardrobe-label">${wardrobeShop?(shop?'现有 '+state.v173.gold+' 金 · 可先试穿':'已打烊。可整理已有收藏。'):'试穿预览'}<span>服装 ${look.outfits.length}/${OUTFITS.filter(r=>look.outfits.includes(r[0])||rowFits(r,8,look.type)).length} · 帽饰 ${look.hats.length-1}/${HEADWEAR.filter(r=>look.hats.includes(r[0])||rowFits(r,6,look.type)).length-1}</span></div>
     ${shop?uiBtn('forgeOpen','orders','稀有披风与远征背包定制',false,true):''}${wardrobeTypeControls()}<div class="inventory-actions">${buttons}</div><div class="wardrobe-columns"><div class="wardrobe-items">${choices}</div>
     <section class="wardrobe-view"><canvas width="144" height="130" id="lookPreview" aria-label="角色外观预览"></canvas>
     <div class="inventory-actions">${uiBtn('lookTurn','','转身')}${uiBtn('lookPose','',wardrobePose===0?'试走':wardrobePose===1?'工作':'待机')}</div>
     ${details}</section></div></div>`);
-  const list=w.querySelector('.wardrobe-items');if(list)list.scrollTop=scroll;
+  const list=modalScrollBox();if(list)list.scrollTop=scroll;
   wardrobePaint();
 }
 function wardrobeAction(act,value){
@@ -25094,6 +25282,10 @@ function restoreEscortActors(){
   }
 }
 function newInterfaceAction(act,value,button){
+  if(adventureGuideUi(act,value))return true;
+  if(act==='seasonTalkRate'&&mapMode==='settings'&&['normal','low','off'].includes(value)){
+    saveSettings({ambientChatter:value});seasonTalk=null;renderSettingsPanel();return true;
+  }
   if(v201Ui(act,value)||v20AtlasUi(act,value)||duelUi(act,value)||forgeUi(act,value)||caseUiAction(act,value)||mistAction(act,value))return true;
   if(handleV196bAction(act,value,button))return true;
   if(handleV196Action(act,value,button))return true;
@@ -25656,7 +25848,7 @@ function renderFacilityManagement(){
     ${estatePlotAccess(selected.estateLot)?uiBtn('estateFocusLot',selected.estateLot,'管理地块'):''}</article>`:'';
   const cards=nearby.map(b=>{
     const pack=portableType(b.type),packError=pack?facilityBlock(b,'pack'):'',remove=facilityBlock(b,'dismantle');
-    const transplant=held()==='shovel'&&['sapling','fruitSapling','silverSapling'].includes(b.type);
+    const transplant=held()==='shovel'&&['sapling','fruitSapling','silverSapling','cherrySapling'].includes(b.type);
     const running=burning(b),name=items[b.type][0],active=b.id===facilityFocusId;
     const lock=packError&&packError!==remove?'<p class="v201b-block">收起限制 · '+escapeHtml(packError)+'</p>':'';
     return `<article class="entry ${active?'v201b-focused':''}" data-facility="${escapeHtml(b.id)}">
@@ -33073,6 +33265,10 @@ function v196bSyncEntities(){
   const v = state.v196b;
   for(const ev of v.events||[]){
     if(ev.status!=='discovered' && ev.status!=='active') continue;
+    if(ev.scope==='sea'&&tileAt(ev.x,ev.y)>0){
+      const wp=v20NearestSea(ev,12);
+      if(wp&&tileAt(wp.x,wp.y)===0){ev.x=wp.x;ev.y=wp.y;}else{ev.status='expired';continue;}
+    }
     entities.push(obj('v196bEvent', ev.x, ev.y, ev.id, { evId:ev.id, evTitle:ev.title, evTpl:ev.tplId, evScope:ev.scope }));
   }
   for(const ct of v.clueTreasures||[]){
@@ -34180,6 +34376,7 @@ function tickNpcEmotionsAndEnv(){
   for(const [k,v] of npcAnimRuntime) if(state.elapsed > v.cdUntil + 10) npcAnimRuntime.delete(k);
 
   const threats = entities.filter(e=>combatProfile[e.type]&&visibleEntity(e)&&!e.respawn&&e.hp>0&&dist(e,p)<520);
+  tickSeasonTalk(threats);
   const humanTypes = new Set(['trader','leisureNpc','livingWatch','estateNpc','v195cNpc','v196Fubo','storeHost','prosperMerchant']);
 
   for(const e of entities){
@@ -37508,6 +37705,7 @@ function v20Habitat(k){
   return '在符合季节或昼夜条件的岛屿上发现';
 }
 function v20AnimalDetail(k){
+  if(Object.hasOwn(FIELD_HERD,k))return '出没 · '+v20Habitat(k)+'。'+FIELD_HERD[k].about;
   const pet=v20Pet(k);if(pet)return '可在群岛遇见并驯养。'+pet.ability+'。';
   const behavior=ecoProfiles[k],combat=combatProfile[k],t=enemyTactics({type:k});
   const modes={
@@ -37876,7 +38074,7 @@ function v201CaptureUi(){
     return;
   }
   if(mapMode!=='chest'||!chestId)return;
-  const scroll=$('window').querySelector('[data-inv-scroll]')?.scrollTop||0;
+  const scroll=modalScrollBox()?.scrollTop||0;
   v201BoxMemory.set(chestId,{withdrawing,scroll});
   if(v201BoxMemory.size>60)v201BoxMemory.delete(v201BoxMemory.keys().next().value);
 }
@@ -37884,7 +38082,7 @@ function v201RememberStorage(b){
   v201CaptureUi();const prior=v201BoxMemory.get(b.id);
   if(chestId!==b.id){inventorySelection='';inventoryDrop=false;}
   chestId=b.id;withdrawing=prior?.withdrawing??false;openPanel('chest');
-  const scroll=$('window').querySelector('[data-inv-scroll]');
+  const scroll=modalScrollBox();
   if(scroll)scroll.scrollTop=prior?.scroll??0;
 }
 function v201ValidSelection(dict,k,cell){
@@ -38476,8 +38674,514 @@ function commerceBulletin(){
     <div class="grid">${rows.join('')}</div></section>`;
 }
 
+function outpostReadiness(b,u=null){
+  const {beds,boxes}=homeSupplies(b);
+  const free=Math.max(0,beds.length-state.residents.filter(r=>r.home===b.id).length);
+  const rations=[];
+  for(const box of boxes)for(const [k,slot] of Object.entries(box.stock||{})){
+    if(!(items[k]?.[2]>0)||!slot.count)continue;
+    const count=slot.lots?slot.lots.filter(t=>t>state.elapsed).length:slot.count;
+    if(count)rations.push({box,k,count});
+  }
+  const escort=u||state.castaways.find(e=>e.following&&!e.aboard&&dist(e,b)<153);
+  return {free,boxes:boxes.length,rations,escort,ready:!!(free&&rations.length&&escort?.following&&!escort.aboard&&dist(escort,b)<153)};
+}
+function outpostStatus(b,u=null){
+  const info=outpostReadiness(b,u);
+  return '空木床 '+info.free+' / 1 · 食物箱 '+info.boxes+' 个 · 可用食物 '+info.rations.reduce((n,o)=>n+o.count,0)+' / 1'+
+    (info.ready?' · 可以安置。':' · 把跟随中的旅人带到路牌旁。');
+}
+function guideOutpost(u){
+  const nearby=state.builds.filter(b=>b.type==='outpost'&&regionAt(b.x,b.y)===regionAt(u.x,u.y));
+  nearby.sort((a,b)=>Number(outpostReadiness(b,u).ready)-Number(outpostReadiness(a,u).ready)||dist(a,u)-dist(b,u));
+  return nearby[0]||null;
+}
+function describeRescue(u){
+  const b=guideOutpost(u),loc=regionAt(u.x,u.y)?.name||'当前海岸';
+  return '<p>地点 '+escapeHtml(loc)+' · '+escapeHtml(u.name)+'（遇难旅人）</p>'+
+    '<p>制作 → 搜「前哨路牌」，在安全陆地摆放。路牌附近放一张空木床，并在可储物的箱子里存至少一份食物。对旅人选择「开始护送」，带到路牌旁，再交互选择「安排幸存者入住」。</p>'+
+    (b?'<p>'+escapeHtml(b.name)+' · '+outpostStatus(b,u)+'</p>':'<p>旅人所在岛还没有前哨路牌。可以在同岛建造，或护送旅人登船，到自建前哨所在岛安置。</p>')+
+    '<div class="inventory-actions">'+uiBtn('guideRecipe','outpost','前哨路牌配方')+uiBtn('guideRecipe','bed','木床配方')+uiBtn('guideRecipe','chest','木箱配方')+'</div>';
+}
+function guideMaterials(bill){
+  return '<ul class="guide-materials">'+Object.entries(bill).map(([k,n])=>{
+    const count=amount(k);
+    return '<li class="'+(count>=n?'guide-ready':'')+'">'+items[k][0]+' <b>'+count+' / '+n+'</b></li>';
+  }).join('')+'</ul>';
+}
+function adventureRows(includeSide=true,includeMarkers=true){
+  const keel=state.flags.keel,finished=state.hull>=hullPhases.length,ship=state.builds.find(b=>b.type==='flagship');
+  const launch=!!(ship||state.flags.flagshipArrival||state.flags.weatherMaster);
+  const unlocked=state.won||state.flags.mistReward;
+  const todo=relicIslands.filter(o=>!state.relics.includes(o.relic));
+  const needBoat=!state.builds.some(isBoat)&&!['raft','sail','advancedSail','flagship'].some(k=>amount(k));
+  const raft=needBoat?WORKSHOP_RECIPES.get('raft'):null;
+  const phases=hullPhases.map(([name],i)=>(i<state.hull?'✓ ':'')+name).join(' → ');
+  const hullGoal=keel?(finished?(launch?'双桅探索船已下水。':'回灯塔湾船坞选择「旗舰下水」，确保湾口有空水面。'):'在灯塔湾船坞交付第 '+(state.hull+1)+' 阶段材料，使用背包库存。'):'集齐三件遗物修复航标，或完成暮潮洞穴核心藏匣，再交谈领取蓝图。';
+  const markers=state.flags.weatherMaster||state.seals.length<4?null:weatherIsland;
+  const rows=[
+    {id:'signal',name:'点亮信号塔',done:state.won,location:'微光营地、三座遗物岛',point:HOME,
+      goal:state.won?'三件遗物已交还，营地航标已修复。':todo.length?'修复航标需要从 '+todo.map(o=>o.name+'（'+o.dir+'）').join('、')+' 带回其遗物。'+(needBoat?'先在「制作」中造木筏，到岸边放船并交互登船。':'看海图选浅海航线，靠近安全海岸后交互登岸。'):'回微光营地，与信号塔交互并交付三件遗物和五份木头。',
+      detail:'遗物 '+state.relics.length+' / 3'+(!state.won&&!todo.length?' · 背包木头 '+amount('wood')+' / 5':''),
+      extra:raft&&includeMarkers&&todo.length&&!state.won?guideMaterials(workshopCost(raft,1))+uiBtn('guideRecipe','raft','木筏配方'):''},
+    {id:'southwest',name:'西南航线探索',done:!!state.flags.mistReward,location:'群岛西南航线 · 灯塔湾、断帆浅滩、暮潮岛',
+      point:tradeIsland,
+      goal:state.flags.mistReward?'已打开暮潮洞穴核心藏匣，可去灯塔湾找铁山。':state.flags.swWreck?'沿线去暮潮岛，带照明和护甲。从岛心偏北寻找雾林洞穴，按日志解谜并开启核心藏匣。':'从灯塔湾出海，向东南航往断帆浅滩一带，寻找外海的断帆沉船。乘船靠近入口，在舱内阅读线索并开启核心藏匣。',
+      detail:state.flags.swWreck?'断帆沉船线索已取得。':'航标修复也是远洋龙骨的独立解锁途径。'},
+    {id:'hull',name:'建造双桅探索船',done:launch,location:'灯塔湾 · 船坞',person:tradeOffers[1].name,
+      point:includeMarkers&&state.society?.personal?.['south:trader:1']?entities.find(e=>e.id==='south:trader:1')||tradeIsland:tradeIsland,
+      goal:!keel&&unlocked?'到灯塔湾船坞或与修船匠铁山交互，领取「远洋龙骨」蓝图。':hullGoal,
+      detail:'施工 '+state.hull+' / '+hullPhases.length+' · '+phases,
+      extra:keel&&!finished?guideMaterials(hullPhases[state.hull][1]):''},
+    {id:'weather',name:'远洋气象塔',done:!!state.flags.weatherMaster,location:'白脊、赤炉、苍冠、暮潮与仪风岛',point:markers,
+      goal:state.flags.weatherMaster?'已击败远古守卫，可进气象塔控制局部天气。':!launch?'先在灯塔湾建成并下水双桅探索船。':state.seals.length<4?'在对应洞穴取得尚缺的徽记。跟随已发现入口、机关与核心藏匣的线索。':!state.flags.flagshipArrival?'驾驶双桅探索船到仪风岛并登岸，再找气象塔入口。':'进入气象塔，击败远古守卫。',
+      detail:'徽记 '+state.seals.length+' / 4 · '+Object.entries(voyageSeals).map(([k,label])=>(state.seals.includes(k)?'✓ ':'')+label).join('、')}
+  ];
+  if(!includeSide)return rows;
+  const u=escortUnit();
+  if(u){
+    const post=guideOutpost(u);
+    rows.push({side:true,id:'escort',name:'护送遇难旅人',location:regionAt(u.x,u.y)?.name,person:u.name+'（遇难旅人）',
+      point:post||(!u.aboard?u:null),goal:ESCORT_IDLE[u.escortMode]||'靠近旅人后交谈。',
+      extra:describeRescue(u)+uiBtn('escortOpen',u.id,'管理护送')});
+  }
+  if(state.rescuedCount>0)rows.push({id:'rescueDone',side:true,name:'前哨 · 幸存者安置',done:true,goal:'已安置 '+state.rescuedCount+' 位旅人。'});
+  const mist=state.mistVale;
+  if(mist.seen||mist.phase){
+    const [title,goal]=MIST_STAGES[mist.phase]||MIST_STAGES.at(-1);
+    rows.push({side:true,id:'mistVale',name:'迷雾谷 · '+title,done:mistFinished(state),location:'迷雾谷',goal,detail:'调查阶段 '+mist.phase+' / 8',extra:uiBtn('mistJournal','','调查记录')});
+  }
+  for(const [id,r] of Object.entries(state.dungeons.records)){
+    if(!(r.visits||r.cleared)||!Object.hasOwn(DUNGEON_SITE_LOGS,id)&&!Object.hasOwn(V195_RUIN_FLOORS,id))continue;
+    const point=dungeonEntrances.find(e=>e.siteId===id);
+    rows.push({side:true,id:'site:'+id,name:r.name,done:!!r.cleared,
+      point,location:point&&regionAt(point.x,point.y)?.name||'已发现的探索地点',
+      goal:r.cleared?'已完成地点目标，核心藏匣已有记录。':'调查已进入的区域，按现场日志处理机关，再寻找核心藏匣。',
+      detail:r.cleared?'探索完成':'已发现 · 待完成'});
+  }
+  for(const order of visibleIncidentOrders())if(order.status==='active'||order.status==='complete'){
+    const done=order.status==='complete',port=LIVING_PORTS[order.port],bill=order.material&&order.material!=='gold'?{[order.material]:Math.max(0,order.n-(order.progress||0))}:null;
+    rows.push({side:true,id:'order:'+order.id,name:ORDER_NAMES[order.kind]+' · '+port.name,done,location:port.name,
+      goal:done?'该港口委托已完成。':orderObjective(order),point:['port','rescue'].includes(order.port)?regions[port.region]:null,
+      extra:done?'':(bill&&Object.values(bill).some(Boolean)?guideMaterials(bill):'')+uiBtn('orderLocate',order.id,'海图位置')+
+        uiBtn('orderAbandon',order.id,abandonConfirm===order.id?'确认放弃':'放弃委托')});
+  }
+  const job=state.transportOrder;
+  if(job)rows.push({side:true,id:'transport',name:job.name,location:job.targetName,
+    goal:'把运输货物送至目的地港口，按原委托规则办理交接。',extra:uiBtn('taskCancelRun','','取消运输委托')});
+  const skip=new Set(['signal','weather','mist']);
+  for(const row of v20QuestRows())if((row.done||row.seen)&&!skip.has(row.id)){
+    if(row.id.startsWith('case:')){
+      const id=row.id.slice(5);
+      rows.push({side:true,id:row.id,name:row.name,done:row.done,person:'案件相关村民',goal:row.done?'已得出正式结局。':caseGoalText(id),extra:uiBtn('caseBook','','查看线索簿')});
+    }else rows.push({side:true,id:row.id,name:row.name,done:row.done,goal:row.detail,extra:row.id.startsWith('estate-')?'':undefined});
+  }
+  return rows;
+}
+function caseGoalText(id){
+  const [,stage]=caseCurrentGoal(id);
+  return typeof stage==='string'?stage:'从群岛线索簿查看这个案件当前已获得的证据，回访相关人物。';
+}
+function mainAdventureSummary(){
+  if(state.flags.weatherMaster)return ['第三幕完成','气象塔已解锁，可回仪风岛使用。'];
+  const r=adventureRows(false,false);
+  const row=currentAdventureRow(r);
+  return [row.name,row.goal];
+}
+function currentAdventureRow(rows){
+  if(state.hull>=hullPhases.length&&rows[2].done)return rows[3];
+  if(state.won||state.flags.mistReward||state.flags.keel)return rows[2];
+  return state.flags.swWreck?rows[1]:rows[0];
+}
+let guideTab='main';
+function adventureTasksHtml(){
+  const tabs=[['main','主线'],['side','支线与探索'],['done','已完成'],['track','当前追踪']];
+  const focus=state.adventureFocus;
+  const all=adventureRows(guideTab!=='main'),suggested=guideTab==='main'?currentAdventureRow(all):null;
+  const rows=all.filter(r=>guideTab==='track'?r.id===focus:guideTab==='done'?r.done:!r.done&&!!r.side===(guideTab==='side'));
+  const body=rows.map(r=>'<details class="entry guide-task" '+(r.id===focus||r===suggested||rows.length===1?'open':'')+'><summary>'+escapeHtml(r.name)+
+    (r.id===focus?' · 追踪中':r.done?' · 已完成':'')+'</summary><p>'+escapeHtml(r.goal)+'</p>'+
+    (r.location||r.person?'<p>'+escapeHtml([r.location,r.person].filter(Boolean).join(' · '))+'</p>':'')+
+    (r.detail?'<p>'+escapeHtml(r.detail)+'</p>':'')+(r.extra||'')+'<div class="inventory-actions">'+
+    (!r.done?uiBtn('guideTrack',r.id,r.id===focus?'取消追踪':'追踪任务'):'')+
+    (r.point?uiBtn('guideMap',r.id,'查看海图'):'')+'</div></details>').join('');
+  return '<section class="guide-journal"><div class="inventory-actions">'+tabs.map(([k,label])=>uiBtn('guideTab',k,label,false,k===guideTab)).join('')+
+    '</div>'+body+(body?'':'<p class="cards-help">此分类暂无任务。</p>')+'</section>';
+}
+let adventureMapRow=null;
+function drawAdventureMarker(g,sx,sy){
+  const row=adventureMapRow;
+  if(!row?.point)return;
+  const {x,y}=row.point,px=x/T*sx,py=y/T*sy;
+  polygon(g,[[px,py-10],[px+7,py-3],[px,py+4],[px-7,py-3]],'#f6cf84');
+  g.save();g.textAlign='center';g.lineWidth=3;g.strokeStyle='#173630';g.fillStyle='#ffecb5';
+  g.strokeText(row.name,px,py-14);g.fillText(row.name,px,py-14);g.restore();
+}
+function adventureGuideUi(act,value){
+  if(act==='guideTab'&&mapMode==='taskControl'){
+    if(['main','side','done','track'].includes(value))guideTab=value;
+    renderTaskControl();return true;
+  }
+  if(act==='guideRecipe'&&['taskControl','escort','outpost'].includes(mapMode)&&['outpost','bed','chest','raft'].includes(value)){
+    openPanel('craft');searchCraft=items[value][0];readyOnly=false;inventorySelection='recipe|'+value;renderRecipes(true);return true;
+  }
+  if((act==='guideTrack'||act==='guideMap')&&mapMode==='taskControl'){
+    const r=adventureRows().find(row=>row.id===value);
+    if(!r)return true;
+    if(act==='guideTrack'){state.adventureFocus=r.id===state.adventureFocus?'':r.id;save();renderTaskControl();}
+    else if(r.point&&!state.cave&&!activeDungeon&&!state.boarding&&!insideStore()){openPanel('map');adventureMapRow=r;drawMap($('chart'),true);}
+    else toast('离开室内或地下区域后可查看这处海图位置。');
+    return true;
+  }
+  return false;
+}
+
+const FARM_SEASONS={
+  seed:[0,3],rootPlot:[2,3],dryPlot:[1,3],fruitSapling:[0,3],silverSapling:[2,1]
+};
+function farmSeasonRate(b,season,covered){
+  const [best,poor]=FARM_SEASONS[b.type]||[];
+  return season===best?1.10:season===poor&&!(season===3&&covered)?.85:1;
+}
+function farmSurface(){
+  return !boat()&&!isFerryPassenger()&&!state.cave&&!state.boarding&&!activeDungeon&&!insideStore();
+}
+function farmPlacement(k){return Object.hasOwn(FARM_CROPS,k)&&!movingBuild&&farmSurface();}
+function farmPlantRow(){
+  const k=placing;
+  if(mapMode!=='play'||!farmPlacement(k)||nowClock<(window._v194PlaceLock||0))return 0;
+  const start=placementPoint(k);
+  if(!start)return 0;
+  const p=state.player, angle=Number.isFinite(start.angle)?start.angle:p.angle;
+  const dx=Math.cos(angle),dy=Math.sin(angle);
+  const step={x:Math.abs(dx)>=Math.abs(dy)?Math.sign(dx)*T:0,y:Math.abs(dy)>Math.abs(dx)?Math.sign(dy)*T:0};
+  let count=0;
+  for(let i=0;i<3&&amount(k)>0;i++){
+    const q={x:start.x+step.x*i,y:start.y+step.y*i,angle};
+    if(!place(k,q))break;
+    count++;
+  }
+  if(!count){toast('选近处可种植的空地，路径不能隔墙。');return 0;}
+  window._v194PlaceLock=nowClock+.28;
+  cancelPlacement();ruralCue('plant');
+  toast('已连续种下 '+count+' 株 '+items[k][0]+'。');
+  renderHotbar();updateHud();save();return count;
+}
+function farmReach(b,r=REACH){
+  return farmSurface()&&dist(b,state.player)<=r&&clearSight(state.player,b);
+}
+function farmInteract(b){
+  if(!farmReach(b))return;
+  const tool=held();
+  if(b.readyAt>state.elapsed&&tool==='wateringCan'){waterPlots(b);return;}
+  if(b.readyAt<=state.elapsed){harvestFarmNeighbors(b);return;}
+  harvestPlanted(b);
+}
+function harvestFarmNeighbors(anchor=null,tool=null){
+  if(!farmSurface())return 0;
+  const q=anchor||state.player;
+  const r=anchor?REACH:82,max=anchor?3:6;
+  const plots=state.builds.filter(b=>FARM_CROPS[b.type]&&b.readyAt<=state.elapsed&&farmReach(b,r)&&(!anchor||dist(b,q)<=T*1.48))
+    .sort((a,b)=>dist(a,q)-dist(b,q)).slice(0,max);
+  const n=plots.filter(b=>harvestPlanted(b,true)).length;
+  if(n){if(tool)wear(tool);toast('已收获 '+n+' 株成熟作物。背包放不下的产物留在田边。',2);renderHotbar();save();}
+  else toast('附近没有可收获的成熟作物。',1.2);
+  return n;
+}
+function farmHint(b){
+  const a=b.field;
+  if(!a)return '农田 · 交互查看';
+  const progress=clamp(1-(b.readyAt-state.elapsed)/a.duration,0,1);
+  if(progress>=1)return '可收获 · 交互收获相邻成熟作物';
+  return `生长 ${Math.floor(progress*100)}% · 湿度 ${Math.round(a.water)}%${a.water<25?' · 缺水':''}`;
+}
+
+const FIELD_HERD={
+  farmPig:{name:'家猪',lure:'root',hp:6,speed:19,flee:68,range:95,produce:null,birth:5,loot:{pork:1,tallow:1},about:'用块根引入带门的食槽围栏。喂养可育肥，收取猪肉和兽脂。'},
+  goose:{name:'鹅',lure:'berry',hp:4,speed:25,flee:104,range:94,produce:'gooseEgg',birth:5,loot:{meat:1,feather:1},about:'在淡水边出没，受惊会鸣叫。用浆果引入靠近淡水的围栏。'},
+  turkey:{name:'火鸡',lure:'berry',hp:5,speed:28,flee:143,range:126,produce:null,birth:5,loot:{turkeyMeat:1,feather:1},about:'在林缘与草地出没，受惊飞奔。用浆果引养，可定期收取羽毛。'}
+};
+const FIELD_HERD_KEYS=Object.keys(FIELD_HERD);
+const TRADE_ANIMAL_FOOD={
+  pork:['猪肉','🍖',12,-3,130,11],
+  gooseEgg:['鹅蛋','●',12,0,330,9],
+  turkeyMeat:['火鸡肉','🍖',12,-3,115,10]
+};
+function installFieldAnimals(){
+  for(const [k,[name,icon,food,hp,life,value]] of Object.entries(TRADE_ANIMAL_FOOD)){
+    items[k]=[name,icon,food,hp];shelfLife[k]=life;ITEM_REF_PRICES[k]=value;
+    ITEM_ART.set(k,[k==='gooseEgg'?'egg':'drum',k==='gooseEgg'?ART_COLORS.cream:k==='pork'?ART_COLORS.clay:ART_COLORS.hide,1]);
+  }
+  livestock.push(...FIELD_HERD_KEYS);
+  Object.assign(V196_BUYERS.tavern.goods,{pork:4,gooseEgg:4,turkeyMeat:4});
+  Object.assign(rawOrigins,{pork:'家猪 · 狩猎或围栏养殖后屠宰',gooseEgg:'圈养鹅 · 有饲料时在食槽产出',turkeyMeat:'火鸡 · 林缘狩猎或围栏养殖后屠宰'});
+  for(const [k,row] of Object.entries(FIELD_HERD)){
+    entityNames[k]=row.name;objectHp[k]=row.hp;
+    ecoProfiles[k]={role:'herbivore',states:['Idle','Wander','Graze','Alert','Flee','Return','Rest'],
+      territory:row.range,sight:90,speed:row.speed,fleeSpeed:row.flee,diurnal:true,livestock:true};
+  }
+  const cooking=[
+    ['cookedMeat','food',{pork:1},'烤熟猪肉，补充饱腹。','fire'],
+    ['bakedEgg','food',{gooseEgg:1},'把鹅蛋烤熟。','fire'],
+    ['cookedMeat','food',{turkeyMeat:1},'烤熟火鸡肉，补充饱腹。','fire']
+  ];
+  for(const r of cooking){recipes.push(r);WORKSHOP_RECIPES.set(recipeId(r),r);CRAFT_SEARCH.set(r,recipeSearchText(r));}
+}
+function freshwaterNear(q,r){
+  return nearRiver(q,r)||entities.some(e=>e.type==='spring'&&dist(e,q)<r);
+}
+function fieldAnimalSites(){
+  const sites=[['farmPig',17,3],['goose',0,2],['goose',12,2],['turkey',0,2],['turkey',13,2]];
+  const riverPoints=Array.from(rivers,id=>point(id%W,Math.floor(id/W))).concat(entities.filter(e=>e.type==='spring'));
+  for(const [k,i,n] of sites){
+    const island=regions[i],picks=[];
+    const water=k==='goose'?riverPoints.filter(q=>regionAt(q.x,q.y)?.i===i):null;
+    if(water&&!water.length)continue;
+    for(let y=island.r-island.ry;y<=island.r+island.ry;y++)for(let x=island.c-island.rx;x<=island.c+island.rx;x++){
+      if(tile(x,y)!==i+1)continue;
+      const q=point(x,y);
+      if(!canLand(q.x,q.y)||townFootprint(q.x,q.y))continue;
+      if(water&&!water.some(p=>dist(p,q)<100))continue;
+      if(k==='turkey'&&[2,3].includes(habitatTiles[cellAt(q.x,q.y)]))continue;
+      if(k==='farmPig'&&(dist(q,HOME)<160||dist(q,tradeIsland)<T*3))continue;
+      picks.push({q,score:hash(x,y,state.seed+i+1181)});
+    }
+    const chosen=[];
+    for(const {q} of picks.sort((a,b)=>a.score-b.score)){
+      if(chosen.some(p=>dist(p,q)<50))continue;
+      chosen.push(q);
+      if(chosen.length===n)break;
+    }
+    chosen.forEach((q,j)=>{
+      const id=`farm-fauna:${k}:${i}:${j}`,prior=state.animalStates[id];
+      const empty=p=>livingLand(p,i)&&!entities.some(e=>dist(e,p)<15)&&!state.builds.some(b=>dist(b,p)<20);
+      const spots=[q,...[1,2,3].flatMap(n=>[[n,0],[-n,0],[0,n],[0,-n]].map(([a,b])=>({x:q.x+a*T,y:q.y+b*T})))];
+      const at=prior&&empty(prior)?prior:spots.find(p=>empty(p)&&(!water||water.some(w=>dist(p,w)<105)));
+      if(!at)return;
+      const e=obj(k,at.x,at.y,id);entities.push(e);
+    });
+  }
+}
+function hydrateFieldHerd(b){
+  if(b.type!=='trough')return;
+  for(const k of FIELD_HERD_KEYS){
+    b.flock[k]=Number.isSafeInteger(b.flock[k])?clamp(b.flock[k],0,8):0;
+    b.birth[k]=Number.isSafeInteger(b.birth[k])?clamp(b.birth[k],0,FIELD_HERD[k].birth):0;
+  }
+  b.produce.gooseEgg=Number.isSafeInteger(b.produce.gooseEgg)?clamp(b.produce.gooseEgg,0,8):0;
+  b.pigCondition=Number.isFinite(b.pigCondition)?clamp(b.pigCondition,0,1):0;
+}
+function herdFieldSuitable(b,k){
+  if(k==='cow')return !b.flock.cow;
+  if(k==='duck')return !!adjacentSea(b,145)||nearRiver(b,140);
+  if(k==='goose')return freshwaterNear(b,145);
+  return true;
+}
+function fieldAnimalWarning(e){
+  if(e.type!=='goose'||e.aiState!=='Alert'||state.elapsed<(e.nextHonk||0)||dist(e,state.player)>110)return;
+  e.nextHonk=state.elapsed+22;
+  if(gameSettings().ambientChatter!=='off')toast('附近的鹅警觉地叫了一声。',1.15);
+  beep(288,.11);
+}
+function moveNewAnimal(e,p,dt){
+  const prof=Object.hasOwn(FIELD_HERD,e.type)&&FIELD_HERD[e.type];
+  if(!prof||e.leadUntil>state.elapsed)return false;
+  const d=dist(p,e),home={x:e.homeX,y:e.homeY},bias=d<72&&!boat()&&!(held()===prof.lure||prof.lure==='root'&&held()==='dryRoot');
+  if(bias){
+    if(e.aiState!=='Flee'){e.aiState='Alert';fieldAnimalWarning(e);}
+    e.aiState='Flee';e.angle=Math.atan2(e.y-p.y,e.x-p.x);
+  }else{
+    const t=Math.floor(state.elapsed/4),axis=hash(t,Math.floor(home.x),Math.floor(home.y))*TWO_PI;
+    const q={x:home.x+Math.cos(axis)*prof.range*.42,y:home.y+Math.sin(axis)*prof.range*.38};
+    const rest=dusk()&&dist(e,home)<45||dist(e,q)<8;
+    e.aiState=rest?'Rest':dist(e,home)>prof.range?'Return':'Wander';
+    if(rest)return true;
+    const target=e.aiState==='Return'?home:q;e.angle=Math.atan2(target.y-e.y,target.x-e.x);
+  }
+  const speed=bias?prof.flee:prof.speed;
+  const pass=(x,y)=>canTravel(x,y)&&escortLand(x,y)&&Math.hypot(home.x-x,home.y-y)<prof.range*1.65;
+  moveObject(e,Math.cos(e.angle)*speed*dt,Math.sin(e.angle)*speed*dt,pass);
+  return true;
+}
+let herdConfirm='';
+function fieldHerdAction(b,act){
+  const [mode,k]=act.split('|'),row=Object.hasOwn(FIELD_HERD,k)&&FIELD_HERD[k];
+  if(!row||!['prepare','collect','cancel'].includes(mode))return false;
+  if(mapMode!=='herd'||dist(state.player,b)>REACH)return true;
+  if(mode==='cancel'){herdConfirm='';renderHerd();return true;}
+  if(!enclosure(b)||!b.flock[k])return true;
+  const key=b.id+'|'+k;
+  if(mode==='prepare'){herdConfirm=key;renderHerd();return true;}
+  if(herdConfirm!==key)return true;
+  herdConfirm='';
+  b.flock[k]--;b.birth[k]=0;
+  const drops={...row.loot};
+  if(k==='farmPig'){
+    if(b.pigCondition>=.65)drops.pork++;
+    if(!b.flock[k])b.pigCondition=0;
+    else b.pigCondition*=.8;
+  }
+  for(const [id,n] of Object.entries(drops))yieldItem(id,n,b);
+  toastItems('收取 '+row.name,drops);renderHotbar();save();renderHerd();
+  return true;
+}
+function fieldHerdHtml(b,cap){
+  return '<section class="entry"><strong>新牲畜</strong><p>家猪 '+b.flock.farmPig+' · 鹅 '+b.flock.goose+' · 火鸡 '+b.flock.turkey+
+    (b.flock.farmPig?' · 家猪育肥 '+Math.round(b.pigCondition*100)+'%':'')+'。块根引猪，浆果引鹅与火鸡。鹅圈靠近淡水。</p><div class="inventory-actions">'+
+    (b.produce.gooseEgg?uiBtn('herd','gooseEgg','收鹅蛋 ×'+b.produce.gooseEgg):'')+
+    FIELD_HERD_KEYS.filter(k=>b.flock[k]>0).map(k=>herdConfirm===b.id+'|'+k?
+      uiBtn('herd','collect|'+k,'确认屠宰一只'+FIELD_HERD[k].name,!cap)+uiBtn('herd','cancel|'+k,'取消'):
+      uiBtn('herd','prepare|'+k,'屠宰 '+FIELD_HERD[k].name,!cap)).join('')+'</div></section>';
+}
+const FIELD_ANIMAL_ART={
+    farmPig:['..oo.....','..orc....','oooccco..','occccccoo','occpccrrc','occccccro','..o..o...'],
+    goose:['......owr','.....owwo','.....owo.','...oowo..','.oowwo...','owwwwo...','.oooo....','..r.r....'],
+    turkey:['ooo......','opoo.....','oppo..or.','.opocooor','..occccr.','..occco..','...ooo...','...r.r...']
+  };
+const FIELD_ANIMAL_PALETTES={
+    farmPig:{o:'#674957',r:'#ba7180',c:'#eba5a5',p:'#f5c4bf'},
+    goose:{o:'#516164',r:'#d49852',w:'#f0e4cb'},
+    turkey:{o:'#4f3849',p:'#a36b46',c:'#78556a',r:'#d07e5b'}
+  };
+function drawFieldAnimal(e){
+  if(!Object.hasOwn(FIELD_HERD,e.type))return false;
+  const rows=FIELD_ANIMAL_ART[e.type];
+  const size=e.type==='farmPig'?3:2.5;
+  const moving=['Wander','Flee','Return'].includes(e.aiState)||e.leadUntil>state.elapsed;
+  ellipse(ctx,0,3,13,4,'#1b28274f');
+  ctx.scale(Math.cos(e.angle||0)<0?-1:1,1);
+  pixelSprite(rows,FIELD_ANIMAL_PALETTES[e.type],-rows[0].length*size/2,-rows.length*size+4+(moving?Math.round(Math.sin(nowClock*14)):0),size);
+  return true;
+}
+
+function retireLivestock(e,delay){
+  e.leadUntil=0;e.respawn=state.elapsed+delay;e.combat=null;e.aiState='Idle';
+  if(e.id.startsWith('transit:')){
+    state.movedAnimals=state.movedAnimals.filter(a=>a.id!==e.id);
+    entities=entities.filter(other=>other!==e);
+    delete state.depleted[e.id];
+  }else state.depleted[e.id]=e.respawn;
+}
+function finishFieldAnimal(e){
+  if(!Object.hasOwn(FIELD_HERD,e.type))return false;
+  const row=FIELD_HERD[e.type];
+  for(const [k,n] of Object.entries(row.loot))yieldItem(k,n,e);
+  recordHuntingPressure(e);
+  retireLivestock(e,DAY*2*Math.max(1,ecoRespawnMultiplier(e)));
+  discover('animals',e.type);toastItems('猎获 '+row.name,row.loot);renderHotbar();save();
+  return true;
+}
+
+const SEASON_TALK={
+  spring:[
+    [['播种祭快到了，先把 种子袋里的旧标签换下来。','我得留几颗根蔬，等土壤软一点再种。','等广场开场，再去看看别人的播法。'],
+     ['今年想在园子多留一条小路。','这样给相邻几株浇水方便些。','等播种祭开场，我会带上水壶。']],
+    [['播种祭已经开场了，广场那边可以下种。','我想看看哪块试验田浇得最匀。','这季以后还有时间补种，先给种子留点空。'],
+     ['今天集市的种子摊应该有不少人。','我先看自己家还剩多少种子。','好，我也先去农田那边看看活动。']],
+    [['试验田收拾完了，下一茬准备种什么？','我还想试点根蔬，留几株晚点挖。','下次交换一点种子试试。'],
+     ['彩旗已经收起来了。','地里的活倒还在呢，先看看哪块地干了。','我把空水壶带上。']]
+  ],
+  summer:[
+    [['潮汐节之前，我想再检查一遍鱼线。','有浪就多留一点余线，别急着硬拽。','我到时候从岸上看收线的节奏。'],
+     ['比赛快到了，你会去码头吗？','先看看天气，我想早点到岸台。','可以先试两竿，找找手感。']],
+    [['岸台的钓鱼比赛已经开放了。','咬钩了也得留神鱼线张力。','我打算先在近岸找个稳当的位置。'],
+     ['今天补给摊和比赛都开着。','钓鱼前我得找个地方把杂物放下。','给渔获留点位置，别装满了再去。']],
+    [['潮汐节过后，岸台安静了不少。','普通鱼照常钓，知道在哪儿等就好。','我先修修鱼线，再找一片好水面。'],
+     ['节日收摊了，鱼怎么处理好？','能吃掉就趁新鲜；远航前可以加工存起来。','我去看看手里还有多少盐。']]
+  ],
+  autumn:[
+    [['丰收祭快到了，别吃掉想参评的那一份。','我会从自己种的作物里挑。','种类多一些，桌上也热闹。'],
+     ['离丰收祭还有几天，粮食要先收好。','有箱子就分开放，新鲜的先留出来。','我想带一份块根去。']],
+    [['广场的丰收展示台已经开放了。','我留了一份自己种的作物，等会儿去看看。','顺便看看大家摆了哪些品种。'],
+     ['丰收祭的集市今天开张了。','先买用得上的，留些物资过冬。','傍晚我还想回广场逛一圈。']],
+    [['丰收祭的桌子撤掉了，仓里还得整理。','易坏的先吃或加工，比较耐放的留着。','我会给冬天留一箱干粮。'],
+     ['今年的作物把展示桌摆得满满当当。','我想下回多试一个品种。','先把这季留下的种子分好。']]
+  ],
+  winter:[
+    [['星灯节快到了，有几盏灯要重新绑绳。','门口的那盏也修好，免得有人找不到路。','天黑前我来帮你看一眼。'],
+     ['广场的灯架准备好了。','等夜里点起来，站在路口就能看见。','我带件厚衣再出门。']],
+    [['星灯节开始了，去看哪几盏还没有点亮。','我顺着广场边走，你从另一侧看看。','灯下相见，走路时留神脚边。'],
+     ['入夜后的灯色和平常不一样。','我带了件厚衣，想在这里多待一会儿。','走的时候记得把火把带上。']],
+    [['星灯节结束了，木架留下等来年用。','先收干净那些怕潮的灯罩。','好，我从广场边开始。'],
+     ['今晚没有那么多灯了。','过几天就该准备春天的种子。','等天气转暖再慢慢下田。']]
+  ],
+  trade:[
+    [['明天是商贸日，今天先把要卖的货理出来。','我会把不易久放的鱼留到明早再检查。','各家收的东西不同，先核对收购范围。'],
+     ['明日商人提高收购比例，我在整理库存。','我留够吃的，再把多余的拿去卖。','需要的货就先别打包。']],
+    [['今天是商贸日，普通收购的基础比例是六成。','那我带上自己收的这一批。','先看哪些商品对方肯收，别白跑一趟。'],
+     ['港口今天有商贸日，交易前可以核对报价。','我打算先卖多余的木料。','等交易完再把下次的货位留出来。']],
+    [['商贸日已经结束，今天恢复平时的报价了。','我先把剩下的货放回仓库。','下季再算一算哪些有余量。'],
+     ['昨天整理出的空位现在能放补给。','值钱的东西还是得分开放。','下一季商贸日还在第三天。']]
+  ]
+};
+const CHAT_JOBS=/农|园|种植|牧|渔|钓|伙计|商|店|货|船|港|裁缝|码头/;
+let seasonTalk=null,seasonTalkAt=0,seasonTalkOwner=null,seasonTalkLast='';
+function seasonalTopic(cal=worldCalendar(),fest=festivalInfo()){
+  if(cal.seasonDay>=2&&cal.seasonDay<=4){
+    if(cal.seasonDay<4||seasonTalkLast.split(':').slice(0,3).join(':')!==cal.year+':'+cal.season+':trade-after')
+      return {phase:cal.seasonDay-2,key:'trade',tag:'trade-'+['before','live','after'][cal.seasonDay-2]};
+  }
+  if(fest.now)return {phase:1,key:fest.key,tag:fest.key+'-live'};
+  if(fest.preview||fest.live&&cal.hour<fest.start)return {phase:0,key:fest.key,tag:fest.key+'-before'};
+  if(cal.seasonDay===7||fest.live&&cal.hour>=fest.end)return {phase:2,key:fest.key,tag:fest.key+'-after'};
+  return null;
+}
+function seasonTalkRole(e,key){
+  const name=e.label||livingRole(e)||'';
+  const roles={spring:/农|园|牧/,summer:/渔|钓|船|港/,autumn:/农|园|商|货|店/,winter:/客|灯|邮|工/,trade:CHAT_JOBS};
+  return roles[key]?.test(name)?2:0;
+}
+function livingRole(e){return e.roleName||e.ruralRole||e.workRole||e.npcId||'';}
+function tickSeasonTalk(threats){
+  if(seasonTalkOwner!==state){seasonTalkOwner=state;seasonTalk=null;seasonTalkAt=state.elapsed+12;seasonTalkLast='';}
+  const rate=gameSettings().ambientChatter;
+  if(rate==='off'||mapMode!=='play'||!farmSurface()||threats.some(e=>dist(e,state.player)<142)){
+    seasonTalk=null;return;
+  }
+  if(state.elapsed<seasonTalkAt)return;
+  seasonTalkAt=state.elapsed+(rate==='low'?18:6);
+  const p=state.player,cal=worldCalendar(),fest=festivalInfo(),topic=seasonalTopic(cal,fest);
+  if(!topic||cal.hour<6||cal.hour>=23||regionAt(p.x,p.y)!==tradeIsland||Math.random()>(rate==='low'?.25:.48))return;
+  const token=cal.year+':'+cal.season+':'+topic.tag;
+  const candidates=entities.filter(e=>['trader','leisureNpc','livingWatch','estateNpc','v195cNpc','v196Fubo','prosperMerchant'].includes(e.type)&&
+    visibleEntity(e)&&dist(e,p)<204&&!e.combat&&!e.escort&&!e.gone&&state.v195c?.activity?.npcId!==(e.npcId||e.id))
+    .sort((a,b)=>seasonTalkRole(b,topic.key)-seasonTalkRole(a,topic.key)||dist(a,p)-dist(b,p)).slice(0,10);
+  for(const a of candidates){
+    const b=candidates.find(o=>a!==o&&dist(a,o)>=18&&dist(a,o)<=120&&clearSight(a,o));
+    if(!b)continue;
+    const variants=SEASON_TALK[topic.key][topic.phase];
+    const pick=Number(seasonTalkLast===token+':0'||seasonTalkLast!==token+':1'&&Math.random()<.5);
+    const lines=variants[pick].slice();
+    if(weather()&&topic.key==='spring'&&topic.phase<2)lines[2]='现在下雨，露天田能自己补水。';
+    if(festivalRecord(fest)?.awarded&&topic.phase===2&&topic.key!=='trade')lines[0]='这一届的活动已经结算，获奖的纪念品可以留着。';
+    seasonTalk={pair:[a,b],lines,at:state.elapsed};
+    seasonTalkLast=token+':'+pick;seasonTalkAt=state.elapsed+(rate==='low'?120:61);return;
+  }
+}
+function drawSeasonTalk(visible){
+  if(!seasonTalk||mapMode!=='play'||gameSettings().ambientChatter==='off')return;
+  const {pair,lines,at}=seasonTalk,t=state.elapsed-at,i=Math.floor(t/2.9);
+  if(i<0||i>=lines.length||t%2.9>2.65)return;
+  const e=pair[i%2];
+  if(!visible(e)||!visibleEntity(e)||dist(pair[0],pair[1])>170)return;
+  const slot=v195dClaimBubbleSlot(e.x,e.y-51,false);
+  if(slot===null)return;
+  const msg=lines[i],parts=msg.length<=15?[msg]:[msg.slice(0,15),msg.slice(15)];
+  ctx.save();ctx.font='bold 11px system-ui';ctx.textAlign='center';
+  const w=Math.max(...parts.map(v=>ctx.measureText(v).width))+18,h=16+parts.length*12;
+  const x=e.x,y=e.y-59-h-slot*19;
+  rect(ctx,x-w/2,y,w,h,'#183430f2');rect(ctx,x-w/2,y,w,2,'#e2c48f');
+  polygon(ctx,[[x-4,y+h],[x+4,y+h],[x,y+h+5]],'#183430');
+  ctx.fillStyle='#fbebcc';parts.forEach((v,n)=>ctx.fillText(v,x,y+17+n*12));ctx.restore();
+}
+function seasonTalkSettings(s){
+  return '<div class="set-item"><label><span>村民环境对话</span><small>在灯塔湾显示节庆与商贸日的短对话</small></label><div class="inventory-actions">'+
+    [['normal','正常'],['low','低频'],['off','关闭']].map(([k,n])=>uiBtn('seasonTalkRate',k,n,false,s.ambientChatter===k)).join('')+'</div></div>';
+}
+
 installInventoryForge();
 installDuelContent();
+installFieldAnimals();
 installItemDescriptions();
 
 makeTerrain();state=prepareSave(newState());populate();initSchools();resetRuralRuntime();bindAngling();resize();
