@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-sr7wMgfpMUChz51Q62qtUvxiOB2lWZrscvGEgUZLZX8='; style-src 'unsafe-inline'; img-src data: blob:; base-uri 'none'; object-src 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-6rB2OaChb0brOSqr9s8pxCXHgDSdXnh4lWShjIFwSaQ='; style-src 'unsafe-inline'; img-src data: blob:; base-uri 'none'; object-src 'none'; form-action 'none'">
 <meta name="theme-color" content="#0d2224">
-<title>荒野微光 V2.0.2c · 雇佣平衡</title>
+<title>荒野微光 V2.0.3</title>
 <meta name="description" content="《荒野微光》V2.0.2c《雇佣平衡》。大幅回调雇佣兵战斗力与自动猎杀效率，上调雇佣兵与公会生产雇工费用，保留全部精简 UI 与防重叠修复。">
 <meta property="og:title" content="荒野微光 V2.0.2c · 雇佣平衡">
 <meta property="og:description" content="《荒野微光》V2.0.2c《雇佣平衡》。雇佣兵战力大幅下调、公会雇佣费用上调与经济平衡。">
@@ -824,7 +824,7 @@ body:not([data-state="playing"]) #hud:not(.editing-layout) *{pointer-events:none
 <div id="editLayoutBar" hidden><span>拖动右侧按钮。摇杆在操作布局设置中调整。</span><button class="press primary" id="doneEditLayout">保存布局</button><button class="press" id="backEditLayout">返回游戏</button><button class="press" id="resetEditLayout">重置</button></div>
 <div id="worldCatchup" class="world-catchup" role="status" hidden></div><div class="veil" id="veil"><section class="window title-window" id="window" role="dialog" aria-modal="true">
       <div class="inside">
-        <div class="eyebrow">2.0.2c · 雇佣平衡</div>
+        <div class="eyebrow">2.0.3</div>
         <h1>荒野微光</h1>
         <p role="status">正在启动游戏…</p>
         <p class="controls">如果一直停在这里，请下载 HTML 文件并用系统浏览器打开。</p>
@@ -962,8 +962,8 @@ const buildKinds = ['raft','sail','flagship','fire','bench','furnace','chest','w
 buildKinds.push('barrel','smoker','rootPlot','compost','trough');
 buildKinds.push('fridge','floor','stoneWall','rainRoof','shade','bridge','raisedDock','cargoChest','outpost','cistern','fruitSapling','dryPlot');
 buildKinds.push('strawMat','forge','bedLamp','brazier','sign','harborLight','doubleTrap','collector','beehive','oysterBasket','silverSapling','cherrySapling');
-const CHEST_SLOTS = 18;
-const PACK_CAPACITIES = [21,28,35,42];
+const CHEST_SLOTS = 20;
+const PACK_CAPACITIES = [22,30,38,46];
 const recipes = [
   ['axe','tools',{wood:2,stone:2},'砍树两下。徒手也能采集。'],
   ['pick','tools',{wood:2,stone:3},'加快采石，可从灰烬岛矿脉取得铁矿。'],
@@ -1543,7 +1543,7 @@ function prepareSave(s){
     if(!s.lots[k])s.lots[k]=Array(s.bag[k]).fill(s.elapsed+shelfLife[k]);
     else s.lots[k].sort((a,b)=>a-b);
   }
-  for(const p of s.piles)p.lots?.sort((a,b)=>a-b);
+  for(const p of s.piles){p.lots?.sort((a,b)=>a-b);if(!Number.isFinite(p.expiresAt))p.expiresAt=s.time+DAY;}
   for(const b of s.builds)if(isStock(b)){
     b.stock??={};
     for(const [k,v] of Object.entries(b.stock)){
@@ -1681,7 +1681,7 @@ function take(k,n=1){
   return lots;
 }
 function groundDrop(k,n,x,y,lots=null,condition=null){
-  const drop={id:`build:${state.nextId++}`,type:'pile',k,x,y,count:n,wear:condition,lots:lots||(shelfLife[k]?Array(n).fill(state.elapsed+shelfLife[k]):null)};
+  const drop={id:`build:${state.nextId++}`,type:'pile',k,x,y,count:n,wear:condition,expiresAt:state.time+DAY,lots:lots||(shelfLife[k]?Array(n).fill(state.elapsed+shelfLife[k]):null)};
   if(state.dungeons?.active)drop.dungeonId=state.dungeons.active.id;
   if(state.boarding)drop.boardingId=state.boarding.vesselId;
   state.piles.push(drop);
@@ -1721,6 +1721,7 @@ function expireFood(){
     }
   }
   state.piles=state.piles.filter(p=>{
+    if(Number.isFinite(p.expiresAt)&&p.expiresAt<=state.time)return false;
     if(!p.lots)return true;
     v201ExpireStockLots(p);p.count=p.lots.length;if(p.farmCount!=null)p.farmCount=Math.min(p.count,p.farmCount);return p.count>0;
   });
@@ -1973,6 +1974,7 @@ function visibleEntity(e){
   if(e.type==='puzzleRuin')return !state.cave;
   if(e.type==='landEncounter')return !state.cave&&!e.evData?.done;
   if(e.type==='fogChest')return !state.cave&&!state.v172?.fogChests?.[e.id];
+  if(e.type==='pile'&&Number.isFinite(e.expiresAt)&&e.expiresAt<=state.time)return false;
   if(e.type==='pile'&&e.boardingId)return state.boarding?.vesselId===e.boardingId;
   if(e.boardingEntity)return !!state.boarding;
   if(state.boarding)return false;
@@ -3371,7 +3373,7 @@ function openPanel(kind,reason=''){
   else if(kind==='mistSite')renderMistSite();
   else if(kind==='title'){
     const exists=!!loadGame();
-    w.innerHTML=`<div class="inside"><div class="eyebrow">2.0.2c · 雇佣平衡</div><h1>荒野微光</h1><p>在群岛求生、耕作、远航与建设。全新精简分类菜单与手机竖屏体验，保留完整生存、航海、牧场、佣兵与委托玩法。</p><div class="row">${exists?'<button class="press primary" data-act="continue" data-start="true">继续航行</button><button class="press" data-act="restart">新游戏</button>':'<button class="press primary" data-act="new" data-start="true">开始生存</button>'}<button class="press" data-act="saveTransfer">导入／导出存档</button></div><p class="controls">${controlGuide}</p></div>`;
+    w.innerHTML=`<div class="inside"><div class="eyebrow">2.0.3</div><h1>荒野微光</h1><p>在群岛求生、耕作、远航与建设。全新精简分类菜单与手机竖屏体验，保留完整生存、航海、牧场、佣兵与委托玩法。</p><div class="row">${exists?'<button class="press primary" data-act="continue" data-start="true">继续航行</button><button class="press" data-act="restart">新游戏</button>':'<button class="press primary" data-act="new" data-start="true">开始生存</button>'}<button class="press" data-act="saveTransfer">导入／导出存档</button></div><p class="controls">${controlGuide}</p></div>`;
   }else if(kind==='pause'){
     w.innerHTML=`<div class="inside"><h2>游戏暂停</h2><p>${frameFaultPaused?'游戏遇到异常并已暂停。点击「脱离卡点」重试。':saveFailed?'当前浏览器无法保留进度。':'进度自动保存在这台设备的浏览器里。'}</p><div class="row">${frameFaultPaused?'':'<button class="press primary" data-act="close">继续探索</button>'}<button class="press ${frameFaultPaused?'primary':''}" data-act="movementRecovery">脱离卡点</button><button class="press" data-act="saveTransfer">JSON 存档</button><button class="press primary" data-act="openSettings">完整游戏设置</button><button class="press" data-act="v20Atlas">群岛百科</button><button class="press" data-act="saveNow">立即手动保存</button><button class="press" data-act="restart">重新开始</button></div><p class="controls">${controlGuide}</p></div>`;
   }else if(kind==='restart'){
@@ -6653,7 +6655,7 @@ function tickEntityRespawns(){
 function buildSaveExportText(fromTitle=false){
   if(!fromTitle){saveProsperPeople();captureIncidentActors();captureAnimalStates();captureBoarding();captureNightActors();captureDuelEncounters();refreshJourneyProgress();syncDungeonPersist();syncSchoolSave();state.rural.audio=ruralAudioDefaults();state.displayPrefs=displayPreferences();}
   const data=fromTitle?(loadGame()||state):state;
-  return JSON.stringify({app:'wildcraft',format:SAVE_FORMAT,version:'2.0.2c',exportedAt:new Date().toISOString(),data},null,2);
+  return JSON.stringify({app:'wildcraft',format:SAVE_FORMAT,version:'2.0.3',exportedAt:new Date().toISOString(),data},null,2);
 }
 function validateSavePayload(text){
   const bad=error=>({ok:false,error});
@@ -6664,7 +6666,7 @@ function validateSavePayload(text){
   const coords=q=>record(q)&&Number.isFinite(q.x)&&Number.isFinite(q.y);
   const integer=(n,max)=>Number.isSafeInteger(n)&&n>=0&&n<=max;
   if(!checkSaveTree(parsed))return bad('存档数据过深或包含异常字符。');
-  if(parsed?.data&&(parsed.app!=='wildcraft'||!['1.87b','1.88','1.88a','1.88b','1.88c','1.89','1.90','1.91a','1.91b','1.91c','1.91d','1.92','1.93','1.94','1.94b','1.94c','1.95','1.95b','1.95c','1.95d','1.96','1.96b','1.97','1.97 Dev','1.97b','1.98','1.98 Dev','1.99','1.99b','1.99c','1.99d','2.0','2.0.1','2.0.1a','2.0.1b','2.0.1c','2.0.1d','2.0.1d Dev','2.0.1e','2.0.1e Dev','2.0.1f','2.0.1f Dev','2.0.1g','2.0.1g Dev','2.0.2','2.0.2a','2.0.2b','2.0.2c'].includes(parsed.version)||
+  if(parsed?.data&&(parsed.app!=='wildcraft'||!['1.87b','1.88','1.88a','1.88b','1.88c','1.89','1.90','1.91a','1.91b','1.91c','1.91d','1.92','1.93','1.94','1.94b','1.94c','1.95','1.95b','1.95c','1.95d','1.96','1.96b','1.97','1.97 Dev','1.97b','1.98','1.98 Dev','1.99','1.99b','1.99c','1.99d','2.0','2.0.1','2.0.1a','2.0.1b','2.0.1c','2.0.1d','2.0.1d Dev','2.0.1e','2.0.1e Dev','2.0.1f','2.0.1f Dev','2.0.1g','2.0.1g Dev','2.0.2','2.0.2a','2.0.2b','2.0.2c','2.0.2c Dev','2.0.3','2.0.3 Dev'].includes(parsed.version)||
     parsed.version!=='1.87b'&&parsed.format!==SAVE_FORMAT))return bad('此游戏版本无法导入。');
   const s=parsed?.data??parsed;
   if(!record(s)||s.v!==1)return bad('不支持的存档格式。');
@@ -6739,7 +6741,8 @@ function validateSavePayload(text){
       if(!Array.isArray(w.recovery)||w.recovery.length>12)return bad('遗物列表异常。');
       for(const b of w.recovery){
         if(!coords(b)||typeof b.id!=='string'||recoveryIds.has(b.id)||!record(b.contents)||!Number.isFinite(b.expires)||
-           Object.entries(b.contents).some(([k,n])=>!Object.hasOwn(items,k)||!integer(n,100000)))return bad('遗物位置或内容异常。');
+           (b.gold!=null&&!integer(b.gold,1e12))||
+           Object.entries(b.contents).some(([k,n])=>!Object.hasOwn(items,k)||!integer(n,100000)))return bad('遗落包位置或内容异常。');
         recoveryIds.add(b.id);
       }
     }
@@ -6748,8 +6751,8 @@ function validateSavePayload(text){
   if(s.lots&&Object.values(s.lots).some(v=>!Array.isArray(v)||v.some(t=>!Number.isFinite(t))))return bad('食物保质期异常。');
   s.wear??={};s.depleted??={};s.camp=coords(s.camp)?s.camp:{...HOME};s.dock=coords(s.dock)?s.dock:{...HOME};
   s.nextId=integer(s.nextId,1e12)&&s.nextId>0?s.nextId:1;
-  for(const id of ids){
-    const n=Number(id.split(':').at(-1));
+  for(const id of [...ids,...(s.living?.recovery||[]).map(b=>b.id)]){
+    const n=Number(String(id).split(':').at(-1));
     if(integer(n,1e12))s.nextId=Math.max(s.nextId,n+1);
   }
   s.downs=integer(s.downs,1e12)?s.downs:0;s.selected=clamp(Math.floor(s.selected)||0,0,s.slots.length-1);
@@ -7106,21 +7109,70 @@ function handleAdvSiteChoice(val){
 }
 
 // --- 4. 海盗遭遇与接舷登船战 ---
+const PIRATE_RANSOM_GOLD=20;
+const PIRATE_ESCAPE_DMG=23;
+const pirateCoastGuard=q=>!!adjacentLand(q,110);
+
+function pickPirateKidnapSpot(origin){
+  const safeIds=[0,1,2,3,4,5,6,7,8,9,11,12,13,14,15,16,17,18,20,21,23];
+  const current=regionAt(origin.x,origin.y)?.i;
+  const pool=regions.filter(o=>safeIds.includes(o.i)&&o.i!==current&&dist(o,origin)>240);
+  const candidates=pool.length?pool:regions.filter(o=>safeIds.includes(o.i));
+  for(let tries=0;tries<16;tries++){
+    const isl=candidates[Math.floor(Math.random()*candidates.length)];
+    for(let k=0;k<24;k++){
+      const ang=Math.random()*TWO_PI,rad=Math.random()*Math.min(isl.rx,isl.ry)*.72;
+      const c=Math.round(isl.c+Math.cos(ang)*rad),r=Math.round(isl.r+Math.sin(ang)*rad);
+      const q=point(c,r),id=index(c,r);
+      if(tile(c,r)===isl.i+1&&!rivers.has(id)&&!reefChannels.has(id)&&!hotCells.has(id)&&canTravel(q.x,q.y)){
+        return {island:isl,spot:q};
+      }
+    }
+    const shore=shoreFind(isl,Math.floor(Math.random()*4));
+    if(shore&&canTravel(shore.x,shore.y))return {island:isl,spot:shore};
+  }
+  return {island:regions[0],spot:{...HOME}};
+}
+
+function kidnapByPirates(){
+  const ship=boat(),p=state.player;
+  const {island,spot}=pickPirateKidnapSpot(p);
+  if(ship){
+    state.mounted=null;
+    if(ship.hasAnchor)ship.anchored=true;
+    unloadAnimals(ship,spot);
+    sailEscortLanding(ship,spot);
+  }
+  Object.assign(p,{x:spot.x,y:spot.y});
+  state.dock={x:spot.x,y:spot.y};
+  pirateShip=null;
+  p.hp=Math.max(15,p.hp-18);
+  p.food=Math.max(0,p.food-22);
+  p.water=Math.max(0,p.water-22);
+  p.mind=Math.max(0,p.mind-20);
+  p.stamina=Math.max(0,(p.stamina??STAMINA.max)-35);
+  camPos.init=false;
+  triggerShake(7,.22);
+  beep(110,.28,'sawtooth');
+  renderHotbar();updateHud();save();closePanel();
+  toast(`你拿不出 ${PIRATE_RANSOM_GOLD} 金币！被海盗绑架并丢弃在【${island.name}】，生命/饱腹/水分/心神大幅下降！`,5);
+}
+
 function tickPirates(dt,ship){
   const p=state.player,t=state.elapsed;
   if(miaPirateProtection(ship))return;
-  if(!ship||state.cave||seaShelter(p)){
+  if(!ship||state.cave||seaShelter(p)||pirateCoastGuard(p)){
     if(pirateShip&&dist(pirateShip,p)>650)pirateShip=null;
     return;
   }
   const fromHome=dist(p,HOME);
   if(!pirateShip&&fromHome>48*T&&t>=(state.pirateStats.nextAt||0)){
     if(Math.random()<.42){
-      const q=Array.from({length:12},(_,i)=>{const a=p.angle+(i-6)*.45;return {x:p.x+Math.cos(a)*210,y:p.y+Math.sin(a)*210};}).find(o=>seaAt(o.x,o.y,ship)&&!seaShelter(o));
+      const q=Array.from({length:12},(_,i)=>{const a=p.angle+(i-6)*.45;return {x:p.x+Math.cos(a)*210,y:p.y+Math.sin(a)*210};}).find(o=>seaAt(o.x,o.y,ship)&&!seaShelter(o)&&!pirateCoastGuard(o));
       if(q){
         pirateShip={...q,hp:75,maxHp:75,mode:'chase',until:t+3,angle:Math.atan2(p.y-q.y,p.x-q.x)};
         beep(98,.25,'sawtooth');
-        toast('⚠ 海盗快船逼近！可用舰炮击沉，或靠近触发接舷登船战！',4.5);
+        toast('⚠ 海盗快船逼近！可用舰炮击沉，靠近岸边可甩脱，或被抓钩锁住触发勒索！',4.5);
       }
     }
     state.pirateStats.nextAt=t+95;
@@ -7138,55 +7190,55 @@ function tickPirates(dt,ship){
     }
     return;
   }
-  moveObject(ps,Math.cos(a)*132*dt,Math.sin(a)*132*dt,(x,y)=>seaAt(x,y,ship));
+  moveObject(ps,Math.cos(a)*132*dt,Math.sin(a)*132*dt,(x,y)=>seaAt(x,y,ship)&&!adjacentLand({x,y},95));
   if(d<58){
     ps.mode='boardWarn';ps.until=t+.9;beep(82,.25,'square');
-    toast('海盗抛出抓钩，准备接舷登船！',1.5);
+    toast('海盗抛出抓钩，准备拦截勒索！',1.5);
   }
 }
 
 function renderPirateBoardPanel(){
-  const canPay=amount('iron')>=2||amount('wood')>=6||Object.keys(items).some(k=>items[k][2]>0&&amount(k)>=3);
-  $('window').innerHTML=panelFrame('🏴‍☠️ 海盗接舷登船战',`<div class="inside">
-    <p class="cards-help">海盗快船已用抓钩锁住你的船舷！你可以迎战海盗船长与水手，或交出部分物资息事宁人。</p>
+  const gold=state.v173?.gold||0,canPay=gold>=PIRATE_RANSOM_GOLD;
+  $('window').innerHTML=panelFrame('🏴‍☠️ 海盗拦截勒索',`<div class="inside">
+    <p class="cards-help">海盗快船已用抓钩锁住你的船舷，张口索要 <strong>${PIRATE_RANSOM_GOLD} 金币</strong>！当前持有 <strong>${gold} 金币</strong>。</p>
     <div class="grid">
-      <article class="entry"><strong>拔刀迎战（甲板接舷）</strong><p>在最近海岸浅滩展开白刃战，击败海盗船长可夺取精炼钢、珍珠与藏宝图！</p><button class="press primary" data-act="pirateChoice" data-val="fight">迎战海盗</button></article>
-      <article class="entry"><strong>交出过路费议和</strong><p>消耗 2 铁锭或 6 木头或 3 份食物，海盗解开抓钩离去，船体不受损。</p><button class="press" data-act="pirateChoice" data-val="pay" ${canPay?'':'disabled'}>交出物资议和</button></article>
-      <article class="entry"><strong>强行斩断缆绳突围 <span class="pill warn">船体 -18</span></strong><p>强行加速挣脱抓钩，船体受损 18 点。</p><button class="press" data-act="pirateChoice" data-val="break">斩缆突围</button></article>
+      <article class="entry"><strong>${canPay?`交出 ${PIRATE_RANSOM_GOLD} 金币赎身`:`给不出 ${PIRATE_RANSOM_GOLD} 金币（遭绑架）`}</strong><p>${canPay?`支付 ${PIRATE_RANSOM_GOLD} 金币买路，海盗解开抓钩离去，船体不受损。`:`当前金币不足 ${PIRATE_RANSOM_GOLD}，将被海盗绑架并丢弃到随机岛屿，生命/饱腹/水分/心神大幅损耗！`}</p><button class="press ${canPay?'':'danger'}" data-act="pirateChoice" data-val="pay">${canPay?`支付 ${PIRATE_RANSOM_GOLD} 金币`:'无力支付（被绑架）'}</button></article>
+      <article class="entry"><strong>强行摆脱海盗 <span class="pill warn">船体 -${PIRATE_ESCAPE_DMG}</span></strong><p>强行斩断抓钩加速摆脱海盗，船体耐久受损 ${PIRATE_ESCAPE_DMG} 点。</p><button class="press" data-act="pirateChoice" data-val="break">摆脱海盗（-${PIRATE_ESCAPE_DMG}耐久）</button></article>
+      <article class="entry"><strong>拔刀开战（登岸白刃战）</strong><p>与海盗船长及水手在最近海岸展开白刃战，击败可夺取精炼钢、珍珠与战利品。注意：你的船只将停留在原海面，不会跟随到岸边！</p><button class="press primary" data-act="pirateChoice" data-val="fight">迎战海盗</button></article>
     </div></div>`);
 }
 
 function handlePirateChoice(val){
   const ship=boat(),p=state.player;
   if(val==='pay'){
-    if(amount('iron')>=2)take('iron',2);
-    else if(amount('wood')>=6)take('wood',6);
-    else{
-      const fk=Object.keys(items).find(k=>items[k][2]>0&&amount(k)>=3);
-      if(!fk)return;
-      take(fk,3);
+    if((state.v173?.gold||0)<PIRATE_RANSOM_GOLD){
+      kidnapByPirates();
+      return;
     }
+    state.v173.gold-=PIRATE_RANSOM_GOLD;
+    syncGoldHud();
     const id=dist(p,tradeIsland)<=dist(p,rescueReef)?'port':'rescue';
-    changeFaction(id==='port'?'west':'east',7,'过路费换来暂时退让。',id);
-    changeStanding(id,-3,'海盗从你手中收到了过路物资。');
-    toast('海盗收下物资后解开抓钩扬长而去。',3.5);
+    changeFaction(id==='port'?'west':'east',7,'高额赎金换来暂时退让。',id);
+    changeStanding(id,-3,'海盗从你手中勒索了 20 金币。');
+    toast(`你支付了 ${PIRATE_RANSOM_GOLD} 金币，海盗收钱后解开抓钩扬长而去。`,3.5);
     renderHotbar();save();closePanel();return;
   }
   if(val==='break'){
-    if(ship){damagePlayerShip(ship,18,'突围时船被撞沉。');if(ship.hp<=0)return;}
-    toast('你斩断抓钩强行突围，船舷受损 18 点！',3.5);
+    if(ship){damagePlayerShip(ship,PIRATE_ESCAPE_DMG,'摆脱海盗时船被撞沉。');if(ship.hp<=0)return;}
+    toast(`你强行斩断抓钩摆脱海盗，船体耐久受损 ${PIRATE_ESCAPE_DMG} 点！`,3.5);
     save();closePanel();return;
   }
   if(val==='fight'){
     const shore=landing()||adjacentLand(p,450)||HOME;
     if(ship){state.mounted=null;if(ship.hasAnchor)ship.anchored=true;Object.assign(p,shore);state.dock=shore;unloadAnimals(ship,shore);sailEscortLanding(ship,shore);}
+    pirateShip=null;
     const bid='board:'+state.nextId++;
     const capSpot=adjacentLand({x:p.x+38,y:p.y-12},90)||p,crewSpot=adjacentLand({x:p.x+28,y:p.y+24},90)||p;
     entities.push(obj('pirateCaptain',capSpot.x,capSpot.y,bid+':cap',{aggro:true,boardId:bid}));
     entities.push(obj('pirateCrew',crewSpot.x,crewSpot.y,bid+':c1',{aggro:true,boardId:bid}));
     state.pirateStats.boardings=(state.pirateStats.boardings||0)+1;
     closePanel();
-    toast('海盗已登岸接舷！击败海盗船长夺取战利品！',4);
+    toast('已开战！你的船只留在原海面未跟随上岸，击败海盗船长夺取战利品！',4);
     save();
   }
 }
@@ -10158,7 +10210,7 @@ function smartContextLabel(t){
   if(isDock(t)||['portPier','rescuePier'].includes(t.type))return {text:'泊位 · 船况',active:true,alert:false};
   if(t.type==='villagePlace')return {text:(t.kind==='home'?'敲门 · ':'进入 · ')+VILLAGE_PLACES[t.kind].name,active:true,alert:false};
   if(t.type==='livingWatch')return {text:'交谈 · 港口守卫',active:true,alert:false};
-  if(t.type==='recoveryBag')return {text:'取回遗物',active:true,alert:true};
+  if(t.type==='recoveryBag')return {text:'取回遗落包',active:true,alert:true};
   if(t.type==='leisureNpc')return {text:`交谈 · ${leisureNpcs.find(n=>n.key===t.npcKey)?.title||'闲客'}`,active:true,alert:!!state.leisure.invites[t.npcKey]?.active};
   if(t.type==='trader')return {text:`交谈 · ${tradeOffers[t.merchant].name.split(' ')[0]}`,active:true,alert:false};
   if(t.type==='wanderingNpc'||t.type==='castaway')return {text:`交谈 · ${t.npcData?.name?.split(' ')[0]||'旅人'}`,active:true,alert:true};
@@ -11468,7 +11520,7 @@ function tickV173Sea(dt){
       }else if(!isFerryPassenger()){
         const secCalm=(state.v194c?.sectorCalm?.[seaSectorKey(v)]||0)>state.time;
         const nearFriendly=!secCalm&&seaVessels.find(o=>o.hp>0&&o.faction==='friendly'&&(!blockade||o.tripId)&&dist(o,v)<(blockade?350:280));
-        if(ship&&!miaPirateProtection(ship)&&!seaShelter(p)&&(!blockade||dist(p,blockade.marker)<560)&&(v.aggroPlayer||dPlayer<320)){
+        if(ship&&!miaPirateProtection(ship)&&!seaShelter(p)&&!pirateCoastGuard(p)&&(!blockade||dist(p,blockade.marker)<560)&&(v.aggroPlayer||dPlayer<320)){
           target=ship;
           if(dPlayer>190&&v.hp>v.maxHp*.45)v.fullSpeed=true;
         }else if(nearFriendly){
@@ -11534,7 +11586,7 @@ function tickV173Sea(dt){
         v.angle+=v.orbitDir*1.1*dt;
         nx=v.x+Math.cos(v.angle)*spd*dt;ny=v.y+Math.sin(v.angle)*spd*dt;
       }
-      if(v20SeaLeg(v,{x:nx,y:ny})){
+      if(v20SeaLeg(v,{x:nx,y:ny})&&(v.faction!=='pirate'||!adjacentLand({x:nx,y:ny},88))){
         v.x=nx;v.y=ny;
         // NPC 船只同样承受航行自然磨损（全速 200%）
         if(Math.hypot(v.x-ox,v.y-oy)>1e-3){
@@ -11957,7 +12009,7 @@ function renderSettingsPanel(tabName){
   }else if(settingsTab==='gameplay'){
     const mode=state.living.deathMode;
     body=`<div class="set-group">
-      <div class="set-item"><label><span>死亡惩罚</span><small>轻度保留物品。标准掉落 20% 普通材料，保留 3 天。严酷掉落 40%，保留 1 天。</small></label><div class="inventory-actions">${Object.entries(DEATH_RULES).map(([k,r])=>'<button class="press '+(mode===k?'primary':'')+'" data-act="deathMode" data-val="'+k+'">'+r.name+'</button>').join('')}</div></div>
+      <div class="set-item"><label><span>死亡惩罚</span><small>${deathPenaltyDesc(false)}</small></label><div class="inventory-actions">${Object.entries(DEATH_RULES).map(([k,r])=>'<button class="press '+(mode===k?'primary':'')+'" data-act="deathMode" data-val="'+k+'">'+r.name+'</button>').join('')}</div></div>
       <div class="set-item"><label><span>游戏难度</span><small>影响敌人强度、饥渴速度及野生资源再生。制作配方共用。</small></label><div class="inventory-actions">${[['casual','休闲'],['standard','标准'],['hard','困难']].map(([k,n])=>`<button class="press ${s.difficulty===k?'primary':''}" data-act="setOpt" data-val="difficulty:${k}">${n}</button>`).join('')}</div></div>
       <div class="set-item"><label><span>引导强度</span><small>${V201_GUIDE_INTENSITIES[currentGuideIntensity()].desc}</small></label><div class="inventory-actions">${Object.entries(V201_GUIDE_INTENSITIES).map(([k,d])=>`<button class="press ${currentGuideIntensity()===k?'primary':''}" data-act="setGuideIntensity" data-val="${k}">${d.label}</button>`).join('')}</div></div>
       <div class="set-item"><label><span>伤害数字显示</span><small>命中时显示浮动伤害数值</small></label><button class="press" data-act="toggleBool" data-val="dmgNumbers">${s.dmgNumbers?'开启':'关闭'}</button></div>
@@ -13114,10 +13166,15 @@ function drawTownProject(e){
 }
 
 const DEATH_RULES={
-  light:{name:'轻度',drop:0,wear:.03,wait:2,days:0},
-  standard:{name:'标准',drop:.20,wear:.08,wait:4,days:3},
-  harsh:{name:'严酷',drop:.40,wear:.16,wait:6,days:1}
+  light:{name:'轻度',drop:0,keep:0,wear:.03,wait:2,days:0},
+  standard:{name:'标准',drop:.30,keep:.50,wear:.08,wait:4,days:3},
+  harsh:{name:'严酷',drop:.60,keep:.50,wear:.16,wait:6,days:1}
 };
+function deathPenaltyDesc(compact=false){
+  const sd=Math.round(DEATH_RULES.standard.drop*100),hd=Math.round(DEATH_RULES.harsh.drop*100),kp=Math.round(DEATH_RULES.standard.keep*100);
+  return compact?`轻度保留 · 标准掉 ${sd}%（含金币） · 严酷掉 ${hd}%（含金币） · 遗落包留 ${kp}%`:`轻度保留物资与金币。标准掉落 ${sd}% 随身物资与金币，严酷掉落 ${hd}% 随身物资与金币，遗落包仅可找回掉落部分的 ${kp}%。`;
+}
+let collapsingNow=false;
 const RECOVERY_MATERIALS=['wood','stone','fiber','ore','copperOre','clay','salt','rope','hide','scrap','charcoal','reed','limestone'];
 const RECOVERY_LIMIT=12;
 
@@ -13189,27 +13246,51 @@ function saveBoatAfterDeath(ship,shore){
 }
 
 function pruneRecovery(time=state.time){
-  state.living.recovery=state.living.recovery.filter(r=>r.expires>time&&Object.keys(r.contents).length);
+  state.living.recovery=state.living.recovery.filter(r=>r.expires>time&&(Object.keys(r.contents||{}).length||(r.gold||0)>0));
+}
+
+function isDeathDroppableSupply(k){
+  return Object.hasOwn(items,k)&&amount(k)>0&&!DROP_PROTECTED.has(k)&&!items[k][4]&&!garmentSlot[k]&&!HOME_FURNITURE[k]&&!(buildKinds.includes(k)&&!planted.includes(k))&&!['pot','coat',...upgrades].includes(k);
 }
 
 function deathMaterials(rules,lossSite){
-  const contents={};
-  for(const k of RECOVERY_MATERIALS){
+  if(!(rules.drop>0))return {bag:null,droppedItems:0,keptItems:0,droppedGold:0,keptGold:0};
+  const contents={},keepRate=rules.keep??.5;
+  let droppedItems=0,keptItems=0;
+  for(const k of Object.keys(state.bag)){
+    if(!isDeathDroppableSupply(k))continue;
     const n=Math.floor(amount(k)*rules.drop);
-    if(n>0){contents[k]=n;take(k,n);}
+    if(n>0){
+      take(k,n);
+      droppedItems+=n;
+      const kept=Math.floor(n*keepRate);
+      if(kept>0){contents[k]=kept;keptItems+=kept;}
+    }
   }
-  if(!Object.keys(contents).length)return null;
+  const curGold=Math.max(0,Math.floor(state.v173?.gold||0));
+  const droppedGold=Math.floor(curGold*rules.drop);
+  const keptGold=Math.floor(droppedGold*keepRate);
+  if(droppedGold>0&&state.v173){
+    state.v173.gold=Math.max(0,curGold-droppedGold);
+    syncGoldHud();
+  }
+  if(!Object.keys(contents).length&&keptGold<=0){
+    return {bag:null,droppedItems,keptItems,droppedGold,keptGold};
+  }
   pruneRecovery();
   const bags=state.living.recovery;
   if(bags.length>=RECOVERY_LIMIT){
     // At the cap use the oldest reachable cache on the same island if available.
     const old=bags.find(b=>regionAt(b.x,b.y)===regionAt(lossSite.x,lossSite.y))||bags[0];
+    old.contents??={};
     for(const [k,n] of Object.entries(contents))old.contents[k]=(old.contents[k]||0)+n;
+    old.gold=(old.gold||0)+keptGold;
     old.expires=Math.max(old.expires,state.time+rules.days*DAY);
-    return old;
+    return {bag:old,droppedItems,keptItems,droppedGold,keptGold};
   }
-  const bag={id:'recovery:'+state.nextId++,type:'recoveryBag',...lossSite,contents,expires:state.time+rules.days*DAY};
-  bags.push(bag);return bag;
+  const bag={id:'recovery:'+state.nextId++,type:'recoveryBag',...lossSite,contents,gold:keptGold,expires:state.time+rules.days*DAY};
+  bags.push(bag);
+  return {bag,droppedItems,keptItems,droppedGold,keptGold};
 }
 
 function applyDeathWear(rules){
@@ -13224,11 +13305,16 @@ function applyDeathWear(rules){
 
 function collapse(reason,lostShip=null){
   navalJob=null;
-  if(mapMode==='recover')return;
+  if(mapMode==='recover'||collapsingNow)return;
+  collapsingNow=true;
+  try{
+  mapMode='recover';
   duelClearOnDeath();
+  const storeRoom=state.prosper?.inside||null;
+  if(storeRoom)state.prosper.inside=null;
   const boarding=state.boarding,cave=state.cave,dungeonExit=leaveDungeonOnDefeat();
   const ship=lostShip||boat()||(boarding&&state.builds.find(b=>b.id===boarding.boatId))||(dungeonExit?.returnShipId&&state.builds.find(b=>b.id===dungeonExit.returnShipId));
-  const from=dungeonExit?.from||(ship?state.dock:cave?(outerCaves[cave]?.surface||(dist(state.player,caveSide)<dist(state.player,caveMain)?mineSide:mineMain)):state.player);
+  const from=storeRoom?{x:storeRoom.returnX,y:storeRoom.returnY}:dungeonExit?.from||(ship?state.dock:cave?(outerCaves[cave]?.surface||(dist(state.player,caveSide)<dist(state.player,caveMain)?mineSide:mineMain)):state.player);
   abortFishingContest('因昏倒中断了钓鱼比赛。');
   if(boarding){
     if(boarding.won){
@@ -13248,7 +13334,7 @@ function collapse(reason,lostShip=null){
   // Advance the original clock and consume perishables just as rest does.
   state.time+=skip;state.elapsed+=skip;
   applyDeathWear(rules);
-  const bag=deathMaterials(rules,site);
+  const loss=deathMaterials(rules,site),bag=loss.bag;
   Object.assign(state.player,home,{hp:80,food:64,mind:76,water:68,stamina:100,staminaResumeAt:0});
   state.playerStatus={};state.lastHit=state.elapsed-20;
   seaEnemy=null;seaShot=null;pirateShip=null;cannonBalls=[];enemyShots=[];camPos.init=false;
@@ -13257,21 +13343,38 @@ function collapse(reason,lostShip=null){
   settleLivingWorld();campTimeStep(skip);expireFood();shiftSchools();
   renderHotbar();save();
   openPanel('recover',reason);
+  const lossParts=[];
+  if(loss.droppedItems>0)lossParts.push('掉落物资 '+loss.droppedItems+' 件（遗落包保留 '+loss.keptItems+' 件）');
+  if(loss.droppedGold>0)lossParts.push('掉落金币 '+loss.droppedGold+'（遗落包保留 '+loss.keptGold+'）');
   $('deathInfo').textContent=DEATH_RULES[state.living.deathMode].name+'惩罚 · 你在复苏点醒来，时间前进 '+rules.wait+' 小时。'+
-    (bag?'遗物已标记在海图上，剩余 '+Math.ceil((bag.expires-state.time)/DAY)+' 天。':'本次没有掉落材料。');
+    (lossParts.length?lossParts.join('，')+'。':'本次没有掉落物资。')+
+    (bag?'遗落包已标记在海图上，剩余 '+Math.ceil((bag.expires-state.time)/DAY)+' 天。':'');
+  }finally{collapsingNow=false;}
 }
 
 function pickRecovery(bag){
   if(!state.living.recovery.includes(bag)||bag.expires<=state.time||state.cave||state.boarding||boat()||dist(bag,state.player)>REACH)return;
-  let moved=0;
-  for(const [k,n] of Object.entries(bag.contents)){
+  let moved=0,gotGold=0;
+  if((bag.gold||0)>0){
+    gotGold=Math.max(0,Math.floor(bag.gold));
+    bag.gold=0;
+    if(gotGold>0){state.v173.gold=(state.v173.gold||0)+gotGold;syncGoldHud();}
+  }
+  for(const [k,n] of Object.entries(bag.contents||{})){
     let count=0;
     while(count<n&&roomFor(k)){addItem(k);count++;}
     moved+=count;
     if(count===n)delete bag.contents[k];else bag.contents[k]-=count;
   }
   pruneRecovery();renderHotbar();save();
-  toast(moved?'取回 '+moved+' 件材料。':'背包没有可用空间。');
+  if(moved||gotGold){
+    const parts=[];
+    if(moved)parts.push(moved+' 件物资');
+    if(gotGold)parts.push(gotGold+' 金币');
+    toast('已从遗落包取回 '+parts.join('、')+'。');
+  }else{
+    toast('背包没有可用空间。');
+  }
 }
 
 function drawRecovery(e){
@@ -13290,7 +13393,7 @@ function drawRecoveryMap(g,sx,sy){
   }
 }
 
-Object.assign(entityNames,{livingWatch:'港口守卫',townProject:'聚落工地',recoveryBag:'遗物包'});
+Object.assign(entityNames,{livingWatch:'港口守卫',townProject:'聚落工地',recoveryBag:'遗落包'});
 
 let livingTab='ports';
 const LIVING_TABS={ports:'聚落',routes:'商路',people:'居民',society:'势力',incidents:'局势',history:'记录'};
@@ -13380,7 +13483,9 @@ function drawLivingMap(g,sx,sy,labels){
 function showLivingChartInfo(q,node,tolerance){
   const cache=state.living.recovery.filter(b=>b.expires>state.time).sort((a,b)=>dist(a,q)-dist(b,q))[0];
   if(cache&&dist(cache,q)<=Math.min(90,tolerance)){
-    node.innerHTML='<article class="entry map-help"><strong>遗物包</strong><p>'+Object.entries(cache.contents).map(([k,n])=>items[k][0]+' ×'+n).join(' · ')+'</p><p>保留至 '+calendarStamp(cache.expires)+'。</p></article>';
+    const parts=Object.entries(cache.contents||{}).filter(([k,n])=>Object.hasOwn(items,k)&&n>0).map(([k,n])=>items[k][0]+' ×'+n);
+    if((cache.gold||0)>0)parts.push('金币 ×'+cache.gold);
+    node.innerHTML='<article class="entry map-help"><strong>遗落包</strong><p>'+(parts.join(' · ')||'空')+'</p><p>保留至 '+calendarStamp(cache.expires)+'。</p></article>';
     return true;
   }
   if(showIncidentMarker(q,node,tolerance))return true;
@@ -24732,7 +24837,7 @@ function bagGrid(){
       (canDropCarried(k)?uiBtn('invDropMenu',k,'丢弃…'):'')+'</div>');
     if(inventoryDrop&&canDropCarried(k)){
       detail+=`<div class="inv-drop" role="group" aria-label="丢弃 ${escapeHtml(items[k][0])}">
-        <strong>丢弃到脚边</strong><div class="inventory-actions">
+        <strong>丢弃到脚边（地面物资 1 天内消失）</strong><div class="inventory-actions">
         ${uiBtn('dropItem',k,'丢弃 1 个')}${uiBtn('dropItem',k,'丢弃全部',false,false,'data-stack="true"')}${uiBtn('invDropCancel','','取消')}</div></div>`;
     }
   }else if(gear){
@@ -24745,8 +24850,8 @@ function bagGrid(){
   const footer=`<div class="inv-toolbar v20-menugrid">
     ${v20MenuGroup('背包',uiBtn('tidyInventory','','按类整理')+uiBtn('forgeDeposit','','快存材料',!forgeDepositBox()))}${v20MenuGroup('角色与工匠',uiBtn('wardrobeOpen','','换装')+uiBtn('forgeGuide','','行囊与图纸'))}
     ${ship||trap?v20MenuGroup('船只与渔具',(shipAtDock()?uiBtn('shipyard','','船只改装'):'')+(ship?uiBtn('openCargo','','打开货舱')+uiBtn('navalStatus','','船况与维修'):'')+(trap?uiBtn('inspectFloat','','检查鱼篓'):'')):''}</div>`+renderV195cBagUpgradeHint();
-  const names=FORGE_BAGS;
-  renderInvWindow(names[state.packTier]+' · '+usedSlots(state.bag)+'/'+packSize()+' 格',
+  const names=FORGE_BAGS,usedBag=usedSlots(state.bag),capBag=packSize(),remBag=Math.max(0,capBag-usedBag);
+  renderInvWindow(names[state.packTier]+' · '+usedBag+'/'+capBag+' 格（剩 '+remBag+' 格）',
     footer+v201BagTools()+forgeSummary()+invShell([invGroup('装备',forgeGearCells.slice(1),'gear-grid'),invGroup('持具',forgeGearCells.slice(0,1)),bag],detail));
   v201BindBag();
 }
@@ -24777,7 +24882,7 @@ function storageGrid(keepScroll){
   const toolbar=`${renderUpgradeCard(chest)}<div class="inv-toolbar inventory-actions">${tools}${uiBtn('tidyInventory','','按类整理')}
     ${uiBtn('chestDeposit','','选择存入模式',false,!withdrawing)}${uiBtn('chestWithdraw','','选择取出模式',false,withdrawing)}
     ${uiBtn('stockBulk','all','快速'+(withdrawing?'取出':'存入'))}</div>
-    <p class="cards-help">背包 ${usedSlots(state.bag)}/${packSize()} 格 · 单击查看详情，<strong>双击物品格可快速存入／取出</strong>。${escapeHtml(storageDescription(chest.type,chest))}${note}</p>`;
+    <p class="cards-help">背包 ${usedSlots(state.bag)}/${packSize()} 格（剩 ${Math.max(0,packSize()-usedSlots(state.bag))} 格） · 单击查看详情，<strong>双击物品格可快速存入／取出</strong>。${escapeHtml(storageDescription(chest.type,chest))}${note}</p>`;
   const bag=invPackGroup('随身背包',state.bag,packSize(),'transfer',k=>({wear:state.wear[k],style:freshClass(k,state.lots[k])||''}));
   const width=stockLimit(chest);
   const storage=invPackGroup('容器库存',chest.stock,width,'cargo',k=>{
@@ -24785,7 +24890,9 @@ function storageGrid(keepScroll){
     return {wear:row.wear,style:freshClass(k,row.lots)||''};
   });
   const groups=withdrawing?[storage,bag]:[bag,storage];
-  renderInvWindow(items[chest.type][0]+(isBoat(chest)?'货舱':'')+' · '+stockSlots(chest)+'/'+width+' 格',toolbar+invShell(groups,detail),keepScroll);
+  const usedBox=stockSlots(chest),remBox=Math.max(0,width-usedBox);
+  const boxTitle=chest.type==='chest'&&(chest.upgradeLv||1)>1&&BUILDING_UPGRADES.chest[(chest.upgradeLv||1)-1]?.name||items[chest.type][0];
+  renderInvWindow(boxTitle+(isBoat(chest)?'货舱':'')+' · '+usedBox+'/'+width+' 格（剩 '+remBox+' 格）',toolbar+invShell(groups,detail),keepScroll);
 }
 function recipeGrid(){
   const list=filteredRecipes(),box=$('recipeList');
@@ -25592,57 +25699,91 @@ function displayControls(){
     uiBtn('screenMode',key,title,orientationBusy,displayMode(gameSettings().displayMode)===key,
       'aria-pressed="'+(displayMode(gameSettings().displayMode)===key)+'"')).join('')+'</div></section>';
 }
+function waitFullscreenState(want,timeout=800){
+  return new Promise(resolve=>{
+    const start=performance.now();
+    const check=()=>{
+      const on=!!fullscreenNode();
+      if(on===want||performance.now()-start>=timeout){resolve(on);return;}
+      setTimeout(check,50);
+    };
+    check();
+  });
+}
 function verifyOrientation(target){
   return new Promise(resolve=>{
     const start=performance.now();
     const check=()=>{
-      const actual=layoutAxis();
-      if(actual===target||!fullscreenNode()||performance.now()-start>=1600){resolve(actual===target&&!!fullscreenNode());return;}
+      const actual=layoutAxis(),apiType=orientationApi()?.type||'';
+      if(actual===target||apiType.startsWith(target)){resize();resolve(true);return;}
+      if(performance.now()-start>=2000){resolve(false);return;}
       setTimeout(check,70);
     };
     check();
   });
+}
+async function tryLockOrientation(mode){
+  const api=orientationApi();
+  if(typeof api?.lock==='function'){
+    try{await api.lock(mode);return true;}
+    catch(firstErr){
+      try{await api.lock(mode+'-primary');return true;}
+      catch{throw firstErr;}
+    }
+  }
+  const legacy=window.screen?.lockOrientation||window.screen?.mozLockOrientation||window.screen?.msLockOrientation;
+  if(typeof legacy==='function'){
+    if(legacy.call(window.screen,mode)||legacy.call(window.screen,mode+'-primary'))return true;
+  }
+  return false;
 }
 async function requestDisplayMode(mode){
   if(orientationBusy||!Object.hasOwn(DISPLAY_MODES,mode))return;
   const api=orientationApi(),root=document.documentElement;
   saveSettings({displayMode:mode});stopInput();
   orientationBusy=true;orientationTarget=mode;orientationNote='正在请求屏幕方向。';syncDisplayStatus();
-  let stage='fullscreen';
+  let stage='fullscreen',fsErr=null;
   try{
     if(mode==='auto'){
-      api?.unlock?.();
+      try{api?.unlock?.();}catch{}
+      if(fullscreenNode()){
+        const exit=document.exitFullscreen||document.webkitExitFullscreen;
+        if(typeof exit==='function'){try{await exit.call(document);}catch{}}
+      }
       orientationNote='已恢复跟随设备，布局会随实际视口变化。';
       return;
     }
-    if(typeof api?.lock!=='function'){
-      orientationNote='此浏览器或预览器不支持方向锁定。请开启系统自动旋转后转动设备。';
-      return;
-    }
+    const canLock=typeof api?.lock==='function'||typeof (window.screen?.lockOrientation||window.screen?.mozLockOrientation||window.screen?.msLockOrientation)==='function';
     if(!fullscreenNode()){
       const request=root.requestFullscreen||root.webkitRequestFullscreen;
-      if(typeof request!=='function'||document.fullscreenEnabled===false){
-        orientationNote='此页面无法请求全屏。请用浏览器打开页面，或开启系统自动旋转后转动设备。';
-        return;
+      if(typeof request==='function'&&document.fullscreenEnabled!==false){
+        try{
+          const ret=root.requestFullscreen?root.requestFullscreen({navigationUI:'hide'}).catch(()=>request.call(root)):request.call(root);
+          if(ret&&typeof ret.then==='function')await ret;
+          await waitFullscreenState(true,800);
+        }catch(e){fsErr=e;}
       }
-      await request.call(root);
-      if(!fullscreenNode())throw new Error('Fullscreen unavailable');
+    }
+    if(!canLock){
+      orientationNote=fullscreenNode()?'已进入全屏，但此浏览器不支持脚本锁定方向。请开启系统自动旋转后横置手机。':'此浏览器或预览器不支持方向锁定。请开启系统自动旋转后横置设备。';
+      return;
     }
     stage='lock';
-    await api.lock(mode);
+    await tryLockOrientation(mode);
     stage='viewport';
     if(await verifyOrientation(mode)){
       orientationNote='实际视口已切换为'+orientationLabels[mode]+'。';
     }else{
-      api.unlock?.();
+      try{api?.unlock?.();}catch{}
       orientationNote='浏览器接受了请求，但实际视口未切换。请确认系统允许自动旋转后再转动设备。';
     }
   }catch(error){
     if(stage!=='fullscreen'){
       try{api?.unlock?.();}catch{}
     }
+    const errObj=error||fsErr;
     orientationNote=(stage==='fullscreen'?'浏览器未允许进入全屏':stage==='lock'?'浏览器未允许锁定'+orientationLabels[mode]:'实际视口未能确认切换')+
-      (error?.name&&error.name!=='Error'?'（'+error.name+'）':'')+'。请开启系统自动旋转后转动设备。';
+      (errObj?.name&&errObj.name!=='Error'?'（'+errObj.name+'）':'')+'。请开启系统自动旋转后转动设备。';
   }finally{
     orientationBusy=false;orientationTarget=null;queueViewportResize();syncDisplayStatus();
   }
@@ -25720,7 +25861,7 @@ function cancelCharacterCreation(){
 }
 function mobileInterfaceAction(act,value){
   if(act==='screenMode'){
-    if(['settings','fullSettings'].includes(mapMode)&&settingsTab==='graphics')void requestDisplayMode(value);
+    if(['settings','fullSettings'].includes(mapMode)&&(v202aSettingsTab==='display'||settingsTab==='graphics'))void requestDisplayMode(value);
     return true;
   }
   if(act==='wardrobeType'){
@@ -27431,8 +27572,8 @@ const BUILDING_UPGRADES={
   ],
   chest:[
     null,
-    {name:'加固营地箱',cost:{plank:4,iron:2},effect:'提升储物容量和家园舒适度'},
-    {name:'铁箍大木箱',cost:{sealedPlank:4,steel:1,metalFitting:2},effect:'提升储物容量'}
+    {name:'加固营地箱',cost:{plank:4,iron:2},effect:`容量 ${CHEST_SLOTS} → ${CHEST_SLOTS+4} 格 · 提升家园舒适度`},
+    {name:'铁箍大木箱',cost:{sealedPlank:4,steel:1,metalFitting:2},effect:`容量 ${CHEST_SLOTS+4} → ${CHEST_SLOTS+8} 格`}
   ],
   woodenCabinet:[
     null,
@@ -27527,7 +27668,11 @@ function renderComfortBar(b){
 function renderUpgradeCard(b){
   if(!b||!BUILDING_UPGRADES[b.type])return '';
   const tiers=BUILDING_UPGRADES[b.type],lv=b.upgradeLv||1,next=tiers[lv];
-  if(!next)return `<div class="v193-bar"><strong>${items[b.type]?.[0]||b.type} · 已达最高级 (Lv.${lv})</strong></div>`;
+  if(!next){
+    const tierName=(lv>1&&tiers[lv-1]?.name)||items[b.type]?.[0]||b.type;
+    const capNote=['chest','woodenCabinet'].includes(b.type)?` · 当前容量 ${stockLimit(b)} 格`:'';
+    return `<div class="v193-bar"><strong>${tierName} · 已达最高级 (Lv.${lv})${capNote}</strong></div>`;
+  }
   const ok=hasIngredients(next.cost);
   const req=Object.entries(next.cost).map(([k,n])=>`${items[k]?.[0]||k} ${amount(k)}/${n}`).join(' · ');
   return `<article class="entry" style="margin-bottom:8px"><strong>建筑升级 → Lv.${lv+1} ${next.name}</strong><p>${escapeHtml(upgradeEffect(b,lv,next.effect))}</p><p class="req">材料：${req}</p><button class="press primary" data-act="v193UpgradeBuild" data-val="${b.id}" ${ok?'':'disabled'}>${ok?'立即升级':'材料不足'}</button></article>`;
@@ -27939,11 +28084,13 @@ function handleV193Action(act,val){
     if(!b||!BUILDING_UPGRADES[b.type])return true;
     const lv=b.upgradeLv||1,next=BUILDING_UPGRADES[b.type][lv];
     if(!next||!hasIngredients(next.cost))return true;
+    const beforeCap=['chest','woodenCabinet'].includes(b.type)?stockLimit(b):0;
     for(const [k,n] of Object.entries(next.cost))take(k,n);
     b.upgradeLv=lv+1;
+    const afterCap=['chest','woodenCabinet'].includes(b.type)?stockLimit(b):0;
     if(['chest','woodenCabinet'].includes(b.type))v201Guide('B05');
     beep(700,.18);makeParticles(b.x,b.y,'#ffe496',14);
-    toast(`✨ ${items[b.type]?.[0]||b.type}已升级为 Lv.${b.upgradeLv} ${next.name}！`,3.5);
+    toast(`✨ ${items[b.type]?.[0]||b.type}已升级为 Lv.${b.upgradeLv} ${next.name}${afterCap?`（容量 ${beforeCap} → ${afterCap} 格）`:''}！`,3.5);
     renderHotbar();save();
     if(mapMode==='bed')renderBed();
     else if(mapMode==='chest')renderChest(true);
@@ -29076,7 +29223,7 @@ function tickV194cFleets(dt, ship){
     }
 
     const detect=mistPirateDanger(p)?(ship&&ship.hp<ship.maxHp*.55?530:495):475;
-    const peaceful = fl.peaceUntil > state.time || isFerryPassenger() || !ship || miaPirateProtection(ship) || seaShelter(p);
+    const peaceful = fl.peaceUntil > state.time || isFerryPassenger() || !ship || miaPirateProtection(ship) || seaShelter(p) || pirateCoastGuard(p);
     const heavyLoss = members.length <= Math.max(1, Math.floor(fl.size * 0.4));
     const flagCritical = !flag || flag.hp < flag.maxHp * 0.32;
 
@@ -29125,7 +29272,7 @@ function tickFleetVesselAI(v, dt, ship){
   if(v.fleetRole==='pursuer'&&['chase','engage'].includes(fl.state)&&mistPirateDanger(p))spd*=1.09;
   v.fullSpeed=false;
 
-  const canFight = ship && !miaPirateProtection(ship) && !seaShelter(p) && !isFerryPassenger() && fl.peaceUntil<=state.time;
+  const canFight = ship && !miaPirateProtection(ship) && !seaShelter(p) && !pirateCoastGuard(p) && !isFerryPassenger() && fl.peaceUntil<=state.time;
 
   if(fl.state==='retreat' || v.hp<v.maxHp*.24){
     desiredAng = Math.atan2(v.y-p.y, v.x-p.x);
@@ -30306,7 +30453,7 @@ function renderV195bToolUpgradeHtml(){
 function renderV195bHomeUpgradesPanel(){
   const u = state.v195b.homeUpgrades;
   const defs = [
-    {k:'storage', name:'营地仓储扩容', max:3, prices:[80,180,320], desc:'所有自有陆地箱子/货箱容量 +4 格/级'},
+    {k:'storage', name:'营地仓储扩容', max:3, prices:[80,180,320], desc:`所有自有陆地箱子/货箱容量 +4 格/级（当前营地箱：普通 ${stockLimit({type:'chest',upgradeLv:1})} / 加固 ${stockLimit({type:'chest',upgradeLv:2})} / 铁箍 ${stockLimit({type:'chest',upgradeLv:3})} 格）`},
     {k:'comfort', name:'居所舒适改良', max:2, prices:[60,150], desc:'床铺休息额外恢复体力与心神'},
     {k:'workshop', name:'工坊便利工具架', max:2, prices:[90,210], desc:'提升制作与营地维护效率'}
   ];
@@ -30996,7 +31143,7 @@ function drawV195bMapOverlay(g,sx,sy,labels){
 // 3. NPC 主动邀请系统（黄色 !、靠近搭话气泡、一起去/稍后/不去、冷却、设置开关）
 // 4. 真实共同活动（伐木/采矿/耕作/钓鱼/狩猎/出海/遗迹）与战利品真实分成
 // 5. 守信、违约、救援、NPC 记忆、对话气泡与社交传闻传播
-// 6. 36 格大型旅行背包（废弃矿都二层固定图纸箱）与全游戏图纸来源审计
+// 6. 大师远征背包（废弃矿都二层固定图纸箱）与全游戏图纸来源审计
 // =========================================================================
 
 ITEM_ART.set('largeTravelBag',['bag',ART_COLORS.gold,2]);
@@ -31006,7 +31153,7 @@ const V195C_BLUEPRINT_AUDIT = [
   { key:'mineLamp', name:'矿灯', flag:'mineLamp', loc:'黑岩矿岛·矿道深处「矿厅藏宝箱」（引石怪撞开落石或击败石怪后开启）' },
   { key:'mistArmor', name:'雾潮甲', flag:'armorPlan', loc:'暮潮岛·海蚀洞深处「暮潮藏匣」（击败雾潮守卫后开启），或灯塔湾领航员阿沫交换' },
   { key:'flagship', name:'双桅探索船龙骨', flag:'keel', loc:'灯塔湾船坞找修船匠铁山领取（完成主线信号塔或开启暮潮藏匣后）' },
-  { key:'largeTravelBag', name:'大师远征背包（42格）', flag:'largeTravelBagPlan', loc:'废弃矿都遗迹·第二层（深层矿库）·工匠储物室遗物箱（固定必得）' }
+  { key:'largeTravelBag', name:`大师远征背包（${PACK_CAPACITIES[3]}格）`, flag:'largeTravelBagPlan', loc:'废弃矿都遗迹·第二层（深层矿库）·工匠储物室遗物箱（固定必得）' }
 ];
 
 const V195C_HOUSES = [
@@ -36941,7 +37088,7 @@ function forgeSubmitBlock(k){
   const spec=FORGE_CONTRACTS[k];if(!spec)return '此工单不存在';
   if(state.forging.orders.some(o=>o.key===k&&!o.claimed))return '此工单尚未领取';
   if(state.forging.orders.filter(o=>!o.claimed).length>=8)return '待领取工单已达 8 份';
-  if(k==='largeTravelBag'&&state.packTier!==2)return state.packTier===3?'已拥有 42 格背包':'先升级至 35 格';
+  if(k==='largeTravelBag'&&state.packTier!==2)return state.packTier===3?`已拥有 ${PACK_CAPACITIES[3]} 格背包`:`先升级至 ${PACK_CAPACITIES[2]} 格`;
   if(k!=='largeTravelBag'&&forgeOwns(k))return '已携带或装备同类成品';
   if(spec[4]&&!forgeHasPlan(spec[4]))return '未登记图纸';
   if(!forgeAccess(spec[0]))return '请在工匠营业时到店';
@@ -36973,7 +37120,7 @@ function forgeClaim(id){
   }
   if(k==='largeTravelBag')v20FoundItem(k);
   order.claimed=true;order.notified=true;
-  toast(k==='largeTravelBag'?'大师远征背包已装上 · 42 格':'已领取'+items[k][0]);beep(620,.14);return true;
+  toast(k==='largeTravelBag'?`大师远征背包已装上 · 最大容量 ${PACK_CAPACITIES[3]} 格`:'已领取'+items[k][0]);beep(620,.14);return true;
 }
 function settleForgeOrders(hour){
   for(const order of state.forging.orders){
@@ -37049,7 +37196,7 @@ function forgeBook(){
 }
 function forgeBagHelp(){
   const tier=state.packTier;
-  if(tier===3)return '<p class="cards-help">大师远征背包 · 42 格</p>';
+  if(tier===3)return `<p class="cards-help">大师远征背包 · 最大容量 ${PACK_CAPACITIES[3]} 格</p>`;
   const next=['wovenBag','hideBag','largeTravelBag'][tier],cost=[FORGE_BAG2,FORGE_BAG3,FORGE_CONTRACTS.largeTravelBag[1]][tier];
   const site=['工作台','锻造与工艺台',forgeWorkerName.tailor+' · 100 金 · 1.5 游戏日'][tier];
   const blueprint=tier?' · 图纸'+(forgeHasPlan(next)?'已登记':'未登记'):'';
@@ -37070,7 +37217,7 @@ function renderForgePanel(){
       '<h3>可委托项目</h3><div class="grid">'+Object.entries(FORGE_CONTRACTS).map(([k,[w,cost,fee,days,plan]])=>{
         const block=forgeSubmitBlock(k);
         return '<article class="entry"><strong>'+itemIcon(k)+items[k][0]+'</strong><p>'+forgeWorkerName[w]+' · '+commercialPrice(fee)+' 金 · '+days+' 游戏日</p>'+
-          (FORGE_ARMOR[k]?'<p>'+forgeGearLabel(k)+'</p>':k==='largeTravelBag'?'<p>交付后把 35 格升级至 42 格。</p>':'<p>'+itemStats(k)+'</p>')+
+          (FORGE_ARMOR[k]?'<p>'+forgeGearLabel(k)+'</p>':k==='largeTravelBag'?`<p>交付后将背包从 ${PACK_CAPACITIES[2]} 格升级至最大 ${PACK_CAPACITIES[3]} 格。</p>`:'<p>'+itemStats(k)+'</p>')+
           '<p>'+materialButtons(cost)+'</p>'+(plan?'<p>'+(forgeHasPlan(plan)?'图纸已登记':'图纸未登记 · '+FORGE_PLANS[plan][3])+'</p>':'')+
           uiBtn('forgeSubmit',k,block||'提交工单',!!block,true)+'</article>';
       }).join('')+'</div>';
@@ -37163,9 +37310,9 @@ function installInventoryForge(){
   for(const k of Object.keys({...FORGE_ARMOR,...FORGE_SHIELDS}))itemDetails[k]=forgeGearLabel(k);
   const first=WORKSHOP_RECIPES.get('wovenBag'),mid=WORKSHOP_RECIPES.get('hideBag'),top=WORKSHOP_RECIPES.get('largeTravelBag');
   items.wovenBag[0]=FORGE_BAGS[1];items.hideBag[0]=FORGE_BAGS[2];items.largeTravelBag[0]=FORGE_BAGS[3];
-  [first[2],first[3],first[4]]=[FORGE_BAG2,'在普通工作台将容量升级至 28 格。','bench'];
-  [mid[2],mid[3],mid[4]]=[FORGE_BAG3,'先在翡翠岛取得图纸，再到锻造与工艺台升级至 35 格。','forge'];
-  [top[2],top[3],top[4]]=[FORGE_CONTRACTS.largeTravelBag[1],'由灯塔湾晴日裁缝铺定制。工费 100 金，需 1.5 游戏日和图纸。','forge'];
+  [first[2],first[3],first[4]]=[FORGE_BAG2,`在普通工作台将背包容量从 ${PACK_CAPACITIES[0]} 格升级至 ${PACK_CAPACITIES[1]} 格。`,'bench'];
+  [mid[2],mid[3],mid[4]]=[FORGE_BAG3,`先在翡翠岛取得图纸，再到锻造与工艺台将背包容量从 ${PACK_CAPACITIES[1]} 格升级至 ${PACK_CAPACITIES[2]} 格。`,'forge'];
+  [top[2],top[3],top[4]]=[FORGE_CONTRACTS.largeTravelBag[1],`由灯塔湾晴日裁缝铺定制，将背包容量从 ${PACK_CAPACITIES[2]} 格升级至最大 ${PACK_CAPACITIES[3]} 格。工费 100 金，需 1.5 游戏日和图纸。`,'forge'];
   for(const r of [first,mid,top])CRAFT_SEARCH.set(r,recipeSearchText(r));
   for(const [k,cost,station] of FORGE_RECIPES){
     const r=[k,'tools',cost,itemStats(k),station];recipes.push(r);WORKSHOP_RECIPES.set(k,r);CRAFT_SEARCH.set(r,recipeSearchText(r));
@@ -38169,7 +38316,7 @@ const V201_GUIDES={
   V06:['生存',0,false,'已积累一批采集资源。可先留出维修和建造材料，再处理多余的库存。'],
   V07:['生存',4,true,'⚠ 当前风暴会影响海面或露天活动。留意状态提示，必要时先靠岸或到遮蔽处等候。'],
   V08:['生存',0,false,'天黑后仍离营地较远。备好照明、食物和淡水，记下返程路线。'],
-  B01:['建造',0,true,'普通木箱有 '+CHEST_SLOTS+' 格基础容量。靠近后交互可存取物品。'],
+  B01:['建造',0,true,`普通营地箱有 ${CHEST_SLOTS} 格基础容量（可升级为加固营地箱 ${CHEST_SLOTS+4} 格、铁箍大木箱 ${CHEST_SLOTS+8} 格）。靠近后交互可存取物品。`],
   B02:['建造',0,false,'冰箱有冷量时可延缓食物变质。在库存界面可添加冰晶补充冷量。'],
   B03:['建造',0,true,'可点选单件或整组存取。按类整理会集中显示相同物品；快速存入会跳过装备和快捷栏物品。'],
   B04:['建造',0,true,'仓储的格子已占满。同类堆叠如有余量仍可存入。也可整理、清出空间或使用其他仓储。'],
@@ -38696,12 +38843,15 @@ function estateStorageSlots(id){return id==='manor'?42:32;}
 function storageDescription(k,b=null){
   const base=storageBaseSlots(b?{...b,mods:null}:{type:k});
   if(base===undefined)return '';
-  if(b)return '基础 '+base+' 格 · 当前 '+stockLimit(b)+' 格 · 同类物品可依堆叠规则合用一格。';
+  if(b){
+    const total=stockLimit(b),homeBonus=!isBoat(b)&&(state?.v195b?.homeUpgrades?.storage||0)*4;
+    return '基础 '+base+' 格 · 当前实际 '+total+' 格'+(homeBonus?'（含家园仓储扩容 +'+homeBonus+' 格）':'')+' · 同类物品可依堆叠规则合用一格。';
+  }
   if(isBoat({type:k})){
     const expanded=storageBaseSlots({type:k,mods:{cargoHold:true}});
     return '基础货舱 '+base+' 格'+(expanded>base?' · 安装扩容件后 '+expanded+' 格':'')+'。';
   }
-  const upgrade=['chest','woodenCabinet'].includes(k)?' · 可在现有建筑升级中扩容':'';
+  const upgrade=k==='chest'?` · 可升级为加固营地箱（${base+4} 格）与铁箍大木箱（${base+8} 格）`:k==='woodenCabinet'?` · 可升级至 ${base+4} / ${base+8} 格`:'';
   return '基础容量 '+base+' 格'+upgrade+'。可堆叠物品按组占格。';
 }
 function gameTimeLabel(t){
@@ -43316,7 +43466,7 @@ renderSettingsPanel = function(tabName){
     body = `<div class="set-group">
       <div class="set-item"><label><span>引导强度</span><small>${V201_GUIDE_INTENSITIES[currentGuideIntensity()].desc}</small></label><div class="inventory-actions">${Object.entries(V201_GUIDE_INTENSITIES).map(([k,d])=>`<button class="press ${currentGuideIntensity()===k?'primary':''}" data-act="setGuideIntensity" data-val="${k}">${d.label}</button>`).join('')}</div></div>
       <div class="set-item"><label><span>游戏难度</span><small>敌人强度、饥渴速度与资源再生</small></label><div class="inventory-actions">${[['casual','休闲'],['standard','标准'],['hard','困难']].map(([k,n])=>`<button class="press ${s.difficulty===k?'primary':''}" data-act="setOpt" data-val="difficulty:${k}">${n}</button>`).join('')}</div></div>
-      <div class="set-item"><label><span>死亡惩罚</span><small>轻度保留 · 标准掉 20% · 严酷掉 40%</small></label><div class="inventory-actions">${Object.entries(DEATH_RULES).map(([k,r])=>`<button class="press ${mode===k?'primary':''}" data-act="deathMode" data-val="${k}">${r.name}</button>`).join('')}</div></div>
+      <div class="set-item"><label><span>死亡惩罚</span><small>${deathPenaltyDesc(true)}</small></label><div class="inventory-actions">${Object.entries(DEATH_RULES).map(([k,r])=>`<button class="press ${mode===k?'primary':''}" data-act="deathMode" data-val="${k}">${r.name}</button>`).join('')}</div></div>
       <div class="set-item"><label><span>伤害数字</span><small>命中时显示浮动伤害</small></label><button class="press" data-act="toggleBool" data-val="dmgNumbers">${s.dmgNumbers?'开启':'关闭'}</button></div>
       <details class="v202a-fold"><summary>更多游戏与辅助选项</summary><div class="v202a-fold-body">
         <div class="set-item"><label><span>NPC 主动邀请弹窗</span><small>关闭后仍可手动点击头顶感叹号</small></label><button class="press" data-act="toggleBool" data-val="npcInvitePopup">${s.npcInvitePopup!==false?'开启':'关闭'}</button></div>
@@ -43371,7 +43521,7 @@ renderSettingsPanel = function(tabName){
       <div class="set-item"><label><span>删除当前存档</span><small>不可撤销，需二次确认</small></label><button class="press danger" data-act="restart">删除并重开</button></div>
     </div>`;
   }
-  $('window').innerHTML = panelFrame('设置（V2.0.2c）', `${tabsHtml}<div class="inside">${body}</div>`);
+  $('window').innerHTML = panelFrame('设置（V2.0.3）', `${tabsHtml}<div class="inside">${body}</div>`);
   const bindRange = (id, valId, key) => {
     const el = $(id); if(!el) return;
     el.addEventListener('input', e => {
