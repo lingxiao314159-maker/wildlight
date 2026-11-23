@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-3UT7ydzp9R+yvRIL1LWR2lzJJlAYBl6oznQjh/UTlYw='; style-src 'unsafe-inline'; img-src data: blob:; base-uri 'none'; object-src 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-v5M20Q3aCilw+2Ik82TrlLAa6Hm83pMsB/nWzyW3oOI='; style-src 'unsafe-inline'; img-src data: blob:; base-uri 'none'; object-src 'none'; form-action 'none'">
 <meta name="theme-color" content="#0d2224">
 <title>荒野微光 V2.0.1f · 分级任务引导</title>
 <meta name="description" content="《荒野微光》V2.0.1f《分级任务引导》。深化完整引导、轻量提示、自由探索三档与全部任务系统的联动，实现目标描述、下一步线索、NPC位置、材料需求、海图标记、卡关帮助与解谜提示的真实分级体验。">
@@ -1066,7 +1066,7 @@ Object.assign(shelfLife,{root:540,bakedRoot:270,egg:330,milk:130,chickenMeat:115
 Object.assign(shelfLife,{cactusFruit:360,dryRoot:590,honey:1250,orchardFruit:350,mussel:115,jam:1440,honeyRoot:810,musselSoup:170});
 Object.assign(shelfLife,{oyster:160,duckEgg:360,oysterRoast:245,duckOmelet:280,silverFruit:560});
 const entityNames = {tree:'树木',pine:'霜松',palm:'椰树',rock:'石堆',bush:'浆果丛',vein:'铁矿脉',cache:'遗迹',beacon:'信号塔',wolf:'野狼',boar:'野猪',wisp:'夜影'};
-const objectHp = {tree:4,pine:4,palm:4,wildCherry:4,rock:4,bush:1,vein:6,cache:1,beacon:1,wolf:9,boar:7,wisp:5};
+const objectHp = {tree:4,pine:4,palm:4,wildCherry:4,cherrySapling:4,rock:4,bush:1,vein:6,cache:1,beacon:1,wolf:9,boar:7,wisp:5};
 Object.assign(entityNames,{copperOre:'铜矿脉',clay:'黏土',salt:'盐池',wreck:'沉船船舱',locker:'上锁货柜',rubble:'硬岩侧路',reserve:'灰烬密室',rabbit:'野兔',crab:'礁蟹',pile:'地上物品'});
 Object.assign(objectHp,{copperOre:5,clay:2,salt:1,rabbit:2,crab:2});
 Object.assign(entityNames,{spring:'淡水泉',herbPatch:'草药',roots:'野生块根',chicken:'野鸡',goat:'野山羊',golem:'灰烬石怪',shellCrab:'铁壳礁蟹',mineEntry:'废矿道入口',mineRidge:'北侧旧井',caveExit:'出口',caveSeam:'开裂岩壁',caveSeal:'落石封口',treasure:'藏宝点',driftBox:'漂流货箱',crystals:'晶石矿',mineChest:'矿厅藏宝箱',lanternStand:'挂灯台座'});
@@ -1513,6 +1513,7 @@ function prepareSave(s){
   }
   for(const b of s.builds){
     if(FARM_CROPS[b.type])hydrateFarm(b,s);
+    if(b.type==='cherrySapling'){b.maxHp=4;if(!(b.hp>0)||b.hp>4)b.hp=4;}
     if(b.type==='fire'){b.fuel??=180;b.ash??=0;}
     if(b.type==='barrel')b.water??=0;
     if(b.type==='trough'){b.feed??=0;b.flock??={chicken:0,goat:0};b.flock.sheep??=0;b.flock.cow??=0;b.produce??={egg:0,milk:0};b.work??=0;b.birth??={chicken:0,goat:0};b.birth.sheep??=0;b.shearAt??=0;}
@@ -2092,7 +2093,7 @@ function place(k,farmPoint=null){
   if(!movingBuild&&!packed){
     if(isStock(b))b.stock={};
     if(FARM_CROPS[k]){farmPlant(b);if(!farmPoint)ruralCue('plant');}
-    else if(planted.includes(k)){b.readyAt=state.elapsed+DAY;if(k==='cherrySapling')b.hp=4;}
+    else if(planted.includes(k)){b.readyAt=state.elapsed+DAY;if(k==='cherrySapling'){b.hp=4;b.maxHp=4;}}
     if([...fishTraps,'crabTrap','oysterBasket'].includes(k))b.readyAt=state.elapsed+(['crabTrap','oysterBasket'].includes(k)?tidePeriod-phaseAt(state.time)+16:62);
     if(k==='lantern'||k==='mineLamp'||k==='glowLantern')b.wear=state.wear[k];
     if(polyFire.includes(k)){b.fuel=k==='fire'?120:90;b.ash=0;}
@@ -2120,13 +2121,14 @@ function place(k,farmPoint=null){
   if(!FARM_CROPS[k])ruralCue('build');toast(defBoat?`${items[k][0]}已下水。交互可登船。`:`已建好${items[k][0]}。`);renderHotbar();updateHud();save();
 }
 const isHarvest = e => !!e&&(['tree','rock','bush','pine','palm','wildCherry','vein','copperOre','clay','salt','roots','herbPatch','crystals','deepOreNode'].includes(e.type)||(e.type==='cherrySapling'&&e.readyAt<=state.elapsed)||Object.hasOwn(frontierNodes,e.type));
-const isAnimal = e => !!e&&(['towerGuard','wolf','boar','wisp','rabbit','crab','chicken','goat','golem','shellCrab','pirateCrew','pirateCaptain','pirateArcher','pirateElite','pirateBoss','strongholdBossMelee','strongholdBossRanged','brownBear','swampCroc','moonStag','desertScorpion','glowJelly','abyssBeetle','caveLurker','drownedSailor','clockworkSentinel','abyssalWarden'].includes(e.type)||Object.hasOwn(frontierLoot,e.type)||Object.hasOwn(FIELD_HERD,e.type));
+const isAnimal = e => !!e&&(['towerGuard','wolf','boar','wisp','rabbit','crab','chicken','goat','golem','shellCrab','pirateCrew','pirateCaptain','pirateArcher','pirateElite','pirateBoss','strongholdBossMelee','strongholdBossRanged','brownBear','swampCroc','moonStag','desertScorpion','glowJelly','abyssBeetle','caveLurker','drownedSailor','clockworkSentinel','abyssalWarden','mistValeWarden'].includes(e.type)||Object.hasOwn(frontierLoot,e.type)||Object.hasOwn(FIELD_HERD,e.type));
 function harvest(e){
   if(!e||e.respawn)return;
   if(e.type==='cherrySapling'){
     if(!state.builds.includes(e)||e.readyAt>state.elapsed)return;
     const k=held(),axe=['axe','ironAxe','fieldAxe'].includes(k),dmg=(axe?(k==='ironAxe'?4:k==='fieldAxe'?3:2):1)+(hasBuff('honeyRoast')&&axe?2:0);
     if(!(e.hp>0)||e.hp>12)e.hp=4;
+    if(e.maxHp!==4)e.maxHp=4;
     cooldown=(k&&dmg>1?.28:.37)*gatherCadence();swing=.20;e.hp-=dmg;face(e);
     ruralCue('chop');makeParticles(e.x,e.y,'#f6b7c8',8);
     if(axe)wear(k);
@@ -4658,21 +4660,20 @@ function drawStructure(e){
 }
 function drawEntity(e){
   ctx.save();ctx.translate(e.x,e.y);
-  if(drawForgeSite(e)||drawIslandCase(e)||drawMistBuilding(e)||drawRouteEntity(e)||drawNamedHuman(e)||drawEstateObject(e)||drawProsperExterior(e)){ctx.restore();return;}
+  if(drawForgeSite(e)||drawIslandCase(e)||drawMistBuilding(e)||drawRouteEntity(e)||drawNamedHuman(e)||drawEstateObject(e)||drawProsperExterior(e)){ctx.restore();drawV172EntityOverlay(e);return;}
   if(e.type==='journeyObject'){drawJourneyObject(e);ctx.restore();return;}
   if(['v196bNpcBoat','v194Ferry'].includes(e.type)&&(e.gone||!v20GuestSea(e))){ctx.restore();return;}
   if(HOME_FURNITURE[e.type]){drawHomeFurniture(e);ctx.restore();return;}
   if(FARM_CROPS[e.type]){drawFarmCrop(e);ctx.restore();return;}
   if(e.type==='ruralObject'){drawRuralObject(e);ctx.restore();return;}
-  if(drawFieldAnimal(e)){ctx.restore();return;}
   drawLivingWork(e);drawRuralNpcWork(e);drawLifeMark(e);
   combatWarning(e);
   if(e.nightRole&&(e.nightState==='alert'||e.nightRole==='elite')){
     ellipse(ctx,0,-25,3,3,e.nightRole==='elite'?'#ffae84':'#efd393');
   }
-  if(drawDungeonEntity(e)){drawFacilityFinish(e);drawCombatStatus(e);ctx.restore();return;}
+  if(drawDungeonEntity(e)){drawFacilityFinish(e);drawCombatStatus(e);ctx.restore();drawV172EntityOverlay(e);return;}
   if(drawDryDock(e)||drawDecor(e)||drawVillagePlace(e)||drawWildSite(e)||drawLivingEntity(e)){ctx.restore();return;}
-  if(drawV196bEntity(e)||drawV196Entity(e)||drawV195dEntity(e)||drawV195cEntity(e)||drawV195bEntity(e)||drawV195Entity(e)||drawV194Entity(e)||drawV193Entity(e)||drawV192Entity(e)||drawVoyageEntity(e)){drawFacilityFinish(e);drawCombatStatus(e);ctx.restore();return;}
+  if(drawV196bEntity(e)||drawV196Entity(e)||drawV195dEntity(e)||drawV195cEntity(e)||drawV195bEntity(e)||drawV195Entity(e)||drawV194Entity(e)||drawV193Entity(e)||drawV192Entity(e)||drawVoyageEntity(e)){drawFacilityFinish(e);drawCombatStatus(e);ctx.restore();drawV172EntityOverlay(e);return;}
   if(['floor','bridge'].includes(e.type)){
     rect(ctx,-16,-16,32,32,e.type==='bridge'?'#80634e':'#b59368');for(let j=-14;j<16;j+=6)rect(ctx,-15,j,30,2,'#e2bd85');
     if(e.type==='bridge'){rect(ctx,-16,-16,4,32,'#5a4e40');rect(ctx,12,-16,4,32,'#5a4e40');}
@@ -5731,7 +5732,7 @@ function crossesBloodMoon(start,end){
 }
 function restoreRaid(){
   const wave=state.raid;if(!wave||wave.day!==gameDay())return;
-  for(const e of wave.enemies)if(e.hp>0)entities.push(obj(e.type,e.x,e.y,e.id,{hp:e.hp,raider:true}));
+  for(const e of wave.enemies)if(e.hp>0){const mHp=e.maxHp||Math.max(e.hp,Math.round((objectHp[e.type]||10)*1.20));entities.push(obj(e.type,e.x,e.y,e.id,{hp:e.hp,maxHp:mHp,raider:true}));}
 }
 function raidTime(dt){
   if(state.raid&&state.raid.day!==gameDay()){
@@ -5743,7 +5744,7 @@ function raidTime(dt){
     const wave={day:gameDay(),x:home.x,y:home.y,home:home.id,enemies:[]};
     for(let i=0;i<7;i++){
       const q=Array.from({length:7},(_,n)=>point(Math.floor(home.x/T)+Math.round(Math.cos((i+n*.19)*TWO_PI/7)*(5+n%2)),Math.floor(home.y/T)+Math.round(Math.sin((i+n*.19)*TWO_PI/7)*(5+n%2)))).find(p=>canLand(p.x,p.y));
-      if(q){const type=raidTypes[i%3];wave.enemies.push({type,...q,id:'raid:'+wave.day+':'+i,hp:Math.round(objectHp[type]*1.20)});}
+      if(q){const type=raidTypes[i%3],rHp=Math.round(objectHp[type]*1.20);wave.enemies.push({type,...q,id:'raid:'+wave.day+':'+i,hp:rHp,maxHp:rHp});}
     }
     state.raid=wave;state.lastRaid=gameDay();restoreRaid();toast('血月来袭！夜影与群兽正在接近营地。',5);save();
   }
@@ -5884,7 +5885,6 @@ function drawVoyageEntity(e){
 
     polygon(ctx,[[-25,2],[-19,-43],[0,-57],[17,-42],[24,2],[0,-6]],'#788784');
     rect(ctx,-12,-36,25,12,alert&&pulse>.3?'#e7ab77':'#4e6a73');rect(ctx,-6,-17,12,13,'#b8dbc0');
-    rect(ctx,-17,10,34,4,'#293d3d');rect(ctx,-17,10,34*clamp(e.hp/(e.maxHp||objectHp.towerGuard),0,1),4,'#eead8f');
     return true;
   }
   return false;
@@ -10180,26 +10180,30 @@ function onV172Defeat(e){
 }
 
 function drawV172EntityOverlay(e){
-  const maxHp=e.maxHp||objectHp[e.type]||1;
+  if(!e||e.respawn||e.type==='v195bMerc')return;
+  if(e.type==='cherrySapling'&&e.readyAt>state.elapsed)return;
+  const animal=isAnimal(e),boss=isBossEntity(e)||duelIsBoss(e);
+  const harvestable=isHarvest(e)||e.type==='dungeonCrackedWall';
+  const maxHp=e.type==='cherrySapling'?4:(e.maxHp||objectHp[e.type]||1);
   if(e.hitFlash>state.elapsed){
     ellipse(ctx,e.x,e.y-10,16,14,'rgba(255,255,255,0.45)');
   }
-  if(e.combat==='recover'&&combatProfile[e.type]&&!e.respawn){
+  if(e.combat==='recover'&&combatProfile[e.type]){
     ctx.strokeStyle='#ffe47a';ctx.lineWidth=1.8;ctx.beginPath();ctx.arc(e.x,e.y-12,18,0,TWO_PI);ctx.stroke();
   }
-  if(e.elite&&!e.respawn){
+  if(e.elite&&e.eliteTraits?.length){
     const pulse=Math.sin(nowClock*6)*2;
     ctx.strokeStyle='#ff8a6b';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(e.x,e.y+4,20+pulse,10+pulse*.5,0,0,TWO_PI);ctx.stroke();
     ctx.fillStyle='#ffd67a';ctx.font='bold 10px system-ui';ctx.textAlign='center';
     ctx.fillText(`★ ${e.eliteTraits.map(k=>ELITE_TRAITS[k].name).join('·')}`,e.x,e.y-30);
   }
-  if((e.hp<maxHp||e.elite||isBossEntity(e))&&!e.respawn&&isAnimal(e)){
-    const w=e.elite||isBossEntity(e)?32:24;
+  if((animal||boss)&&(e.hp<maxHp||e.elite||boss||e.hunterPrey)){
+    const w=e.elite||boss||e.hunterPrey?34:24;
     rect(ctx,e.x-w/2,e.y+13,w,3.5,'#253533');
-    rect(ctx,e.x-w/2,e.y+13,w*clamp(e.hp/maxHp,0,1),3.5,e.elite?'#ff8668':'#e8ac79');
-  }else if(e.hp<maxHp&&!e.respawn){
+    rect(ctx,e.x-w/2,e.y+13,w*clamp(e.hp/maxHp,0,1),3.5,boss?'#ee8f7b':e.elite||e.hunterPrey?'#ff8668':'#e8ac79');
+  }else if(maxHp>1&&Number.isFinite(e.hp)&&e.hp<maxHp&&(harvestable||fences.includes(e.type)||isBoat(e))){
     rect(ctx,e.x-12,e.y+13,24,3,'#34453f');
-    rect(ctx,e.x-12,e.y+13,24*Math.max(0,e.hp)/maxHp,3,'#e8ac79');
+    rect(ctx,e.x-12,e.y+13,24*clamp(e.hp/maxHp,0,1),3,'#e8ac79');
   }
 }
 
@@ -19010,7 +19014,8 @@ function nightSpawnRoom(region,p){
   return samples;
 }
 function nightActor(rec){
-  const e=obj(rec.type,rec.x,rec.y,rec.id,{hp:rec.hp,nightRole:rec.role,homeX:rec.hx,homeY:rec.hy,label:NIGHT_FORM[rec.role].name,nightState:'patrol'});
+  const mHp=rec.maxHp||Math.max(rec.hp,Math.round((objectHp[rec.type]||10)*(rec.role==='elite'?1.22:1.15)));
+  const e=obj(rec.type,rec.x,rec.y,rec.id,{hp:rec.hp,maxHp:mHp,nightRole:rec.role,homeX:rec.hx,homeY:rec.hy,label:NIGHT_FORM[rec.role].name,nightState:'patrol'});
   e.attackAt=state.elapsed+.9;
   return e;
 }
@@ -19063,7 +19068,8 @@ function tickNightWorld(){
   if(['volcanic','desert','mangrove','cliff','atoll'].includes(region.biome)&&role==='hunter'){role='beast';type='boar';}
   const q=points[Math.floor(variant*points.length)];
   const id='night:'+key+':'+night.spent;
-  const rec={id,type,role,x:q.x,y:q.y,hx:q.x,hy:q.y,hp:Math.round(objectHp[type]*(role==='elite'?1.22:1.15))};
+  const nHp=Math.round(objectHp[type]*(role==='elite'?1.22:1.15));
+  const rec={id,type,role,x:q.x,y:q.y,hx:q.x,hy:q.y,hp:nHp,maxHp:nHp};
   night.actors.push(rec);night.spent++;
   const e=nightActor(rec);entities.push(e);
   e.nightLead={x:p.x,y:p.y};e.nightState='search';e.nightUntil=now+11;
