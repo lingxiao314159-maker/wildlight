@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-KWisKageuL6umN0URWJ87TWG4DKgrvG80hU/5YnDTzY='; style-src 'unsafe-inline'; img-src data: blob:; base-uri 'none'; object-src 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-vAz32Xg+NEUXNi3s7vzSFHEeCEQcQT/zuKQIB0RSA4Y='; style-src 'unsafe-inline'; img-src data: blob:; base-uri 'none'; object-src 'none'; form-action 'none'">
 <meta name="theme-color" content="#0d2224">
 <title>荒野微光 V2.0.2c · 雇佣平衡</title>
 <meta name="description" content="《荒野微光》V2.0.2c《雇佣平衡》。大幅回调雇佣兵战斗力与自动猎杀效率，上调雇佣兵与公会生产雇工费用，保留全部精简 UI 与防重叠修复。">
@@ -749,6 +749,12 @@ body:not([data-state="playing"]) #hud:not(.editing-layout) *{pointer-events:none
   .v202a-tabs .press{min-height:42px;font-size:13px}
   .window>.inside .press{min-height:40px}
   .window>.inside{padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))!important}
+}
+
+.win-head-acts{display:flex;align-items:center;gap:6px;flex:none}
+.win-head-acts .press{min-height:36px;padding:5px 10px;white-space:nowrap}
+@media (max-width:560px) and (orientation:portrait){
+  .win-head-acts .press{min-height:38px;padding:5px 9px;font-size:12px}
 }
 </style>
 </head>
@@ -3032,15 +3038,16 @@ const combatProfile={
   mistGuard:{start:104,tell:.76,rush:.55,speed:231,after:1.36,damage:23}
 };
 function enemyAdvance(e,p,ship,dt){
-  const profile=combatProfile[e.type],t=state.elapsed,d=dist(e,p);
+  const profile=combatProfile[e.type],t=state.elapsed;
   if(!profile||e.hp<=0||e.respawn||e.type==='bat'&&!(e.startled>t)&&!e.aggro&&!e.combat)return;
-  const afraid=e.type==='wisp'?lightNear(p,105):['wolf','fogWolf'].includes(e.type)&&lightNear(p,105,false);
+  const tgt=v202cResolveEnemyTarget(e,p,ship),d=dist(e,tgt);
+  const afraid=e.type==='wisp'?lightNear(tgt,105):['wolf','fogWolf'].includes(e.type)&&lightNear(tgt,105,false);
   const pass=(x,y)=>canTravel(x,y)&&(e.type!=='wisp'||!lightNear({x,y},72));
   if(duelIsBoss(e))duelBossStage(e,t);
   if(profile.ranged){
     if(e.combat==='recover'&&t<e.until)return;
     if(e.rangedTell){if(!ship)engageCombat();return;}
-    const home={x:e.homeX,y:e.homeY},target=d<201&&d>85&&clearSight(e,p)?e:d<=85?{x:e.x+(e.x-p.x),y:e.y+(e.y-p.y)}:d<=230&&clearSight(e,p)?p:home;
+    const home={x:e.homeX,y:e.homeY},target=d<201&&d>85&&clearSight(e,tgt)?e:d<=85?{x:e.x+(e.x-tgt.x),y:e.y+(e.y-tgt.y)}:d<=230&&clearSight(e,tgt)?tgt:home;
     if(dist(e,target)>8){
       const a=Math.atan2(target.y-e.y,target.x-e.x);
       e.angle=a;moveObject(e,Math.cos(a)*42*dt,Math.sin(a)*42*dt,pass);
@@ -3058,8 +3065,8 @@ function enemyAdvance(e,p,ship,dt){
   }
   if(e.combat==='rush'){
     if(t>=e.until||ship||afraid){
-      if(e.phase2&&!e.chainDone&&!ship&&!afraid&&dist(e,p)<170&&clearSight(e,p)&&Math.random()<.52){
-        e.chainDone=true;beginEnemyWind(e,p,profile.tell*.87);return;
+      if(e.phase2&&!e.chainDone&&!ship&&!afraid&&dist(e,tgt)<170&&clearSight(e,tgt)&&Math.random()<.52){
+        e.chainDone=true;beginEnemyWind(e,tgt,profile.tell*.87);return;
       }
       e.chainDone=false;e.combat='recover';e.until=t+profile.after*nightRecovery(e)*(elFury?.78:1)*(e.phase2?1.12:1);return;
     }
@@ -3068,7 +3075,14 @@ function enemyAdvance(e,p,ship,dt){
     moveObject(e,Math.cos(e.angle)*step,Math.sin(e.angle)*step,pass);
     const hitWall=Math.hypot(x-e.x,y-e.y)<step*.42;
     if(e.type==='golem'&&dist(e,caveSeal)<33&&!state.flags.mineSeal){openMineSeal();toast('石怪撞开了矿厅的落石！',3);}
-    if(!e.struck&&dist(e,p)<(e.strikeKind==='unblockable'?33:e.strikeKind==='heavy'?29:24)&&clearSight(e,p)){e.struck=true;enemyHit(e,Math.round(profile.damage*dmgMul));}
+    const hitR=e.strikeKind==='unblockable'?33:e.strikeKind==='heavy'?29:24;
+    if(!e.struck){
+      if(tgt!==p&&tgt.hp>0&&dist(e,tgt)<hitR+4&&clearSight(e,tgt)){
+        e.struck=true;v202cDamageMerc(tgt,Math.round(profile.damage*dmgMul),e);
+      }else if(dist(e,p)<hitR&&clearSight(e,p)){
+        e.struck=true;enemyHit(e,Math.round(profile.damage*dmgMul));
+      }
+    }
     if(hitWall){
       if(['golem','shellBack','towerGuard'].includes(e.type)){
         const b=state.builds.find(b=>fences.includes(b.type)&&!b.open&&dist(e,b)<31);
@@ -3085,13 +3099,13 @@ function enemyAdvance(e,p,ship,dt){
   const patrolAngle=t*.5+e.homeX;
   const insideTerritory=!e.dungeonEntity||dist(e,home)<Math.min(profile.chase||220,175);
   const tellMul=(elFury?.78:1)*(e.phase2?.84:1);
-  const pursuing=chase&&insideTerritory&&(!e.dungeonEntity||clearSight(e,p));
-  if(pursuing&&(clearSight(e,p)||e.aggro))engageCombat();
-  if(pursuing&&d<profile.start*(elHeavy?1.12:1)&&e.attackAt<=t&&clearSight(e,p)&&canEnemyStrike(e,p)){
-    beginEnemyWind(e,p,profile.tell*tellMul);return;
+  const pursuing=chase&&insideTerritory&&(!e.dungeonEntity||clearSight(e,tgt));
+  if(pursuing&&(clearSight(e,tgt)||e.aggro))engageCombat();
+  if(pursuing&&d<profile.start*(elHeavy?1.12:1)&&e.attackAt<=t&&clearSight(e,tgt)&&canEnemyStrike(e,tgt)){
+    beginEnemyWind(e,tgt,profile.tell*tellMul);return;
   }
   const patrolRadius=e.dungeonEntity?(e.dungeonElite?8:22):patrol;
-  const aim=pursuing?p:{x:home.x+Math.cos(patrolAngle)*patrolRadius,y:home.y+Math.sin(patrolAngle)*patrolRadius};
+  const aim=pursuing?tgt:{x:home.x+Math.cos(patrolAngle)*patrolRadius,y:home.y+Math.sin(patrolAngle)*patrolRadius};
   if(dist(e,aim)>5){
     let moveAng=Math.atan2(aim.y-e.y,aim.x-e.x);
     if(pursuing&&(['wolf','fogWolf','spider','caveLurker','mistValeLurker'].includes(e.type)||elSwift)&&d<92&&d>38){
@@ -3285,11 +3299,50 @@ function nearWaterFromSea(){
   return false;
 }
 const controlGuide='电脑 WASD / 方向键移动，空格 / 左键攻击与采集，E 智能交互，Tab 切换目标，Shift 按住疾跑，Q 闪避，X 按住格挡，Z 重击，1–5 快捷栏（点击消耗品直接使用），C 制作，B 背包，J 任务记录，M 海图，R 修船，V 切换全速航行，G 舰炮，F 换武器，U 群岛动态。手机左侧摇杆，快速松手再推动并保持可疾跑。右侧短按攻击、长按重击，格挡与闪避各用独立按钮。黄色是普攻，橙色是重击，红色必须躲开。面对来袭方向，命中前 0.22 秒举防可完美格挡。盾牌用攻击键盾击，用 X 或触屏格挡键按住防守。';
+let v202cPanelStack=[],v202cCurrentReason='',v202cGoingBack=false;
+function v202cCanGoBack(){return v202cPanelStack.length>0;}
 function panelFrame(title,body){
-  return `<header><h2>${title}</h2><button class="press" data-act="close" aria-label="关闭">关闭</button></header>${body}`;
+  const back=v202cCanGoBack()?'<button class="press" data-act="v202cBack" aria-label="返回上一级">← 上一级</button>':'';
+  return `<header><h2>${title}</h2><div class="win-head-acts">${back}<button class="press" data-act="close" aria-label="关闭">关闭</button></div></header>${body}`;
 }
 function stopInput(){cancelInventoryPress();if(lineCast)endAngling();chargeStart=null;releaseGamePointer(canvas,placeDrag);placeDrag=null;clearAttackPress();attackBufferUntil=0;dodgeBufferUntil=0;keys.clear();resetStick();if(combatInput.scene!==combatScene())resetCombatEncounter();else resetCombatInput();}
+function v202cSnapshotPanel(prevKind){
+  return {kind:prevKind,reason:v202cCurrentReason,chestId,activeMarketPort,activeShipPort,activeSocialNpc,serviceBerthId,serviceShipId,openedProsperProject,
+    estateView:typeof estateView!=='undefined'&&estateView?{...estateView}:null,v202aJourneyTab,v202aHarborTab,v202aSettingsTab,
+    guildTab:typeof guildTab!=='undefined'?guildTab:'workers',wardrobeShop:typeof wardrobeShop!=='undefined'?wardrobeShop:false,wardrobeTab:typeof wardrobeTab!=='undefined'?wardrobeTab:'outfit',withdrawing};
+}
+function v202cGoBack(){
+  while(v202cPanelStack.length){
+    const prev=v202cPanelStack.pop();
+    if(!prev||!prev.kind||prev.kind==='play')continue;
+    chestId=prev.chestId;activeMarketPort=prev.activeMarketPort;activeShipPort=prev.activeShipPort;activeSocialNpc=prev.activeSocialNpc;
+    serviceBerthId=prev.serviceBerthId;serviceShipId=prev.serviceShipId;openedProsperProject=prev.openedProsperProject;
+    if(typeof estateView!=='undefined')estateView=prev.estateView;
+    if(typeof v202aJourneyTab!=='undefined')v202aJourneyTab=prev.v202aJourneyTab;
+    if(typeof v202aHarborTab!=='undefined')v202aHarborTab=prev.v202aHarborTab;
+    if(typeof v202aSettingsTab!=='undefined')v202aSettingsTab=prev.v202aSettingsTab;
+    if(typeof guildTab!=='undefined')guildTab=prev.guildTab;
+    if(typeof wardrobeShop!=='undefined')wardrobeShop=prev.wardrobeShop;
+    if(typeof wardrobeTab!=='undefined')wardrobeTab=prev.wardrobeTab;
+    withdrawing=prev.withdrawing;
+    v202cGoingBack=true;
+    try{openPanel(prev.kind,prev.reason);}finally{v202cGoingBack=false;}
+    if(mapMode!=='play')return true;
+  }
+  closePanel();return true;
+}
 function openPanel(kind,reason=''){
+  const _prevKind=mapMode;
+  if(kind==='title')v202cPanelStack=[];
+  else if(!v202cGoingBack&&_prevKind&&_prevKind!=='play'&&_prevKind!==kind&&!['recover','win','passengerVoyage','passenger'].includes(_prevKind)){
+    const dupIdx=v202cPanelStack.findIndex(x=>x.kind===kind);
+    if(dupIdx>=0)v202cPanelStack.length=dupIdx;
+    else{
+      v202cPanelStack.push(v202cSnapshotPanel(_prevKind));
+      if(v202cPanelStack.length>12)v202cPanelStack.shift();
+    }
+  }
+  v202cCurrentReason=reason;
   if(kind==='map')adventureMapRow=state.adventureFocus?adventureRows().find(r=>r.id===state.adventureFocus):null;
   if(kind!=='chest')v201CaptureUi();
   pausePracticeForPanel(kind);
@@ -3322,7 +3375,7 @@ function openPanel(kind,reason=''){
   }else if(kind==='pause'){
     w.innerHTML=`<div class="inside"><h2>游戏暂停</h2><p>${frameFaultPaused?'游戏遇到异常并已暂停。点击「脱离卡点」重试。':saveFailed?'当前浏览器无法保留进度。':'进度自动保存在这台设备的浏览器里。'}</p><div class="row">${frameFaultPaused?'':'<button class="press primary" data-act="close">继续探索</button>'}<button class="press ${frameFaultPaused?'primary':''}" data-act="movementRecovery">脱离卡点</button><button class="press" data-act="saveTransfer">JSON 存档</button><button class="press primary" data-act="openSettings">完整游戏设置</button><button class="press" data-act="v20Atlas">群岛百科</button><button class="press" data-act="saveNow">立即手动保存</button><button class="press" data-act="restart">重新开始</button></div><p class="controls">${controlGuide}</p></div>`;
   }else if(kind==='restart'){
-    w.innerHTML='<div class="inside"><h2>要开始新的航行吗？</h2><p>新游戏会覆盖当前的群岛存档。</p><div class="row"><button class="press" data-act="cancelRestart">取消</button><button class="press primary" data-act="new">确认新游戏</button></div></div>';
+    w.innerHTML='<div class="inside"><h2>要开始新的航行吗？</h2><p>新游戏会覆盖当前的群岛存档。</p><div class="row"><button class="press" data-act="cancelRestart">← 上一级</button><button class="press primary" data-act="new">确认新游戏</button></div></div>';
   }else if(kind==='recover'){
     w.innerHTML=`<div class="inside"><div class="eyebrow">第 ${Math.floor(state.time/DAY)+1} 天 · 清晨</div><h2>${reason}</h2><p id="deathInfo">你已在安全地点复苏。</p><div><button class="press primary" data-act="close">起身继续</button></div></div>`;
   }else if(kind==='win'){
@@ -3435,7 +3488,7 @@ function openPanel(kind,reason=''){
     renderRecipes();
   }
 }
-function closePanel(){if(state.routes.passenger&&mapMode==='passengerVoyage')return;herdConfirm='';v201CaptureUi();dismantlePending=null;abandonConfirm='';inventorySelection='';inventoryDrop=false;inventorySuppress=null;invLastPick={val:'',at:0};leaveLayoutEditor();cancelGomokuTimer();mapMode='play';document.body.dataset.state='playing';chestId=null;$('veil').hidden=true;document.activeElement?.blur?.();stopInput();updateHud();}
+function closePanel(){if(state.routes.passenger&&mapMode==='passengerVoyage')return;v202cPanelStack=[];v202cCurrentReason='';herdConfirm='';v201CaptureUi();dismantlePending=null;abandonConfirm='';inventorySelection='';inventoryDrop=false;inventorySuppress=null;invLastPick={val:'',at:0};leaveLayoutEditor();cancelGomokuTimer();mapMode='play';document.body.dataset.state='playing';chestId=null;$('veil').hidden=true;document.activeElement?.blur?.();stopInput();updateHud();}
 function openStorage(b){
   if(!b||!state.builds.includes(b)||!isStock(b)||!(isDock(b)?dockUpgradeAccess(b):storageInRange(b))){toast('距离过远，无法操作储物设施。');return;}
   v201RememberStorage(b);v201Guide('B03');
@@ -4333,6 +4386,7 @@ window.addEventListener('keydown',e=>{
     else if(inventorySelection&&['bag','chest','craft','prosperMarket','portMarket','trade'].includes(mapMode)){inventoryUi('invBlank','',null);}
     else if(mapMode==='createCharacter')cancelCharacterCreation();
     else if(mapMode==='restart')openPanel(restartFrom);
+    else if(v202cCanGoBack())v202cGoBack();
     else if(mapMode!=='title')closePanel();
     return;
   }
@@ -11664,16 +11718,17 @@ function tickEnemyRangedShots(dt){
     const profile=combatProfile[e.type];
     if(e.duelCast||e.combat==='recover'&&e.until>t||e.respawn||e.hp<=0||Math.abs(e.x-p.x)>230||Math.abs(e.y-p.y)>230){e.rangedTell=0;continue;}
     if(!visibleEntity(e)||(state.cave&&!state.dungeons?.active)||dist(e,p)>230||e.staggerUntil>t){e.rangedTell=0;continue;}
+    const rTgt=v202cResolveEnemyTarget(e,p,boat());
     if(e.rangedTell){
       if(t<e.rangedTell)continue;
       e.rangedTell=0;
       e.shootAt=t+(e.type==='strongholdBossRanged'?1.8:2.2);
-      if(!clearSight(e,p))continue;
+      if(!clearSight(e,rTgt))continue;
       const a=e.angle;
       enemyShots.push({x:e.x,y:e.y,vx:Math.cos(a)*235,vy:Math.sin(a)*235,dmg:profile.damage,src:e,kind:e.strikeKind,left:1.2});
       beep(240,.08,'sawtooth');
-    }else if(t>=(e.shootAt||0)&&clearSight(e,p)){
-      e.angle=Math.atan2(p.y-e.y,p.x-e.x);
+    }else if(t>=(e.shootAt||0)&&clearSight(e,rTgt)){
+      e.angle=Math.atan2(rTgt.y-e.y,rTgt.x-e.x);
       e.shotCount=(e.shotCount||0)+1;
       e.strikeKind=e.type==='strongholdBossRanged'&&e.shotCount%3===0?'heavy':'normal';
       e.rangedTell=t+Math.max(.53,(profile.tell||.68)*(e.phase2?.86:1));
@@ -11689,6 +11744,12 @@ function tickEnemyRangedShots(dt){
       enemyHit(shot.src,shot.dmg*(shot.src.phase2?1.18:1),{kind:shot.kind,projectile:true,
         origin:{x:shot.x-shot.vx*.16,y:shot.y-shot.vy*.16}});
       if(mapMode!=='play')return;
+      continue;
+    }
+    const mHit=entities.find(m=>m.type==='v195bMerc'&&visibleEntity(m)&&m.hp>0&&dist(shot,m)<18);
+    if(mHit){
+      shot.left=0;
+      v202cDamageMerc(mHit,Math.round(shot.dmg*(shot.src.phase2?1.18:1)),shot.src);
     }
   }
   enemyShots=enemyShots.filter(s=>s.left>0);
@@ -43474,19 +43535,11 @@ tickV195bMercs = function(dt){
         beep(isRanged ? 440 : 260, .06, 'triangle');
         if(foe.hp <= 0){
           finishDefeat(foe);
-        }else if(dist(ent, foe) < 76 && Math.random() < 0.55){
-          const retDmg = Math.max(4, Math.round((combatProfile[foe.type]?.damage || 12) * (def.mercType==='heavy' ? .65 : .95)));
-          m.hp = Math.max(0, m.hp - retDmg);
-          ent.hp = m.hp;
-          spawnDamageText(ent.x, ent.y - 16, '-'+retDmg, '#ff9c85');
-          if(m.hp <= 0){
-            m.active = false;
-            m.injuredUntil = state.time + DAY * 1.5;
-            m.healPaid = false;
-            toast(`⚠ 佣兵【${def.name}】重伤退场，需休养 1.5 游戏日！`, 4);
-            syncV195bMercEntities();
-            save();
-            continue;
+        }else{
+          v202cMaybeDrawEnemyAggro(foe, ent, def);
+          if(dist(ent, foe) < 70 && Math.random() < 0.22){
+            const retDmg = Math.max(3, Math.round((combatProfile[foe.type]?.damage || 12) * (def.mercType==='heavy' ? .55 : .80)));
+            if(v202cDamageMerc(ent, retDmg, foe)) continue;
           }
         }
       }
@@ -43562,8 +43615,86 @@ function v202aSeparateNpcs(dt){
   }
 }
 
+
+// --- H. 敌方目标均衡分配（在玩家与雇佣兵之间动态切换，避免单盯玩家或单盯佣兵）---
+function v202cDamageMerc(mercEnt, rawDmg, src){
+  const m = state.v195b?.guild?.mercs?.find(x => 'merc:' + x.npcId === mercEnt.id && x.active);
+  const def = m && GUILD_ROSTER.find(x => x.id === m.npcId);
+  if(!m || !def || m.injuredUntil > state.time) return false;
+  const dmg = Math.max(2, Math.round(rawDmg * (def.mercType === 'heavy' ? 0.65 : 0.92)));
+  m.hp = Math.max(0, m.hp - dmg);
+  mercEnt.hp = m.hp;
+  makeParticles(mercEnt.x, mercEnt.y, '#ffb29c', 6);
+  spawnDamageText(mercEnt.x, mercEnt.y - 16, '-' + dmg, '#ff9c85');
+  beep(155, .07, 'sawtooth');
+  if(m.hp <= 0){
+    m.active = false;
+    m.injuredUntil = state.time + DAY * 1.5;
+    m.healPaid = false;
+    toast(`⚠ 佣兵【${def.name}】重伤退场，需休养 1.5 游戏日！`, 4);
+    syncV195bMercEntities();
+    save();
+    return true;
+  }
+  return false;
+}
+
+function v202cMaybeDrawEnemyAggro(foe, mercEnt, def){
+  const t = state.elapsed;
+  if(!foe || !mercEnt || foe._aggroId === mercEnt.id) return;
+  if(t < (foe._mercSwitchCd || 0)) return;
+  const chance = def.mercType === 'heavy' ? 0.48 : def.mercType === 'archer' ? 0.20 : 0.35;
+  foe._mercSwitchCd = t + 6.5;
+  if(Math.random() < chance){
+    foe._aggroId = mercEnt.id;
+    foe._aggroUntil = t + 3.2 + Math.random() * 1.4;
+    foe._lastAggroWasMerc = true;
+  }
+}
+
+function v202cResolveEnemyTarget(e, p, ship){
+  if(ship || state.boarding || isFerryPassenger()) return p;
+  const t = state.elapsed;
+  const mercs = entities.filter(m => m.type === 'v195bMerc' && visibleEntity(m) && m.hp > 0 && dist(e, m) < 210);
+  if(!mercs.length){
+    e._aggroId = 'player';
+    return p;
+  }
+  if(e._aggroId && t < (e._aggroUntil || 0)){
+    if(e._aggroId === 'player') return p;
+    const locked = mercs.find(m => m.id === e._aggroId);
+    if(locked) return locked;
+  }
+  // 计时到期后重新评估：上一轮追佣兵则大概率回切玩家，上一轮追玩家则按概率转火附近佣兵
+  const nearMercs = mercs.filter(m => dist(e, m) < 160).sort((a, b) => dist(e, a) - dist(e, b));
+  if(e._lastAggroWasMerc){
+    if(!nearMercs.length || Math.random() < 0.72){
+      e._aggroId = 'player';
+      e._aggroUntil = t + 3.5 + Math.random() * 1.7;
+      e._lastAggroWasMerc = false;
+      return p;
+    }
+  }
+  if(nearMercs.length){
+    const pick = nearMercs[0];
+    const baseChance = pick.mercType === 'heavy' ? 0.50 : pick.mercType === 'archer' ? 0.24 : 0.38;
+    const closerBonus = dist(e, pick) + 12 < dist(e, p) ? 0.12 : 0;
+    if(Math.random() < baseChance + closerBonus){
+      e._aggroId = pick.id;
+      e._aggroUntil = t + 3.2 + Math.random() * 1.6;
+      e._lastAggroWasMerc = true;
+      return pick;
+    }
+  }
+  e._aggroId = 'player';
+  e._aggroUntil = t + 3.5 + Math.random() * 1.7;
+  e._lastAggroWasMerc = false;
+  return p;
+}
+
 // --- G. V2.0.2a UI 事件分发 ---
 function v202aUi(act, val){
+  if(act === 'v202cBack'){ return v202cGoBack(); }
   if(act === 'v202aJourneyTab' && ['tasks','orders','explore'].includes(val)){
     v202aJourneyTab = val; renderTaskControl(); return true;
   }
