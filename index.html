@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-awUVy1DqvU0DaUlnbBZj0kvIA7VQhRY8JsDi0butzpQ='; style-src 'unsafe-inline'; img-src data: blob:; base-uri 'none'; object-src 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-wQuQq8PyY6xSiu1Nx3T77OQkkCRteh7k/LAtJ5YPQ4c='; style-src 'unsafe-inline'; img-src data: blob:; base-uri 'none'; object-src 'none'; form-action 'none'">
 <meta name="theme-color" content="#0d2224">
 <title>荒野微光 V2.2.9 · 群岛新生</title>
 <meta name="description" content="《荒野微光》V2.2.9《群岛新生》。在广阔的群岛与大陆之间开启属于你的旅程。探索失落的文明，结识不同的居民，建造家园，经营产业，扬帆远航。">
@@ -1554,6 +1554,7 @@ function prepareSave(s){
   if(typeof ensureV226State==='function')ensureV226State(s);
   if(typeof ensureV227State==='function')ensureV227State(s);
   if(typeof ensureV228State==='function')ensureV228State(s);
+  if(typeof v229EnsureState==='function')v229EnsureState(s);
   resetExpansionMeta(s);
   initCivic(s);
   const legacyRuralWorks=s.rural?.works;
@@ -53952,6 +53953,726 @@ function v229Action(act, val){
   if(cmd==='tab'){v229AssetTab=parts[1]||'assets';renderV229AssetsPanel();return true;}
   return false;
 }
+
+
+// =========================================================================
+// V2.2.9 V2.0 P0 QUEST INTEGRITY, QUEST ITEMS & REAL ACTION VALIDATION LAYER
+// 彻底封堵全历史版本远程空点完成、无信送信、未交易完成、未到访推进等全部漏洞
+// =========================================================================
+
+const V229_REGION_NAMES = {
+  0:'微光营地', 1:'沉碑岛', 2:'灰烬岛', 3:'霜松岛', 4:'棕榈岛', 5:'鸥礁', 6:'回声礁',
+  7:'黑岩矿岛', 8:'白脊岛', 9:'沉雾岛', 10:'赤炉岛', 11:'金沙岛', 12:'翡翠岛', 13:'苍冠岛',
+  14:'红树林岛', 15:'白崖岛', 16:'珊瑚环礁', 17:'灯塔湾', 18:'断帆浅滩', 19:'暮潮岛/迷雾谷',
+  20:'返帆礁湾', 21:'巡风礁', 22:'仪风岛', 23:'南帆岛', 27:'晨曦城/曙光大陆'
+};
+
+function v229RegionName(regIdx){
+  if(regIdx===27)return '晨曦城 / 曙光大陆';
+  if(typeof regions!=='undefined'&&regions[regIdx]?.name)return regions[regIdx].name;
+  return V229_REGION_NAMES[regIdx]||'目标海域';
+}
+
+function v229RegionCoords(regIdx){
+  if(regIdx===27)return {x:(474+.5)*T, y:(189+.5)*T, label:'晨曦城'};
+  if(typeof regions!=='undefined'&&regions[regIdx]){
+    return {x:regions[regIdx].x, y:regions[regIdx].y, label:regions[regIdx].name};
+  }
+  return {x:(49+.5)*T, y:(129+.5)*T, label:'灯塔湾'};
+}
+
+function v229CurrentRegionIdx(){
+  if(!state?.player)return 0;
+  if(state.player.x >= 418*T)return 27;
+  if(typeof v227NearestRegionAt==='function'){
+    const r=v227NearestRegionAt(state.player.x, state.player.y);
+    if(r>=24)return 27;
+    return r;
+  }
+  return 0;
+}
+
+function v229PlayerAtDawnContinent(){
+  if(!state?.player)return false;
+  if(state.player.x >= 418*T)return true;
+  if(typeof regions!=='undefined'&&regions[27]){
+    const r=regions[27];
+    if(Math.hypot(state.player.x-r.x, state.player.y-r.y) <= Math.max(r.rx||50, r.ry||50)*T*1.6)return true;
+  }
+  return false;
+}
+
+function v229PlayerInRegion(targetRegIdx){
+  if(!state?.player)return false;
+  if(targetRegIdx===27)return v229PlayerAtDawnContinent();
+  const cur=v229CurrentRegionIdx();
+  if(cur===targetRegIdx)return true;
+  if(typeof regions!=='undefined'&&regions[targetRegIdx]){
+    const r=regions[targetRegIdx];
+    const rad=Math.max(r.rx||14, r.ry||14)*T*1.45;
+    if(Math.hypot(state.player.x-r.x, state.player.y-r.y)<=rad)return true;
+  }
+  return false;
+}
+
+function v229EnsureState(s){
+  if(!s||typeof s!=='object')return null;
+  const isNew=!s.v229q;
+  s.v229q??={
+    ver:229,
+    questItems:{},
+    actions:{
+      traded:0, crafted:0, cooked:0,
+      calendarChecked:false, briefed:false,
+      talkedNpcs:{}, inspected:{},
+      visitedRegions:{0:true}
+    },
+    smallStep:{},
+    claimedRewards:{},
+    repairLog:[]
+  };
+  const q=s.v229q;
+  q.ver=229;
+  q.questItems??={};
+  q.actions??={traded:0,crafted:0,cooked:0,calendarChecked:false,briefed:false,talkedNpcs:{},inspected:{},visitedRegions:{0:true}};
+  q.actions.talkedNpcs??={};
+  q.actions.inspected??={};
+  q.actions.visitedRegions??={0:true};
+  q.smallStep??={};
+  q.claimedRewards??={};
+  q.repairLog??=[];
+  // 保守迁移：同步历史已访问地区，绝不破坏旧存档正当进度
+  if(isNew){
+    if(s.v228?.visitedRegions){
+      for(const k of Object.keys(s.v228.visitedRegions))q.actions.visitedRegions[k]=true;
+    }
+    if(s.v228?.briefChecked)q.actions.briefed=true;
+    // 若旧档 q228_letter 处于未完成但阶段>=1且无真实信件，保守重置到第 0 阶段以便正常拾取信件
+    if(s.v228?.earlyQuests?.q228_letter && !s.v228.earlyQuests.q228_letter.done && (s.v228.earlyQuests.q228_letter.stage||0)>0 && !q.questItems.letter_q228){
+      s.v228.earlyQuests.q228_letter.stage=0;
+      q.repairLog.push('v229:reset_q228_letter_no_item');
+    }
+  }
+  return q;
+}
+
+function v229RecordPlayerAction(kind, detail=''){
+  const q=v229EnsureState(state);
+  if(!q)return;
+  if(kind==='trade'){q.actions.traded=(q.actions.traded||0)+1;}
+  else if(kind==='craft'){q.actions.crafted=(q.actions.crafted||0)+1;}
+  else if(kind==='cook'){q.actions.cooked=(q.actions.cooked||0)+1;}
+  else if(kind==='calendar'){q.actions.calendarChecked=true;}
+  else if(kind==='brief'){q.actions.briefed=true;}
+  else if(kind==='npc'&&detail){q.actions.talkedNpcs[detail]=gameDay()+1;}
+  else if(kind==='inspect'&&detail){q.actions.inspected[detail]=gameDay()+1;}
+  else if(kind==='visit'){
+    const r=v229CurrentRegionIdx();
+    q.actions.visitedRegions[r]=true;
+  }
+}
+
+// ==================== 结构化任务专属物品系统 ====================
+function v229HasQuestItem(qid, itemId){
+  const q=v229EnsureState(state);
+  const rec=q?.questItems?.[itemId];
+  return !!(rec && rec.qid===qid && !rec.delivered);
+}
+
+function v229AcquireQuestItem(qid, itemId, label, allowedRegs){
+  const q=v229EnsureState(state);
+  if(!q)return {ok:false, msg:'状态未初始化。'};
+  if(q.questItems[itemId] && !q.questItems[itemId].delivered){
+    return {ok:false, duplicate:true, msg:`你已持有任务物品「${label}」，请前往目的地交付。`};
+  }
+  const regs=Array.isArray(allowedRegs)?allowedRegs:[allowedRegs];
+  const onSite=regs.some(r=>v229PlayerInRegion(r));
+  if(!onSite){
+    const needNames=regs.map(v229RegionName).join('或');
+    const curName=v229RegionName(v229CurrentRegionIdx());
+    return {ok:false, offSite:true, msg:`需亲临【${needNames}】现场领取「${label}」（当前位于${curName}）。`};
+  }
+  q.questItems[itemId]={qid, itemId, label, acquiredDay:gameDay()+1, delivered:false};
+  q.actions.visitedRegions[v229CurrentRegionIdx()]=true;
+  save();
+  return {ok:true, msg:`✉️ 已在现场获得任务物品「${label}」！请携带前往指定地点交付。`};
+}
+
+function v229DeliverQuestItem(qid, itemId, targetRegIdx, recipientLabel){
+  const q=v229EnsureState(state);
+  if(!q)return {ok:false, msg:'状态未初始化。'};
+  const rec=q.questItems[itemId];
+  if(!rec || rec.qid!==qid){
+    return {ok:false, missingItem:true, msg:'你尚未取得对应的任务物品，无法完成交付。'};
+  }
+  if(rec.delivered){
+    return {ok:false, duplicate:true, msg:`「${rec.label}」已经完成交付，不可重复交付。`};
+  }
+  if(!v229PlayerInRegion(targetRegIdx)){
+    return {ok:false, offSite:true, msg:`需亲临【${v229RegionName(targetRegIdx)}】将「${rec.label}」交予${recipientLabel}（当前位于${v229RegionName(v229CurrentRegionIdx())}）。`};
+  }
+  rec.delivered=true;
+  rec.deliveredDay=gameDay()+1;
+  delete q.questItems[itemId];
+  save();
+  return {ok:true, msg:`📬 已将「${rec.label}」当面交予${recipientLabel}！`};
+}
+
+function v229ListHeldQuestItems(){
+  const q=v229EnsureState(state);
+  return Object.values(q?.questItems||{}).filter(x=>x && !x.delivered);
+}
+
+// ==================== 全历史任务真实校验规格表 ====================
+
+// 1) V2.2.5 八个小型独立任务（全部位于晨曦城，含 3 个真实两段取物/送信交付任务）
+const V229_SMALL_QUEST_SPEC = {
+  sq_coast:   {regIdx:27, spotName:'晨曦城·滨海听涛观海亭', needItem:null, deliverReg:27, actionLabel:'现场游览打卡'},
+  sq_tea:     {regIdx:27, spotName:'晨曦城·望湖茶楼',       needItem:{id:'qi_sq_tea', label:'唐掌柜的翡翠新茶口信'}, deliverReg:12, deliverNpc:'翡翠岛花音', actionLabel:'现场交付口信'},
+  sq_sign:    {regIdx:27, spotName:'晨曦城·北山矿道门',     needItem:null, deliverReg:27, actionLabel:'现场核对路标'},
+  sq_memory:  {regIdx:27, spotName:'晨曦城·新城规划纪念碑', needItem:null, deliverReg:27, actionLabel:'现场聆听口述'},
+  sq_wood:    {regIdx:27, spotName:'晨曦城·外城工匠行会',   needItem:null, deliverReg:27, actionLabel:'现场检验木样'},
+  sq_gallery: {regIdx:27, spotName:'晨曦城·海风艺术画廊',   needItem:{id:'qi_sq_gallery', label:'海风画展请柬'}, deliverReg:27, deliverNpc:'东城医舍与大剧院', actionLabel:'现场送达请柬'},
+  sq_mill:    {regIdx:27, spotName:'晨曦城·南谷风车磨坊',   needItem:null, deliverReg:27, actionLabel:'现场验收麦粉'},
+  sq_letter:  {regIdx:27, spotName:'晨曦城·东湖驿站邮亭',   needItem:{id:'qi_sq_letter', label:'跨海纪念明信片'}, deliverReg:17, deliverNpc:'灯塔湾港务邮亭', actionLabel:'现场投递明信片'}
+};
+
+// 2) V2.2.5 五条中型剧情（33 阶段）逐阶段真实地区映射
+const V229_MED_STAGE_REGS = {
+  med_lighthouse: [27, 27, 23, 17, 17, 27, 27],
+  med_homecoming: [27, 20, 17, 18, 17, 17],
+  med_tombstone:  [27, 27, 27, 20, 27, 27],
+  med_forest:     [27, 27, 27, 27, 27, 27, 27],
+  med_homeland:   ['settlement','settlement','settlement','settlement','settlement','settlement','settlement']
+};
+
+// 3) V2.2.3 10 条人物故事（30 阶段）逐阶段真实地区与专属信物映射
+const V229_CHAR_STORY_SPEC = {
+  cs_mia:     {regs:[17, 12, 17], prereq:()=>!!(state.v228?.miaRescued || state.won || v228ReachedPort()), prereqMsg:'需先救助米娅或抵达灯塔湾'},
+  cs_tieshan: {regs:[17, 27, 17], item:{id:'qi_cs_tieshan', label:'铁山给罗兰的问候信', pickupStage:0, deliverStage:1}},
+  cs_mei:     {regs:[27, 13, 27]},
+  cs_watcher: {regs:[19, 9,  19]},
+  cs_elena:   {regs:[27, 20, 27]},
+  cs_farid:   {regs:[11, 27, 11]},
+  cs_hana:    {regs:[12, 17, 12], item:{id:'qi_cs_hana', label:'翡翠云雾茶礼', pickupStage:0, deliverStage:1}},
+  cs_lorne:   {regs:[17, 18, 17]},
+  cs_shidun:  {regs:[17, 17, 17]},
+  cs_arch:    {regs:[27, 22, 27]}
+};
+
+// 4) V2.2.3 《群岛的回响》8 章 28 阶段逐阶段真实地区与前置条件映射
+const V229_ML_STAGE_REGS = {
+  0: [0, 17, 17],
+  1: [0, 17, 17, 17],
+  2: [19, 9, 10, 19],
+  3: [17, 18, 23, 17],
+  4: [22, 8, 27, 27],
+  5: [17, 11, 27],
+  6: [27, 27, 27],
+  7: [27, 27]
+};
+
+// ==================== 统一底层校验入口 v229ValidateQuestStep ====================
+function v229ValidateQuestStep(kind, id, stageIdx=0){
+  const curReg=v229CurrentRegionIdx();
+  const curName=v229RegionName(curReg);
+  const q=v229EnsureState(state);
+
+  if(kind==='v225_small'){
+    const spec=V229_SMALL_QUEST_SPEC[id];
+    if(!spec)return {ok:false, reason:'未知小型任务。', navPos:null};
+    if(spec.needItem){
+      const hasIt=v229HasQuestItem('v225sq:'+id, spec.needItem.id);
+      if(!hasIt){
+        const onPickup=v229PlayerInRegion(spec.regIdx);
+        return {
+          ok:false, canPickup:onPickup, needPickup:true,
+          itemDef:spec.needItem, pickupReg:spec.regIdx,
+          reason:onPickup?`已抵达【${spec.spotName}】，请先领取「${spec.needItem.label}」`:`需先亲临【${spec.spotName}】领取「${spec.needItem.label}」（当前位于${curName}）`,
+          navPos:v229RegionCoords(spec.regIdx)
+        };
+      }
+      const onDeliver=v229PlayerInRegion(spec.deliverReg);
+      if(!onDeliver){
+        return {
+          ok:false, hasItem:true, deliverReg:spec.deliverReg,
+          reason:`已持有「${spec.needItem.label}」，需亲临【${v229RegionName(spec.deliverReg)}】交予${spec.deliverNpc}（当前位于${curName}）`,
+          navPos:v229RegionCoords(spec.deliverReg)
+        };
+      }
+      return {ok:true, hasItem:true, deliverReg:spec.deliverReg, deliverNpc:spec.deliverNpc, itemDef:spec.needItem, navPos:v229RegionCoords(spec.deliverReg)};
+    }
+    const onSite=v229PlayerInRegion(spec.regIdx);
+    if(!onSite){
+      return {
+        ok:false,
+        reason:`需亲临【${spec.spotName}】完成实地交互（当前位于${curName}）`,
+        navPos:v229RegionCoords(spec.regIdx)
+      };
+    }
+    return {ok:true, navPos:v229RegionCoords(spec.regIdx)};
+  }
+
+  if(kind==='v225_story'){
+    const def=(typeof V225_ALL_STORIES!=='undefined')?V225_ALL_STORIES.find(x=>x.id===id):null;
+    if(!def)return {ok:false, reason:'未知剧情。', navPos:null};
+    const st=def.stages?.[stageIdx];
+    if(!st)return {ok:false, reason:'剧情已完结。', navPos:null};
+    // 自治聚落剧情必须已建立自治聚落
+    if(id==='med_homeland'){
+      if(!state.v224?.settlement?.founded){
+        return {ok:false, reason:'需先在荒野建立你的自治聚落，方可开启并推进《从荒野到家园》。', navPos:null};
+      }
+      return {ok:true, navPos:null};
+    }
+    // 已有真实 autoCheck 且满足（例如已实地探索沉船/迷雾村/灯塔）
+    if(st.autoCheck && st.autoCheck())return {ok:true, autoSatisfied:true, navPos:null};
+    // 判定所需地区
+    let reqReg=27;
+    if(st.target && typeof st.target.regIdx==='number')reqReg=st.target.regIdx;
+    else if(st.target && st.target.bldId)reqReg=27;
+    else if(V229_MED_STAGE_REGS[id]){
+      const mapped=V229_MED_STAGE_REGS[id][stageIdx];
+      reqReg=(typeof mapped==='number')?mapped:27;
+    }else if(def.region==='星锚群岛'){reqReg=27;}
+    else{reqReg=27;}
+
+    if(!v229PlayerInRegion(reqReg)){
+      return {
+        ok:false, reqReg,
+        reason:`需亲临【${v229RegionName(reqReg)}】现场完成本阶段调查（当前位于${curName}）`,
+        navPos:v229RegionCoords(reqReg)
+      };
+    }
+    return {ok:true, reqReg, navPos:v229RegionCoords(reqReg)};
+  }
+
+  if(kind==='v223_mainline'){
+    const ml=state.v223?.mainline;
+    if(!ml||ml.done)return {ok:false, reason:'主线已完结。', navPos:null};
+    if(ml.paused)return {ok:false, reason:'主线当前已暂停。', navPos:null};
+    const ch=V223_MAINLINE_CHAPTERS[ml.chapter];
+    const st=ch?.stages?.[ml.stage];
+    if(!ch||!st)return {ok:false, reason:'无效主线阶段。', navPos:null};
+    // 序章第 0 阶段至少要先救助米娅或抵达灯塔湾，严禁 0 行动新档点击推进！
+    if(ml.chapter===0 && ml.stage===0){
+      if(!state.v228?.miaRescued && !state.won && !v228ReachedPort()){
+        return {ok:false, reason:'需先在微光营地救助米娅或建立营地，再开启《群岛的回响》序章。', navPos:v229RegionCoords(0)};
+      }
+    }
+    // 已有真实 autoCheck 且已满足
+    if(st.autoCheck && st.autoCheck())return {ok:true, autoSatisfied:true, navPos:null};
+    // 第 5 章第 0 阶段要求结案走私案或实地调查；第 6 章第 0 阶段要求踏足三港
+    if(ml.chapter===6 && ml.stage===0){
+      const vis=q.actions.visitedRegions;
+      if(!v229PlayerAtDawnContinent() && !(vis[17] && vis[20] && vis[27])){
+        return {ok:false, reason:'需亲临晨曦城并巡礼灯塔湾与返帆礁湾的复兴成果。', navPos:v229RegionCoords(27)};
+      }
+    }
+    const reqReg=(V229_ML_STAGE_REGS[ml.chapter]?.[ml.stage]) ?? 27;
+    if(!v229PlayerInRegion(reqReg)){
+      return {
+        ok:false, reqReg,
+        reason:`需亲临【${v229RegionName(reqReg)}】完成「${st.t}」（当前位于${curName}）`,
+        navPos:v229RegionCoords(reqReg)
+      };
+    }
+    return {ok:true, reqReg, navPos:v229RegionCoords(reqReg)};
+  }
+
+  if(kind==='v223_char'){
+    const spec=V229_CHAR_STORY_SPEC[id];
+    const cs=(typeof V223_CHAR_STORIES!=='undefined')?V223_CHAR_STORIES.find(x=>x.id===id):null;
+    if(!cs||!spec)return {ok:false, reason:'未知人物故事。', navPos:null};
+    if(spec.prereq && !spec.prereq()){
+      return {ok:false, reason:spec.prereqMsg||'尚未满足前置条件。', navPos:v229RegionCoords(spec.regs[0]||17)};
+    }
+    const reqReg=spec.regs[stageIdx] ?? spec.regs[spec.regs.length-1] ?? 17;
+    if(!v229PlayerInRegion(reqReg)){
+      return {
+        ok:false, reqReg,
+        reason:`需亲临【${v229RegionName(reqReg)}】与相关人物现场互动（当前位于${curName}）`,
+        navPos:v229RegionCoords(reqReg)
+      };
+    }
+    return {ok:true, reqReg, navPos:v229RegionCoords(reqReg)};
+  }
+
+  return {ok:false, reason:'未知任务类型。', navPos:null};
+}
+
+// ==================== 安装全部底层防漏洞钩子（不可绕过！） ====================
+function installV229QuestIntegrityLayer(){
+  // 1) 修复 V228_EARLY_CROSS_QUESTS 的 3 处虚假条件（海边的来信 / 第一笔生意 / 群岛的第一场庆典）
+  if(typeof V228_EARLY_CROSS_QUESTS!=='undefined'){
+    const qLetter=V228_EARLY_CROSS_QUESTS.find(x=>x.id==='q228_letter');
+    if(qLetter){
+      qLetter.stages[0].t='在微光营地或棕榈岛海岸亲手拾取「海盐浸湿的旧家书」';
+      qLetter.stages[0].target={c:60,r:50};
+      qLetter.stages[0].check=()=>v229HasQuestItem('q228_letter','letter_q228');
+      qLetter.stages[1].t='携带旧家书跨海抵达棕榈岛（坐标 94, 53）打听写信人去向';
+      qLetter.stages[1].check=()=>v229HasQuestItem('q228_letter','letter_q228') && (v229PlayerInRegion(4) || !!v229EnsureState(state).actions.visitedRegions[4]);
+      qLetter.stages[2].t='携带旧家书亲临灯塔湾（坐标 49, 129）交由港务邮亭转交收信人';
+      qLetter.stages[2].check=()=>v229HasQuestItem('q228_letter','letter_q228') && v229PlayerInRegion(17);
+    }
+    const qTrade=V228_EARLY_CROSS_QUESTS.find(x=>x.id==='q228_first_trade');
+    if(qTrade){
+      qTrade.stages[0].check=()=>v229PlayerInRegion(17);
+      qTrade.stages[1].t='备齐至少 4 份基础物资（木头/鲜鱼/浆果/海盐任意合计 ≥ 4）';
+      qTrade.stages[1].check=()=>(amount('wood')+amount('fish')+amount('berry')+amount('salt'))>=4;
+      qTrade.stages[2].t='在港口商铺或产业市场实际完成至少 1 笔玩家交易';
+      qTrade.stages[2].check=()=>(v229EnsureState(state)?.actions?.traded||0)>=1;
+    }
+    const qFest=V228_EARLY_CROSS_QUESTS.find(x=>x.id==='q228_first_fest');
+    if(qFest){
+      qFest.stages[0].t='打开 48 天年度日历查阅近期节庆预告';
+      qFest.stages[0].check=()=>!!v229EnsureState(state)?.actions?.calendarChecked;
+    }
+  }
+
+  // 2) 包装 v228AdvanceEarlyQuest：送信任务完成交付时真正消耗信件，严禁无信完成或重复交付
+  if(typeof v228AdvanceEarlyQuest==='function' && !v228AdvanceEarlyQuest.__v229Wrapped){
+    const origAdvEarly=v228AdvanceEarlyQuest;
+    v228AdvanceEarlyQuest=function(qId){
+      if(qId==='q228_letter'){
+        const v=ensureV228State(state);
+        const rec=v.earlyQuests.q228_letter??={started:true,stage:0,done:false};
+        if(rec.done)return {ok:false, duplicate:true, msg:'「海边的来信」已圆满完结，不可重复交付。'};
+        if(rec.stage===0 && !v229HasQuestItem('q228_letter','letter_q228')){
+          return {ok:false, missingItem:true, msg:'你尚未拾取「海盐浸湿的旧家书」，请先在微光营地或棕榈岛海岸现场拾取。'};
+        }
+        if(rec.stage===2){
+          const del=v229DeliverQuestItem('q228_letter','letter_q228',17,'灯塔湾港务邮亭');
+          if(!del.ok)return del;
+          rec.stage=3; rec.done=true;
+          v228GrantOnce('v228_eq_q228_letter', 50, null, '完结前期跨岛故事「海边的来信」（已当面交付旧家书）。');
+          save();
+          return {ok:true, done:true, msg:'🏆 已在灯塔湾当面交付旧家书，完结「海边的来信」！获得 50 金。'};
+        }
+      }
+      return origAdvEarly(qId);
+    };
+    v228AdvanceEarlyQuest.__v229Wrapped=true;
+  }
+
+  // 3) 包装 v228AutoSyncObjectives：防止 q228_letter 阶段 2 在未手动当面交付时被自动跳过
+  if(typeof v228AutoSyncObjectives==='function' && !v228AutoSyncObjectives.__v229Wrapped){
+    const origSync=v228AutoSyncObjectives;
+    v228AutoSyncObjectives=function(){
+      if(typeof state==='object'&&state?.player){
+        const curReg=v229CurrentRegionIdx();
+        const q=v229EnsureState(state);
+        if(q)q.actions.visitedRegions[curReg]=true;
+      }
+      // 暂存 q228_letter 状态，避免 stage 2（最终交付）被自动跳过消耗信件
+      const eq=state?.v228?.earlyQuests?.q228_letter;
+      const holdLetterFinal=eq && !eq.done && eq.stage===2;
+      if(holdLetterFinal){
+        const savedCheck=V228_EARLY_CROSS_QUESTS[0].stages[2].check;
+        V228_EARLY_CROSS_QUESTS[0].stages[2].check=()=>false;
+        try{ origSync(); }finally{ V228_EARLY_CROSS_QUESTS[0].stages[2].check=savedCheck; }
+        return;
+      }
+      return origSync();
+    };
+    v228AutoSyncObjectives.__v229Wrapped=true;
+  }
+
+  // 4) 底层加固 v223AdvanceMainline（彻底杜绝远程空点推进主线！）
+  if(typeof v223AdvanceMainline==='function' && !v223AdvanceMainline.__v229Wrapped){
+    const origML=v223AdvanceMainline;
+    v223AdvanceMainline=function(choiceVal=''){
+      const v=ensureV223State(state);
+      if(v.mainline.done){toast('《群岛的回响》主线已圆满完结。',2.6);return false;}
+      const chk=v229ValidateQuestStep('v223_mainline', 'echoes', v.mainline.stage);
+      if(!chk.ok){
+        toast(`⚠️ ${chk.reason}`, 3.4);
+        return false;
+      }
+      return origML(choiceVal);
+    };
+    v223AdvanceMainline.__v229Wrapped=true;
+  }
+
+  // 5) 底层加固 v223Action（彻底杜绝远程空点推进 10 条人物故事！）
+  if(typeof v223Action==='function' && !v223Action.__v229Wrapped){
+    const origV223Act=v223Action;
+    v223Action=function(act,val){
+      if(act==='v223Act'){
+        const parts=String(val||'').split('|'), cmd=parts[0];
+        if(cmd==='charStory'){
+          const id=parts[1], v=ensureV223State(state);
+          const cs=V223_CHAR_STORIES.find(x=>x.id===id);
+          if(!cs)return false;
+          const cur=v.charStories[id]||0;
+          if(cur>=cs.stages.length){toast('这段人物故事已圆满告一段落。',2.4);return false;}
+          const chk=v229ValidateQuestStep('v223_char', id, cur);
+          if(!chk.ok){
+            toast(`⚠️ ${chk.reason}`, 3.4);
+            return false;
+          }
+          const ok=origV223Act(act,val);
+          if(mapMode==='adventureLog')renderUnifiedQuestPanel();
+          return ok;
+        }
+        if(cmd==='mlStep'){
+          const ok=v223AdvanceMainline(parts[1]||'');
+          if(mapMode==='adventureLog')renderUnifiedQuestPanel();
+          else if(mapMode==='v223Codex')renderV223Codex();
+          return ok;
+        }
+      }
+      return origV223Act(act,val);
+    };
+    v223Action.__v229Wrapped=true;
+  }
+
+  // 6) 底层加固 v225AdvanceStory（彻底杜绝远程空点推进 3 大 5 中共 77 阶段剧情！）
+  if(typeof v225AdvanceStory==='function' && !v225AdvanceStory.__v229Wrapped){
+    const origV225Story=v225AdvanceStory;
+    v225AdvanceStory=function(qid, choiceVal=''){
+      const rec=v225GetQuestRec(qid);
+      if(rec.done){toast('这项剧情已圆满完结。',2.4);return false;}
+      const chk=v229ValidateQuestStep('v225_story', qid, rec.stage);
+      if(!chk.ok){
+        toast(`⚠️ ${chk.reason}`, 3.4);
+        return false;
+      }
+      return origV225Story(qid, choiceVal);
+    };
+    v225AdvanceStory.__v229Wrapped=true;
+  }
+
+  // 7) 底层加固 v225Action（彻底杜绝远程空点完成 8 个晨曦城小型任务，并消除重复任务面板入口！）
+  if(typeof v225Action==='function' && !v225Action.__v229Wrapped){
+    const origV225Act=v225Action;
+    v225Action=function(act,val){
+      if(act!=='v225Act')return false;
+      const parts=String(val||'').split('|'), cmd=parts[0];
+      if(cmd==='openQuests'||cmd==='tab'){
+        v228bCat='side'; v228bMobileDetail=false;
+        openPanel('adventureLog');
+        return true;
+      }
+      if(cmd==='step'){
+        const ok=v225AdvanceStory(parts[1], parts[2]||'');
+        if(mapMode==='adventureLog')renderUnifiedQuestPanel();
+        return ok;
+      }
+      if(cmd==='smallPickup'){
+        const id=parts[1], spec=V229_SMALL_QUEST_SPEC[id];
+        if(!spec||!spec.needItem)return false;
+        const r=v229AcquireQuestItem('v225sq:'+id, spec.needItem.id, spec.needItem.label, spec.regIdx);
+        toast(r.msg, 3.2);
+        if(r.ok)beep(540,.12,'sine');
+        if(mapMode==='adventureLog')renderUnifiedQuestPanel();
+        return r.ok;
+      }
+      if(cmd==='smallDone'){
+        const id=parts[1], q=V225_SMALL_QUESTS.find(x=>x.id===id);
+        if(!q)return false;
+        const rec=v225GetQuestRec(q.id);
+        if(rec.done){toast('这项任务已经完成，不可重复领奖。',2.4);return false;}
+        const chk=v229ValidateQuestStep('v225_small', q.id, 0);
+        if(!chk.ok){
+          toast(`⚠️ ${chk.reason}`, 3.4);
+          return false;
+        }
+        const spec=V229_SMALL_QUEST_SPEC[q.id];
+        if(spec?.needItem){
+          const del=v229DeliverQuestItem('v225sq:'+q.id, spec.needItem.id, spec.deliverReg, spec.deliverNpc);
+          if(!del.ok){toast(`⚠️ ${del.msg}`, 3.4);return false;}
+        }
+        rec.done=true; rec.started=true;
+        estateGold(q.gold);
+        if(typeof v223RecordChronicle==='function')v223RecordChronicle('v225_sq_'+q.id,`实地完成「${q.title}」（${q.region}）。`);
+        toast(`✅ 实地完成「${q.title}」！获得 ${q.gold} 金币！`,3.2);
+        beep(580,.14,'triangle'); save();
+        if(mapMode==='adventureLog')renderUnifiedQuestPanel();
+        return true;
+      }
+      return origV225Act(act,val);
+    };
+    v225Action.__v229Wrapped=true;
+  }
+
+  // 8) 真实玩家交易与日历查看记录钩子（仅真实玩家操作触发）
+  if(typeof marketExchange==='function' && !marketExchange.__v229Wrapped){
+    const origMkt=marketExchange;
+    marketExchange=function(port, key, isBuy, source='market'){
+      const goldBefore=state.v173?.gold||0;
+      const res=origMkt(port, key, isBuy, source);
+      if((state.v173?.gold||0)!==goldBefore)v229RecordPlayerAction('trade', key);
+      return res;
+    };
+    marketExchange.__v229Wrapped=true;
+  }
+  if(typeof v226SellSiteFinished==='function' && !v226SellSiteFinished.__v229Wrapped){
+    const origSell=v226SellSiteFinished;
+    v226SellSiteFinished=function(siteId){
+      const goldBefore=state.v173?.gold||0;
+      const res=origSell(siteId);
+      if((state.v173?.gold||0)!==goldBefore)v229RecordPlayerAction('trade', siteId);
+      return res;
+    };
+    v226SellSiteFinished.__v229Wrapped=true;
+  }
+  if(typeof v227Action==='function' && !v227Action.__v229Wrapped){
+    const origV227=v227Action;
+    v227Action=function(act, val){
+      if(act==='v227Act' && String(val||'').includes('calendar'))v229RecordPlayerAction('calendar');
+      return origV227(act, val);
+    };
+    v227Action.__v229Wrapped=true;
+  }
+
+  // 9) 扩展 v229Action：支持拾取海边家书等任务专属物品操作
+  if(typeof v229Action==='function' && !v229Action.__v229Wrapped){
+    const origV229Act=v229Action;
+    v229Action=function(act, val){
+      if(act==='v229Act'){
+        const parts=String(val||'').split('|'), cmd=parts[0];
+        if(cmd==='pickupLetter'){
+          const r=v229AcquireQuestItem('q228_letter','letter_q228','海盐浸湿的旧家书',[0,4]);
+          toast(r.msg, 3.2);
+          if(r.ok){
+            beep(560,.12,'sine');
+            const v=ensureV228State(state);
+            const rec=v.earlyQuests.q228_letter??={started:true,stage:0,done:false};
+            if(rec.stage===0)rec.stage=1;
+            save();
+          }
+          if(mapMode==='adventureLog')renderUnifiedQuestPanel();
+          return r.ok;
+        }
+      }
+      return origV229Act(act, val);
+    };
+    v229Action.__v229Wrapped=true;
+  }
+
+  // 10) 统一任务面板条目对齐：将所有任务项的状态、按钮、禁推原因与海图指路完全绑定到底层校验结果！
+  if(typeof v228CollectUnifiedQuests==='function' && !v228CollectUnifiedQuests.__v229Wrapped){
+    const origCollect=v228CollectUnifiedQuests;
+    v228CollectUnifiedQuests=function(){
+      const list=origCollect();
+      const v223=ensureV223State(state);
+      const v225=ensureV225State(state);
+      const v228=ensureV228State(state);
+      for(const q of list){
+        if(q.done)continue;
+        // 1) 海边的来信：第 0 阶段需先现场拾取旧家书；第 2 阶段需在灯塔湾现场交付
+        if(q.uid==='side:q228_letter'){
+          const rec=v228.earlyQuests.q228_letter||{stage:0,done:false};
+          const hasLetter=v229HasQuestItem('q228_letter','letter_q228');
+          if(rec.stage===0 && !hasLetter){
+            const onPickup=v229PlayerInRegion(0)||v229PlayerInRegion(4);
+            q.ready=onPickup;
+            q.blockReason=onPickup?'':'需亲临微光营地或棕榈岛海岸拾取旧家书';
+            q.actAct=onPickup?'v229Act':'';
+            q.actVal=onPickup?'pickupLetter':'';
+            q.actLabel='现场拾取旧家书';
+            q.navPos=v229RegionCoords(0);
+          }else if(rec.stage===2){
+            const canDel=hasLetter && v229PlayerInRegion(17);
+            q.ready=canDel;
+            q.blockReason=canDel?'':(hasLetter?'需携带旧家书亲临灯塔湾港务邮亭当面交付':'未持有旧家书');
+            q.actAct=canDel?'v228Act':'';
+            q.actVal=canDel?'advCross|q228_letter':'';
+            q.actLabel='当面交付旧家书';
+            q.navPos=v229RegionCoords(17);
+          }
+          if(hasLetter)q.materialsText='持有任务物品：✉️ 海盐浸湿的旧家书';
+        }
+        // 2) V2.2.5 八个小型任务
+        else if(q.uid.startsWith('side:v225sq_')){
+          const sqId=q.uid.slice('side:v225sq_'.length);
+          const spec=V229_SMALL_QUEST_SPEC[sqId];
+          const chk=v229ValidateQuestStep('v225_small', sqId, 0);
+          q.navPos=chk.navPos||v229RegionCoords(27);
+          if(chk.hasItem && chk.itemDef)q.materialsText=`持有任务物品：✉️ ${chk.itemDef.label}`;
+          if(chk.needPickup){
+            q.ready=!!chk.canPickup;
+            q.blockReason=chk.canPickup?'':chk.reason;
+            q.actAct=chk.canPickup?'v225Act':'';
+            q.actVal=chk.canPickup?`smallPickup|${sqId}`:'';
+            q.actLabel=`现场领取「${chk.itemDef.label}」`;
+          }else if(chk.ok){
+            q.ready=true;
+            q.blockReason='';
+            q.actAct='v225Act';
+            q.actVal=`smallDone|${sqId}`;
+            q.actLabel=spec?.actionLabel||'现场完成交付';
+          }else{
+            q.ready=false;
+            q.blockReason=chk.reason;
+            q.actAct=''; q.actVal=''; q.actLabel='';
+          }
+        }
+        // 3) V2.2.5 三大五中长篇剧情
+        else if(q.uid.startsWith('side:v225_')){
+          const sid=q.uid.slice('side:v225_'.length);
+          const rec=v225.quests?.[sid]||{stage:0,done:false};
+          const def=V225_ALL_STORIES.find(x=>x.id===sid);
+          const st=def?.stages?.[rec.stage];
+          const chk=v229ValidateQuestStep('v225_story', sid, rec.stage);
+          q.navPos=chk.navPos||q.navPos;
+          if(chk.ok){
+            q.ready=true; q.blockReason='';
+            if(st?.choiceKey){
+              q.actAct=''; q.actVal='';
+              q.extraHtml=st.choices.map(([ck,lbl])=>uiBtn('v225Act',`step|${sid}|${ck}`,lbl,false,true)).join('');
+            }else{
+              q.actAct='v225Act'; q.actVal=`step|${sid}|`;
+              q.actLabel=st?.batchItem?'现场交付材料':'现场推进剧情';
+            }
+          }else{
+            q.ready=false; q.blockReason=chk.reason;
+            q.actAct=''; q.actVal=''; q.actLabel=''; q.extraHtml='';
+          }
+        }
+        // 4) V2.2.3 10 条人物故事
+        else if(q.uid.startsWith('side:char_')){
+          const cid=q.uid.slice('side:char_'.length);
+          const cur=v223.charStories[cid]||0;
+          const chk=v229ValidateQuestStep('v223_char', cid, cur);
+          q.navPos=chk.navPos||q.navPos;
+          if(chk.ok){
+            q.ready=true; q.blockReason='';
+            q.actAct='v223Act'; q.actVal=`charStory|${cid}`; q.actLabel='现场推进人物故事';
+          }else{
+            q.ready=false; q.blockReason=chk.reason;
+            q.actAct=''; q.actVal=''; q.actLabel='';
+          }
+        }
+        // 5) V2.2.3 《群岛的回响》主线
+        else if(q.uid==='main:echoes'){
+          const ml=v223.mainline;
+          const ch=V223_MAINLINE_CHAPTERS[ml.chapter];
+          const st=ch?.stages?.[ml.stage];
+          const chk=v229ValidateQuestStep('v223_mainline', 'echoes', ml.stage);
+          q.navPos=chk.navPos||q.navPos;
+          if(chk.ok){
+            q.ready=true; q.blockReason='';
+            if(st?.choiceKey){
+              q.actAct=''; q.actVal='';
+              q.extraHtml=st.choices.map(([ck,lbl])=>uiBtn('v223Act',`mlStep|${ck}`,lbl,false,true)).join('');
+            }else{
+              q.actAct='v223Act'; q.actVal='mlStep|'; q.actLabel='现场推进主线';
+            }
+          }else{
+            q.ready=false; q.blockReason=chk.reason;
+            q.actAct=''; q.actVal=''; q.actLabel=''; q.extraHtml='';
+          }
+        }
+      }
+      return list;
+    };
+    v228CollectUnifiedQuests.__v229Wrapped=true;
+  }
+}
+
+installV229QuestIntegrityLayer();
 
 
 v225InstallCityExpansion();
