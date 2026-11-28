@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-+l8TAQekq2Xu+1O6n0dmpjEtQ96vg95NoN7DjAELTh8='; style-src 'unsafe-inline'; img-src data: blob:; base-uri 'none'; object-src 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-OlJ05H70pou3Mi7UeSfEPTnTu+jHUnkamKnxEGW00MM='; style-src 'unsafe-inline'; img-src data: blob:; base-uri 'none'; object-src 'none'; form-action 'none'">
 <meta name="theme-color" content="#0d2224">
-<title>荒野微光 V2.2.9e · 群岛心语</title>
+<title>荒野微光 V2.2.9f · 群岛平衡</title>
 <meta name="description" content="《荒野微光》V2.2.9《群岛新生》。在广阔的群岛与大陆之间开启属于你的旅程。探索失落的文明，结识不同的居民，建造家园，经营产业，扬帆远航。">
 <meta property="og:title" content="荒野微光 V2.2.9 · 群岛新生">
 <meta property="og:description" content="在广阔的群岛与大陆之间开启属于你的旅程。探索失落的文明，结识不同的居民，建造家园，经营产业，扬帆远航。">
@@ -780,6 +780,10 @@ body:not([data-state="playing"]) #hud:not(.editing-layout) *{pointer-events:none
   .vn-name{font-size:16px;} .vn-body{font-size:13.5px;margin-bottom:8px;} .vn-opt{padding:7px 11px;font-size:13px;}
 }
 
+
+.hp-val-wrap{display:inline-flex;align-items:center;justify-content:flex-end;gap:2px}
+.hp-regen-badge{display:inline-flex;align-items:center;justify-content:center;color:#6ee79c;font-weight:700;font-size:10px;line-height:1;text-shadow:0 0 6px rgba(110,231,156,.6);animation:hpRegenPulse 1.6s ease-in-out infinite}
+@keyframes hpRegenPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.55;transform:scale(.9)}}
 </style>
 </head>
 <body>
@@ -790,7 +794,7 @@ body:not([data-state="playing"]) #hud:not(.editing-layout) *{pointer-events:none
       <div class="panel stats">
         <div class="heading"><strong class="eyebrow">荒野微光</strong><span id="goldHud" class="gold-hud" aria-label="当前金币">🪙 <b id="goldText">0</b><em id="goldDelta" class="gold-delta"></em></span><span id="clock" class="clock"></span></div>
         <div class="meters">
-          <div class="meter" style="--bar:#ed8b83" title="生命">♥<span id="hpText"></span><i><b id="hpBar"></b></i></div>
+          <div class="meter" style="--bar:#ed8b83" title="生命">♥<span class="hp-val-wrap"><span id="hpText"></span><span id="hpRegenBadge" class="hp-regen-badge" hidden title="良好状态自然回血中（每5秒恢复1%最大生命）">✚</span></span><i><b id="hpBar"></b></i></div>
           <div class="meter" style="--bar:#f3c877" title="饱腹">🍖<span id="foodText"></span><i><b id="foodBar"></b></i></div>
           <div class="meter" style="--bar:#bab5ee" title="心神">✧<span id="mindText"></span><i><b id="mindBar"></b></i></div>
           <div class="meter stat-water" title="水分">💧<span id="waterText"></span><i><b id="waterBar"></b></i></div>
@@ -866,7 +870,7 @@ const SURFACE_W_182=416,SURFACE_H_182=272;
 const SURFACE_W_203=446,SURFACE_H_203=292;
 const SURFACE_W_210=530,SURFACE_H_210=320;
 const OLD_W=120,OLD_H=100,CHUNK=16;
-const GAME_META = Object.freeze({version:'2.2.9e', name:'群岛心语', subtitle:'V2.2.9e · 群岛心语', fullTitle:'荒野微光 V2.2.9e · 群岛心语', intro:'在广阔的群岛与大陆之间开启属于你的旅程。探索失落的文明，结识不同的居民，建造家园，经营产业，扬帆远航，在不断变化的世界中书写自己的故事。'});
+const GAME_META = Object.freeze({version:'2.2.9f', name:'群岛平衡', subtitle:'V2.2.9f · 群岛平衡', fullTitle:'荒野微光 V2.2.9f · 群岛平衡', intro:'在广阔的群岛与大陆之间开启属于你的旅程。探索失落的文明，结识不同的居民，建造家园，经营产业，扬帆远航，在不断变化的世界中书写自己的故事。'});
 const SAVE = 'wildcraft.archipelago.v229';
 const LEGACY_BACKUP_KEY = 'wildcraft.archipelago.v228b.backup';
 const TAILOR_ID='prosper:tailor';
@@ -3316,6 +3320,7 @@ function advance(dt){
   if(cold&&winter)p.hp-=dt*gear.cold*(weather()?.36:.16)*(navigatorBadge('ice')?.4:1);
   if(climate.steam&&!ship)p.hp-=dt*(equipped('heatGreaves')?.18:3.2)*(navigatorBadge('ember')?.5:1);
   if(state.bandagedUntil>state.elapsed)p.hp=Math.min(playerMaxHP(),p.hp+dt*(state.bandageRate||3));
+  if(typeof tickV229fNaturalRegen==='function')tickV229fNaturalRegen(dt);
   if(p.food<=25&&!hungerNotice){hungerNotice=true;toast('快饿坏了。选中食物后按使用。',4);}
   if(p.food>35)hungerNotice=false;
   if(tickPlayerStatus(dt))return;
@@ -8599,7 +8604,7 @@ let inviteCheckAt=0;
 function initV171bSave(s){
   s.leisure??={};
   const L=s.leisure;
-  L.chips??=30;
+  L.chips??=15;
   L.chipDay??=-1;
   L.dailyWinDay??=-1;
   L.dailyWinCount??=0;
@@ -8875,7 +8880,7 @@ function npcDialogue(npcKey){
   }
   if(npcKey==='mara'){
     if(L.achievements.naturalBJ)return '「起手就是自然 21 点，这种好牌可不多见。不过牌桌讲究见好就收。」';
-    return dusk()?'「入夜风凉，坐下来打两局 21 点暖暖手？庄家 17 点必停，规矩从不含糊。」':'「港口补给和娱乐筹码都在我这儿记账。每天免费领 20 筹码，别忘了。」';
+    return dusk()?'「入夜风凉，坐下来打两局 21 点暖暖手？庄家 17 点必停，规矩从不含糊。」':'「港口补给和娱乐筹码都在我这儿记账。新来旅人自带 15 枚初始筹码，多体验几款小游戏就能稳步攒够。」';
   }
   if(L.achievements.fishingRecord)return `「你把我的老纪录破到 ${st.fishing.bestScore} 分了！真有两下子，要不要再趁好潮汐比一场？」`;
   if(weather())return '「这阵风浪把鱼群吹得四处乱窜，不过老渔夫从不挑天气。要来一场 60 秒钓鱼赛吗？」';
@@ -22074,6 +22079,7 @@ function advanceStore(dt){
   if(p.food===0)p.hp=Math.max(0,p.hp-dt*1.6);
   if(p.water===0)p.hp=Math.max(0,p.hp-dt*.65);
   if(state.bandagedUntil>state.elapsed)p.hp=Math.min(playerMaxHP(),p.hp+dt*(state.bandageRate||3));
+  if(typeof tickV229fNaturalRegen==='function')tickV229fNaturalRegen(dt);
   const st=state.playerStatus;
   if(st?.poisonUntil>state.elapsed&&state.elapsed>=(st.poisonTickAt||0)){
     st.poisonTickAt=state.elapsed+2;p.hp=Math.max(0,p.hp-(st.poisonDmg||2));
@@ -32553,8 +32559,8 @@ function recordV196Ledger(cat, delta){
 }
 
 // --- 2. 统一小游戏筹码（每日上限 30 + 每日首胜翻倍 + 全游艺 NPC 兑换） ---
-const V196_DAILY_CHIP_CAP = 30;
-const V196_TITLE_COST = 300;
+const V196_DAILY_CHIP_CAP = 999999;
+const V196_TITLE_COST = 350;
 
 function v196EnsureDailyChips(){
   const v = state.v196, d = gameDay();
@@ -32857,9 +32863,9 @@ function renderV196FuboPanel(){
     </div>
     <p class="cards-help">免费休闲对弈（失败不扣金币）。红方先行，严格遵守中国象棋全部规则（马腿、象眼、炮隔子、将帅照面、应将、将死与困毙）。</p>
     <div class="inventory-actions" style="margin-bottom:8px">
-      <button class="press primary" data-act="v196StartXQ" data-val="easy">简单（胜 +3 筹码）</button>
-      <button class="press primary" data-act="v196StartXQ" data-val="normal">普通（胜 +6 筹码）</button>
-      <button class="press primary" data-act="v196StartXQ" data-val="hard">困难（胜 +10 筹码）</button>
+      <button class="press primary" data-act="v196StartXQ" data-val="easy">简单（胜 +5 筹码）</button>
+      <button class="press primary" data-act="v196StartXQ" data-val="normal">普通（胜 +10 筹码）</button>
+      <button class="press primary" data-act="v196StartXQ" data-val="hard">困难（胜 +16 筹码）</button>
     </div>
     ${renderV196ChipExchangeHtml('福伯')}
   </div>`);
@@ -32873,7 +32879,7 @@ const XQ_NAMES = {
   '-1':'将','-2':'士','-3':'象','-4':'马','-5':'车','-6':'炮','-7':'卒'
 };
 const XQ_VALS = [0, 10000, 220, 220, 460, 960, 500, 140];
-const XQ_REWARDS = { easy:3, normal:6, hard:10 };
+const XQ_REWARDS = { easy:5, normal:10, hard:16 };
 const XQ_DIFF_LABELS = { easy:'简单', normal:'普通', hard:'困难' };
 
 let xqGame = null, xqAiTimer = null;
@@ -45694,8 +45700,8 @@ function dawnAction(act,val){
     }
     renderHotbar();save();renderDawnPanel();return true;
   }
-  if(cmd==='gomoku'){if(typeof openGomoku==='function')openGomoku();else openPanel('gomoku');return true;}
-  if(cmd==='dice'){if(typeof openDice==='function')openDice();else openPanel('dice');return true;}
+  if(cmd==='gomoku'){startGomoku('normal');return true;}
+  if(cmd==='dice'){startDice();return true;}
   if(cmd==='rumor'){
     const openC=Object.keys(state.v21.chests||{}).length;
     const openS=Object.keys(state.v21.sites||{}).length;
@@ -57343,6 +57349,552 @@ function installV229eEnhancements(){
 }
 
 installV229eEnhancements();
+
+// =========================================================================
+// V2.2.9f《群岛平衡》
+// 1. 良好状态自然回血（双90%+10秒未受伤，每5秒+1%实际最大生命，每分钟≤12%，防读档/切图/暂停刷血 + 绿标）
+// 2. 前期普通敌人伤害精准下调（狼-25%、普通野兽-20%、前期怪-15~20%；中后期/精英狂暴/Boss/海盗100%不变）
+// 3. 全部 5 款小游戏筹码经济重平衡（初始15、兑换350、取消每日上限、防弃局重开与重复结算）
+// 4. 「游艺大师」称号条件升级（350筹码 + ≥3种小游戏各胜1局 + 累计≥15胜 + 1项进阶实绩，兼容旧存档）
+// =========================================================================
+
+// ==================== 1. 良好状态下自然回血 ====================
+const v229fRegen = {
+  accum: 0,
+  lastHp: null,
+  lastScene: '',
+  windowHeals: [] // { t, frac }
+};
+
+function v229fResetRegenRuntime(){
+  v229fRegen.accum = 0;
+  v229fRegen.lastHp = null;
+  v229fRegen.lastScene = '';
+}
+
+function v229fCurrentSceneKey(){
+  if(!state?.player) return '';
+  if(state.dungeons?.active) return 'dungeon:' + (state.dungeons.active.id || '1');
+  if(typeof insideStore === 'function' && insideStore()) return 'store:' + insideStore();
+  if(state.boarding) return 'boarding';
+  if(state.cave) return 'cave:' + (typeof activeCave === 'function' ? (activeCave()?.id || '1') : '1');
+  return 'surface';
+}
+
+function v229fCanNaturalRegen(){
+  if(typeof mapMode === 'undefined' || mapMode !== 'play') return false;
+  const p = state?.player;
+  if(!p || !(p.hp > 0)) return false;
+  const maxHp = typeof playerMaxHP === 'function' ? playerMaxHP() : 100;
+  if(p.hp >= maxHp - 1e-4) return false;
+  const maxFood = typeof playerMaxFood === 'function' ? playerMaxFood() : 100;
+  const maxWater = typeof playerMaxWater === 'function' ? playerMaxWater() : 100;
+  if(p.food < maxFood * 0.9 - 1e-6) return false;
+  if(p.water < maxWater * 0.9 - 1e-6) return false;
+  const lastHit = Number.isFinite(state.lastHit) ? state.lastHit : -20;
+  if((state.elapsed || 0) - lastHit < 10 - 1e-6) return false;
+  return true;
+}
+
+function tickV229fNaturalRegen(dt){
+  if(typeof mapMode === 'undefined' || mapMode !== 'play') { v229fRegen.accum = 0; return; }
+  const p = state?.player;
+  if(!p) return;
+
+  // 切换场景时重置累计计时，禁止切场景刷回血
+  const sc = v229fCurrentSceneKey();
+  if(v229fRegen.lastScene && sc !== v229fRegen.lastScene){
+    v229fRegen.accum = 0;
+    v229fRegen.lastHp = p.hp;
+  }
+  v229fRegen.lastScene = sc;
+
+  // 监测任何非预期掉血（中毒/灼伤/严寒/陷阱等），立即刷新受伤时间并清零累计
+  if(v229fRegen.lastHp !== null && p.hp < v229fRegen.lastHp - 1e-4){
+    state.lastHit = state.elapsed;
+    v229fRegen.accum = 0;
+  }
+
+  if(!v229fCanNaturalRegen()){
+    v229fRegen.accum = 0;
+    v229fRegen.lastHp = p.hp;
+    return;
+  }
+
+  // 严格钳制单帧 dt，避免切后台/离线时间突增累计
+  const stepDt = clamp(Number.isFinite(dt) ? dt : 0, 0, 0.1);
+  v229fRegen.accum += stepDt;
+
+  const maxHp = typeof playerMaxHP === 'function' ? playerMaxHP() : 100;
+  const now = state.elapsed || 0;
+  while(v229fRegen.accum >= 5 - 1e-9){
+    v229fRegen.accum -= 5;
+    // 滚动 60 秒窗口硬上限：每分钟最多恢复 12% 最大生命值
+    v229fRegen.windowHeals = v229fRegen.windowHeals.filter(h => now - h.t < 60 - 1e-6);
+    const usedFrac = v229fRegen.windowHeals.reduce((s, h) => s + h.frac, 0);
+    if(usedFrac + 0.01 <= 0.12 + 1e-9 && p.hp < maxHp - 1e-4){
+      p.hp = Math.min(maxHp, p.hp + maxHp * 0.01);
+      v229fRegen.windowHeals.push({ t: now, frac: 0.01 });
+    }
+    if(p.hp >= maxHp - 1e-4){
+      v229fRegen.accum = 0;
+      break;
+    }
+  }
+  v229fRegen.lastHp = p.hp;
+}
+
+// ==================== 2. 前期普通敌人伤害下调（中后期/精英/狂暴/Boss/海盗不变） ====================
+// 相对 V2.2.9e 实际数值下调比例：
+// 普通狼 -25% | 普通攻击性野兽(野猪/硬壳蟹/湿地毒蛇) -20% | 前期普通怪物(蜘蛛/幽光/蝙蝠/洞窟潜行者/溺亡水手) -15%~-18%
+const V229F_EARLY_DMG_FACTORS = Object.freeze({
+  wolf: 0.75,          // 15 -> 11.25 (-25%)
+  boar: 0.80,          // 13 -> 10.4 / wild 11 -> 8.8 (-20%)
+  shellCrab: 0.80,     // 18 -> 14.4 / wild 12 -> 9.6 (-20%)
+  marshViper: 0.80,    // 8 -> 6.4 / wild 7 -> 5.6 (-20%)
+  spider: 0.82,        // 13 -> 10.66 (-18%)
+  wisp: 0.82,          // 9 -> 7.38 (-18%)
+  bat: 0.82,           // 7 -> 5.74 (-18%)
+  caveLurker: 0.82,    // 11 -> 9.02 (-18%)
+  drownedSailor: 0.85  // 13 -> 11.05 (-15%)
+});
+const V229F_PRE_NERF_SNAPSHOT = {};
+
+// ==================== 3. 小游戏筹码重平衡 & 「游艺大师」称号条件 ====================
+const V229F_MINIGAME_CHIPS = Object.freeze({
+  blackjack: { win: 3, naturalBJ: 4, firstWin: 5, ach: 12 },
+  dice:      { win: 4, firstWin: 6, ach: 12 },
+  fishing:   { win: 6, recordBonus: 2, firstWin: 8, ach: 15 },
+  gomoku:    { normal: 5, hard: 9, master: 15, firstNormal: 6, firstHard: 10, firstMaster: 18, ach: 18 },
+  xiangqi:   { easy: 5, normal: 10, hard: 16 }
+});
+
+const V229F_TITLE_REQ = Object.freeze({
+  chips: 350,
+  distinctGames: 3,
+  totalWins: 15
+});
+
+const v229fSettledMatchIds = new Set();
+let v229fMatchSeq = 0;
+
+function v229fGameMasterStatus(s = state){
+  const L = s?.leisure;
+  const st = L?.stats || {};
+  const xq = s?.v196?.xqStats || { w:0, l:0, d:0 };
+  const gm = st.gomoku || { normal:{w:0}, hard:{w:0}, master:{w:0} };
+  const gmW = (gm.normal?.w||0) + (gm.hard?.w||0) + (gm.master?.w||0);
+  const diceW = st.dice?.w || 0;
+  const bjW = st.blackjack?.w || 0;
+  const fishW = st.fishing?.w || 0;
+  const xqW = xq.w || 0;
+
+  const perGame = [
+    { key:'gomoku',    name:'五子棋',   wins: gmW },
+    { key:'dice',      name:'吹牛骰',   wins: diceW },
+    { key:'blackjack', name:'21 点',    wins: bjW },
+    { key:'fishing',   name:'钓鱼比赛', wins: fishW },
+    { key:'xiangqi',   name:'中国象棋', wins: xqW }
+  ];
+  const distinctGames = perGame.filter(g => g.wins >= 1).length;
+  const totalWins = perGame.reduce((sum, g) => sum + g.wins, 0);
+  const chips = L?.chips || 0;
+
+  // 进阶实绩（五选一即可，兼容旧存档已有象棋胜场）
+  const feats = [];
+  if((gm.hard?.w||0) + (gm.master?.w||0) >= 1) feats.push('五子棋困难/大师获胜');
+  if((xq.normalW||0) + (xq.hardW||0) >= 1 || xqW >= 3) feats.push('中国象棋进阶胜局');
+  if((st.dice?.bestStreak||0) >= 2) feats.push('吹牛骰 2 连胜');
+  if((st.fishing?.bestScore||0) >= 6) feats.push('钓鱼赛单场 ≥6 分');
+  if((st.blackjack?.bjCount||0) >= 1) feats.push('打出自然 Blackjack');
+  const skillFeat = feats.length > 0;
+
+  const chipsOk = chips >= V229F_TITLE_REQ.chips;
+  const distinctOk = distinctGames >= V229F_TITLE_REQ.distinctGames;
+  const winsOk = totalWins >= V229F_TITLE_REQ.totalWins;
+  const owned = hasGameMasterTitle();
+  const canUnlock = !owned && chipsOk && distinctOk && winsOk && skillFeat;
+
+  return {
+    owned, chips, perGame, distinctGames, totalWins,
+    feats, skillFeat, chipsOk, distinctOk, winsOk, canUnlock
+  };
+}
+
+function v229fForfeitUnsettledGames(){
+  // 退出未结算的对局按弃权计负并重置连胜，杜绝通过反复退出重开刷起手好牌或连胜
+  const L = state?.leisure;
+  if(typeof bjState !== 'undefined' && bjState && !bjState.over && !bjState.settled){
+    bjState.over = true; bjState.settled = true;
+    if(L?.stats?.blackjack) L.stats.blackjack.l++;
+    if(typeof updateChallengeProgress === 'function') updateChallengeProgress('blackjack', 'loss', { bet: 0 });
+    save();
+  }
+  if(typeof diceState !== 'undefined' && diceState && !diceState.over && !diceState.settled && diceState.bid){
+    diceState.over = true; diceState.settled = true;
+    if(L?.stats?.dice){ L.stats.dice.l++; L.stats.dice.streak = 0; }
+    if(typeof updateChallengeProgress === 'function') updateChallengeProgress('dice', 'loss');
+    save();
+  }
+  if(typeof gomokuState !== 'undefined' && gomokuState && !gomokuState.over && !gomokuState.settled && gomokuState.moves > 0){
+    gomokuState.over = true; gomokuState.settled = true;
+    const diff = gomokuState.diff || 'normal';
+    if(L?.stats?.gomoku?.[diff]){ L.stats.gomoku[diff].l++; L.stats.gomoku.streak = 0; }
+    if(typeof updateChallengeProgress === 'function') updateChallengeProgress('gomoku', 'loss', { diff });
+    save();
+  }
+  if(typeof xqGame !== 'undefined' && xqGame && !xqGame.over && !xqGame.settled && xqGame.lastFrom >= 0){
+    xqGame.over = true; xqGame.settled = true;
+    if(state?.v196?.xqStats) state.v196.xqStats.l++;
+    save();
+  }
+}
+
+// ==================== 4. 安装 V2.2.9f 全部模块 ====================
+function installV229fBalancePatch(){
+  // 1) 应用前期普通敌人伤害下调（仅调整攻击伤害，不触碰血量/移速/攻速/前摇/防御；记录基线供精英/狂暴还原）
+  if(typeof combatProfile === 'object' && combatProfile){
+    for(const [k, factor] of Object.entries(V229F_EARLY_DMG_FACTORS)){
+      if(combatProfile[k] && Number.isFinite(combatProfile[k].damage) && !V229F_PRE_NERF_SNAPSHOT[k]){
+        const orig = combatProfile[k].damage;
+        V229F_PRE_NERF_SNAPSHOT[k] = orig;
+        combatProfile[k].damage = Number((orig * factor).toFixed(2));
+      }
+    }
+  }
+  if(typeof WILD_BEHAVIOUR === 'object' && WILD_BEHAVIOUR){
+    for(const k of ['boar', 'shellCrab', 'marshViper']){
+      const factor = V229F_EARLY_DMG_FACTORS[k];
+      if(WILD_BEHAVIOUR[k] && Number.isFinite(WILD_BEHAVIOUR[k].damage) && !V229F_PRE_NERF_SNAPSHOT['wild:' + k]){
+        const orig = WILD_BEHAVIOUR[k].damage;
+        V229F_PRE_NERF_SNAPSHOT['wild:' + k] = orig;
+        WILD_BEHAVIOUR[k].damage = Number((orig * factor).toFixed(2));
+      }
+    }
+  }
+
+  // 包装 resolvePlayerDamage：确保狂暴/精英版前期野兽或怪物 100% 保持原版伤害不被误削弱，并立即打断自然回血！
+  if(typeof resolvePlayerDamage === 'function' && !resolvePlayerDamage.__v229fWrapped){
+    const origResolve = resolvePlayerDamage;
+    resolvePlayerDamage = function(source, damage, info = {}){
+      let adjDamage = damage;
+      if(source && Number.isFinite(damage) && damage > 0){
+        const isEliteOrFury = !!(source.elite || source.isElite || (Array.isArray(source.eliteTraits) && source.eliteTraits.length > 0));
+        const factor = V229F_EARLY_DMG_FACTORS[source.type];
+        if(isEliteOrFury && factor && factor > 0 && factor < 1){
+          adjDamage = damage / factor;
+        }
+      }
+      const res = origResolve(source, adjDamage, info);
+      if(res === 'hit' || res === 'block' || res === 'break'){
+        v229fRegen.accum = 0;
+        if(state?.player) v229fRegen.lastHp = state.player.hp;
+      }
+      return res;
+    };
+    resolvePlayerDamage.__v229fWrapped = true;
+  }
+
+  // 2) 包装 updateHud / openPanel / initialize：更新绿色自然回血标识 + 防止打开面板/读档刷回血
+  if(typeof updateHud === 'function' && !updateHud.__v229fWrapped){
+    const origHud = updateHud;
+    updateHud = function(){
+      origHud();
+      const badge = $('hpRegenBadge');
+      if(badge) badge.hidden = !v229fCanNaturalRegen();
+    };
+    updateHud.__v229fWrapped = true;
+  }
+  if(typeof openPanel === 'function' && !openPanel.__v229fWrapped){
+    const origOpen = openPanel;
+    openPanel = function(kind, reason = ''){
+      if(kind && kind !== 'play') v229fRegen.accum = 0;
+      return origOpen(kind, reason);
+    };
+    openPanel.__v229fWrapped = true;
+  }
+  if(typeof initialize === 'function' && !initialize.__v229fWrapped){
+    const origInit = initialize;
+    initialize = function(fresh, appearance = null, guideLevel = null){
+      v229fResetRegenRuntime();
+      const r = origInit(fresh, appearance, guideLevel);
+      v229fRegen.lastHp = state?.player?.hp ?? null;
+      v229fRegen.lastScene = v229fCurrentSceneKey();
+      return r;
+    };
+    initialize.__v229fWrapped = true;
+  }
+
+  // 3) 取消每日筹码上限与首胜翻倍通胀（所有合法胜局均稳定发筹码，无冷却、无每日上限）
+  v196GrantMinigameChips = function(rawAmount, reason = ''){
+    v196EnsureDailyChips();
+    const v = state.v196;
+    const amt = Math.max(0, Math.round(Number(rawAmount) || 0));
+    if(amt <= 0) return { added: 0, doubled: false, capped: false };
+    v.dailyChipsEarned = (v.dailyChipsEarned || 0) + amt;
+    state.leisure.chips = Math.min(9999, (state.leisure.chips || 0) + amt);
+    save();
+    return { added: amt, doubled: false, capped: false };
+  };
+
+  // 4) 重构 awardMinigameVictory：按 5 款小游戏真实难度与时长精准发筹码 + 防同一局重复发奖 + 取消每日筹码上限
+  awardMinigameVictory = function(game, meta = {}){
+    ensureDailyLeisureAllowance();
+    if(meta.matchId){
+      if(v229fSettledMatchIds.has(meta.matchId)) return [];
+      v229fSettledMatchIds.add(meta.matchId);
+    }
+    const L = state.leisure, lines = [];
+    const fwKey = game === 'gomoku' ? `gomoku_${meta.diff || 'normal'}` : game;
+    if(!L.firstWins[fwKey]){
+      L.firstWins[fwKey] = true;
+      if(fwKey === 'gomoku_normal'){
+        lines.push('【首胜】' + grantSafeRewards({ jerky: 2, bandage: 1 }, V229F_MINIGAME_CHIPS.gomoku.firstNormal, '五子棋普通首胜'));
+      }else if(fwKey === 'gomoku_hard'){
+        const t = createEnhancedTreasure('rare', '艾萨的棋局手记');
+        lines.push('【首胜】' + grantSafeRewards({ iron: 2, crystal: 1 }, V229F_MINIGAME_CHIPS.gomoku.firstHard, '五子棋困难首胜') + (t ? ` · 新藏宝线索（${t.regionName}）` : ''));
+      }else if(fwKey === 'gomoku_master'){
+        const t = createEnhancedTreasure('precious', '大师棋手密藏');
+        lines.push('【首胜】' + grantSafeRewards({ steel: 2, pearl: 2 }, V229F_MINIGAME_CHIPS.gomoku.firstMaster, '五子棋大师首胜') + (t ? ` · 珍藏藏宝线索（${t.regionName}）` : ''));
+      }else if(fwKey === 'dice'){
+        lines.push('【首胜】' + grantSafeRewards({ copper: 2, jerky: 2 }, V229F_MINIGAME_CHIPS.dice.firstWin, '吹牛骰首胜'));
+      }else if(fwKey === 'blackjack'){
+        lines.push('【首胜】' + grantSafeRewards({ honey: 2, silkBandage: 1 }, V229F_MINIGAME_CHIPS.blackjack.firstWin, '21 点首胜'));
+      }else if(fwKey === 'fishing'){
+        const t = createEnhancedTreasure('rare', '老渔夫的海图折角');
+        lines.push('【首胜】' + grantSafeRewards({ smokedFish: 2, rope: 2 }, V229F_MINIGAME_CHIPS.fishing.firstWin, '钓鱼比赛首胜') + (t ? ` · 新藏宝线索（${t.regionName}）` : ''));
+      }
+    }
+
+    // 精准计算单局净筹码（无每日上限、无冷却）
+    let chipBonus = 4;
+    if(game === 'gomoku'){
+      chipBonus = meta.diff === 'master' ? V229F_MINIGAME_CHIPS.gomoku.master
+        : meta.diff === 'hard' ? V229F_MINIGAME_CHIPS.gomoku.hard
+        : V229F_MINIGAME_CHIPS.gomoku.normal;
+    }else if(game === 'dice'){
+      chipBonus = V229F_MINIGAME_CHIPS.dice.win;
+    }else if(game === 'blackjack'){
+      chipBonus = meta.naturalBJ ? V229F_MINIGAME_CHIPS.blackjack.naturalBJ : V229F_MINIGAME_CHIPS.blackjack.win;
+    }else if(game === 'fishing'){
+      chipBonus = V229F_MINIGAME_CHIPS.fishing.win + (meta.brokeRecord ? V229F_MINIGAME_CHIPS.fishing.recordBonus : 0);
+    }
+
+    let pool = {};
+    if(L.dailyWinCount < 8){
+      L.dailyWinCount++;
+      pool = {
+        gomoku: meta.diff === 'master' ? { crystal: 1, jerky: 1 } : meta.diff === 'hard' ? { iron: 1, berry: 2 } : { berry: 2, rope: 1 },
+        dice: { jerky: 1, wood: 2 },
+        blackjack: { berry: 2, salt: 1 },
+        fishing: { saltFish: 1, rope: 1 }
+      }[game] || { berry: 2 };
+    }
+    lines.push('【胜局】' + grantSafeRewards(pool, chipBonus, '对局获胜'));
+
+    if(game === 'gomoku' && meta.diff === 'master' && !L.achievements.masterGomoku){
+      L.achievements.masterGomoku = true;
+      lines.push('🏆 成就解锁【棋道破局】：' + grantSafeRewards({ steel: 1, pearl: 1 }, V229F_MINIGAME_CHIPS.gomoku.ach, '成就奖励'));
+    }
+    if(game === 'dice' && (L.stats.dice.streak || 0) >= 3 && !L.achievements.diceStreak3){
+      L.achievements.diceStreak3 = true;
+      const t = createEnhancedTreasure('rare', '罗克的私藏骰盒线索');
+      lines.push('🏆 成就解锁【骰桌常胜】：' + grantSafeRewards({ iron: 2, honey: 2 }, V229F_MINIGAME_CHIPS.dice.ach, '成就奖励') + (t ? ` · 新线索（${t.regionName}）` : ''));
+    }
+    if(game === 'blackjack' && meta.naturalBJ && !L.achievements.naturalBJ){
+      L.achievements.naturalBJ = true;
+      lines.push('🏆 成就解锁【天成 21 点】：' + grantSafeRewards({ crystal: 2, silkBandage: 1 }, V229F_MINIGAME_CHIPS.blackjack.ach, '成就奖励'));
+    }
+    if(game === 'fishing' && meta.brokeRecord && !L.achievements.fishingRecord){
+      L.achievements.fishingRecord = true;
+      lines.push('🏆 成就解锁【灯塔湾钓王】：' + grantSafeRewards({ steel: 1, seaFeast: 1 }, V229F_MINIGAME_CHIPS.fishing.ach, '成就奖励'));
+    }
+    save();
+    return lines.filter(Boolean);
+  };
+
+  // 5) 同步调整随机挑战筹码，并修复原先不可完成的 21 点「下注20筹码」挑战
+  generateNpcChallenge = function(npcKey){
+    const L = state.leisure, day = gameDay();
+    const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+    let c = null;
+    if(npcKey === 'isa'){
+      const opts = [
+        { code:'g_norm', title:'棋盘热身', desc:'在普通难度下击败艾萨 1 局。', target:1, diff:'normal', reward:{iron:2,jerky:2}, chips:8 },
+        { code:'g_hard', title:'中盘博弈', desc:'在困难难度下击败艾萨 1 局。', target:1, diff:'hard', reward:{steel:1,crystal:2}, chips:12, clue:'rare' },
+        { code:'g_streak', title:'连胜布局', desc:'在普通或更高难度下连续赢得 2 局五子棋。', target:2, diff:'any', streak:true, reward:{iron:2,silkBandage:1}, chips:12 }
+      ];
+      if(L.firstWins.gomoku_hard) opts.push({ code:'g_master', title:'宗师试炼', desc:'在大师难度下击败艾萨 1 局。', target:1, diff:'master', reward:{steel:2,pearl:2}, chips:18, clue:'precious' });
+      c = pick(opts);
+    }else if(npcKey === 'roke'){
+      c = pick([
+        { code:'d_bo3', title:'三局两胜', desc:'在吹牛骰中累计击败罗克 2 局。', target:2, reward:{copper:2,jerky:2}, chips:10 },
+        { code:'d_streak', title:'胆识连胜', desc:'在吹牛骰中连续击败罗克 2 局。', target:2, streak:true, reward:{iron:2,honey:2}, chips:12, clue:'rare' },
+        { code:'d_duel', title:'豪赌一局', desc:'在吹牛骰特别对决中战胜罗克 1 局。', target:1, reward:{crystal:2,rope:2}, chips:8 }
+      ]);
+    }else if(npcKey === 'mara'){
+      c = pick([
+        { code:'b_2of3', title:'稳健牌手', desc:'在 21 点中累计赢得 2 局。', target:2, reward:{honey:2,bandage:2}, chips:8 },
+        { code:'b_streak', title:'冷静连胜', desc:'在 21 点中连续赢得 2 局。', target:2, streak:true, reward:{iron:2,crystal:1}, chips:10, clue:'rare' },
+        { code:'b_bj', title:'幸运牌面', desc:'在 21 点中打出一次自然 Blackjack。', target:1, needBJ:true, reward:{steel:1,pearl:1}, chips:14 }
+      ]);
+    }else{
+      c = pick([
+        { code:'f_score', title:'满载而归', desc:'在单场钓鱼比赛中取得至少 5 分。', target:5, mode:'score', reward:{smokedFish:2,iron:1}, chips:10 },
+        { code:'f_race', title:'抢先上钩', desc:'在钓鱼比赛中比老巴克更快累计钓到 2 条鱼。', target:1, mode:'race2', reward:{copper:2,jerky:2}, chips:10 },
+        { code:'f_big', title:'大鱼挑战', desc:'在单场钓鱼比赛中钓到至少 1 条大鱼（需铜钩钓竿与鱼群）。', target:1, mode:'bigFish', reward:{steel:1,pearl:1}, chips:14, clue:'rare' }
+      ]);
+    }
+    return {
+      id: `ch:${npcKey}:${day}:${state.nextId++}`,
+      npcKey,
+      game: leisureNpcs.find(n => n.key === npcKey).game,
+      ...c,
+      progress: 0,
+      expiresAt: state.time + DAY * 2,
+      status: 'active'
+    };
+  };
+
+  if(typeof updateChallengeProgress === 'function' && !updateChallengeProgress.__v229fWrapped){
+    const origChProg = updateChallengeProgress;
+    updateChallengeProgress = function(game, result, meta = {}){
+      const ch = state.leisure?.activeChallenge;
+      if(ch && ch.status === 'active' && ch.game === 'blackjack' && ch.streak && result === 'loss'){
+        ch.progress = 0; save(); return null;
+      }
+      return origChProg(game, result, meta);
+    };
+    updateChallengeProgress.__v229fWrapped = true;
+  }
+
+  // 6) 中国象棋结算：记录普通/困难胜场（供游艺大师实绩校验），并移除「每日上限 30/30」过时提示
+  if(typeof xqSettleResult === 'function' && !xqSettleResult.__v229fWrapped){
+    const origXqSettle = xqSettleResult;
+    xqSettleResult = function(winner, reason){
+      const wasOver = !xqGame || xqGame.settled;
+      const diff = xqGame?.diff || 'normal';
+      origXqSettle(winner, reason);
+      if(!wasOver && winner === 1 && state?.v196?.xqStats){
+        if(diff === 'normal') state.v196.xqStats.normalW = (state.v196.xqStats.normalW || 0) + 1;
+        if(diff === 'hard') state.v196.xqStats.hardW = (state.v196.xqStats.hardW || 0) + 1;
+        if(xqGame && xqGame.status && xqGame.status.includes('今日筹码已达上限')){
+          xqGame.status = `🎉 ${reason}！你获胜了！赢得 ${V229F_MINIGAME_CHIPS.xiangqi[diff] || 10} 筹码`;
+          const el = $('xqStatusText'); if(el) setText(el, xqGame.status);
+        }
+        save();
+      }
+    };
+    xqSettleResult.__v229fWrapped = true;
+  }
+
+  // 7) 防止中途退出重开刷牌/刷骰：包装 backLeisureNpc / closePanel
+  if(typeof handleV171bClick === 'function' && !handleV171bClick.__v229fWrapped){
+    const orig171b = handleV171bClick;
+    handleV171bClick = function(act, val){
+      if(act === 'backLeisureNpc'){ v229fForfeitUnsettledGames(); }
+      return orig171b(act, val);
+    };
+    handleV171bClick.__v229fWrapped = true;
+  }
+  if(typeof closePanel === 'function' && !closePanel.__v229fWrapped){
+    const origClose = closePanel;
+    closePanel = function(){
+      if(['gomoku', 'dice', 'blackjack', 'v196Xiangqi'].includes(mapMode)){
+        v229fForfeitUnsettledGames();
+      }
+      return origClose();
+    };
+    closePanel.__v229fWrapped = true;
+  }
+
+  // 8) 重写统一筹码兑换与「游艺大师」称号面板（清晰展示 350 筹码 + 品类/总胜局/进阶实绩进度，无每日上限）
+  renderV196ChipExchangeHtml = function(npcName = '游艺 NPC'){
+    v196EnsureDailyChips();
+    const gm = v229fGameMasterStatus();
+    const chips = gm.chips;
+    const reqList = gm.owned ? '' : `<div class="cards-help" style="margin:6px 0 8px;line-height:1.65">
+      <div>${gm.chipsOk ? '✅' : '⬜'} 持有筹码：<strong>${gm.chips}/${V229F_TITLE_REQ.chips}</strong>（兑换时扣除 ${V229F_TITLE_REQ.chips} 筹码）</div>
+      <div>${gm.distinctOk ? '✅' : '⬜'} 小游戏品类覆盖：<strong>${gm.distinctGames}/${V229F_TITLE_REQ.distinctGames}</strong> 种（${gm.perGame.map(g => `${g.name}${g.wins}胜`).join(' · ')}）</div>
+      <div>${gm.winsOk ? '✅' : '⬜'} 累计有效胜局：<strong>${gm.totalWins}/${V229F_TITLE_REQ.totalWins}</strong> 胜</div>
+      <div>${gm.skillFeat ? '✅' : '⬜'} 进阶实绩（五选一）：${gm.skillFeat ? `已达成（${gm.feats[0]}）` : '五子棋困难/大师胜 · 象棋普通/困难胜 · 吹牛骰2连胜 · 钓鱼≥6分 · 自然21点'}</div>
+    </div>`;
+
+    let btnLabel = `消耗 ${V229F_TITLE_REQ.chips} 筹码解锁【游艺大师】`;
+    if(!gm.chipsOk) btnLabel = `还差 ${V229F_TITLE_REQ.chips - chips} 筹码`;
+    else if(!gm.distinctOk) btnLabel = `还差 ${V229F_TITLE_REQ.distinctGames - gm.distinctGames} 种小游戏胜局`;
+    else if(!gm.winsOk) btnLabel = `还差 ${V229F_TITLE_REQ.totalWins - gm.totalWins} 场累计胜局`;
+    else if(!gm.skillFeat) btnLabel = '尚需达成 1 项进阶实绩';
+
+    return `<div class="v195b-sec" style="margin-top:8px">
+      <h3>🎟 统一筹码兑换与称号（余额 ${chips} 筹码）</h3>
+      <p class="cards-help">所有小游戏 NPC 均可兑换 · 1 筹码 = 2 金币 · 无每日筹码获取上限 · 新旅人初始赠送 15 筹码</p>
+      <div class="inventory-actions" style="margin-bottom:6px">
+        <button class="press" data-act="v196ChipToGold" data-val="1" ${chips>=1?'':'disabled'}>兑 1 筹码 (+2金)</button>
+        <button class="press" data-act="v196ChipToGold" data-val="10" ${chips>=10?'':'disabled'}>兑 10 筹码 (+20金)</button>
+        <button class="press" data-act="v196ChipToGold" data-val="all" ${chips>=1?'':'disabled'}>全部兑金 (+${chips*2}金)</button>
+      </div>
+      <div class="inventory-actions" style="margin-bottom:6px">
+        <input type="number" id="v196CustomChip" class="field" min="1" max="${Math.max(1,chips)}" value="${Math.min(5,Math.max(1,chips))}" style="width:76px" aria-label="自定义兑换筹码">
+        <button class="press" data-act="v196ChipToGoldCustom" ${chips>=1?'':'disabled'}>自定义兑金</button>
+      </div>
+      <p style="margin-top:6px"><strong>永久称号【游艺大师】</strong>：${gm.owned ? '<span class="pill good">✓ 已永久解锁（全局消费 -10%，叠加上限 25%）</span>' : `需 ${V229F_TITLE_REQ.chips} 筹码并满足游艺综合条件，永久享受商店/雇佣/施工/船票/维修等全局 10% 折扣`}</p>
+      ${reqList}
+      ${gm.owned ? '' : `<button class="press primary" data-act="v196UnlockTitle" ${gm.canUnlock ? '' : 'disabled'}>${btnLabel}</button>`}
+    </div>`;
+  };
+
+  // 9) 更新小游戏 NPC 面板上的胜局筹码明示文案
+  if(typeof renderLeisureNpcPanel === 'function' && !renderLeisureNpcPanel.__v229fWrapped){
+    const origRenderNpc = renderLeisureNpcPanel;
+    renderLeisureNpcPanel = function(){
+      origRenderNpc();
+      const winEl = $('window');
+      if(!winEl) return;
+      winEl.innerHTML = winEl.innerHTML
+        .replace('>五子棋 · 普通<', '>五子棋 · 普通（胜 +5 筹码）<')
+        .replace('>五子棋 · 困难<', '>五子棋 · 困难（胜 +9 筹码）<')
+        .replace('>五子棋 · 大师<', '>五子棋 · 大师（胜 +15 筹码）<')
+        .replace('>开始吹牛骰<', '>开始吹牛骰（胜 +4 筹码）<')
+        .replace('>21 点（免费休闲局）<', '>21 点 · 免费局（胜 +3 / 自然21点 +4 筹码）<')
+        .replace('>开始 60 秒钓鱼比赛<', '>开始 60 秒钓鱼比赛（胜 +6 筹码）<')
+        .replace(/· 今日普通胜局奖励 \d+\/8/, '· 筹码无每日上限（今日额外物资奖励 ' + (state?.leisure?.dailyWinCount || 0) + '/8）');
+    };
+    renderLeisureNpcPanel.__v229fWrapped = true;
+  }
+
+  // 10) 拦截 v196UnlockTitle：严格执行 350 筹码 + 品类/总胜/实绩校验，防止重复兑换与旧存档误扣
+  if(typeof handleV196Action === 'function' && !handleV196Action.__v229fWrapped){
+    const orig196 = handleV196Action;
+    handleV196Action = function(act, val){
+      if(act === 'v196UnlockTitle'){
+        if(hasGameMasterTitle()){ toast('已拥有【游艺大师】称号。'); return true; }
+        const gm = v229fGameMasterStatus();
+        if(!gm.chipsOk){ toast(`筹码不足 ${V229F_TITLE_REQ.chips}（当前 ${gm.chips} 枚）。`, 3); return true; }
+        if(!gm.distinctOk){ toast(`需至少在 ${V229F_TITLE_REQ.distinctGames} 种不同小游戏中获胜（当前 ${gm.distinctGames} 种）。`, 3.2); return true; }
+        if(!gm.winsOk){ toast(`小游戏累计胜局不足 ${V229F_TITLE_REQ.totalWins} 场（当前 ${gm.totalWins} 场）。`, 3.2); return true; }
+        if(!gm.skillFeat){ toast('尚需达成至少 1 项小游戏进阶实绩（如五子棋困难胜/象棋普通胜/吹牛骰2连胜/钓鱼≥6分/自然21点）。', 3.6); return true; }
+        state.leisure.chips -= V229F_TITLE_REQ.chips;
+        state.v196.titles.gameMaster = true;
+        beep(820, .28, 'triangle');
+        toast('🏆 恭喜解锁永久称号【游艺大师】！全局商店与收费服务永久享 10% 折扣！', 5);
+        save();
+        if(mapMode === 'leisureNpc') renderLeisureNpcPanel();
+        else if(mapMode === 'v196Fubo') renderV196FuboPanel();
+        else if(mapMode === 'v196Commerce') renderV196CommercePanel();
+        return true;
+      }
+      if(act === 'v196XQExit'){
+        v229fForfeitUnsettledGames();
+      }
+      return orig196(act, val);
+    };
+    handleV196Action.__v229fWrapped = true;
+  }
+}
+
+installV229fBalancePatch();
+
 
 
 
